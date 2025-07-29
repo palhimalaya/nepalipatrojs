@@ -11,8 +11,13 @@ import { convertADToBS, getCurrentBSDate } from './converters/ad-to-bs';
 import { convertBSToAD } from './converters/bs-to-ad';
 import { getDaysInMonth } from './utils/helpers';
 import { formatBS as formatBSDate, toNepaliDigits } from './formatters/date-formatter';
-
-
+import { NepaliDatepicker } from './ui/NepaliDatepicker';
+import { 
+  createNepaliDatepicker, 
+  initNepaliDatepicker,
+  type DatepickerConfig,
+  type DatepickerState 
+} from './ui/FunctionalNepaliDatepicker';
 class NepaliPatro {
   static readonly MIN_YEAR = MIN_BS_YEAR;
   static readonly MAX_YEAR = MAX_BS_YEAR;
@@ -73,6 +78,7 @@ class NepaliPatro {
   static toNepaliDigits(num: number | string): string {
     return toNepaliDigits(num);
   }
+
   /**
    * Gets the current date by using .now() method
    * @returns Current date as NepaliDate object
@@ -80,14 +86,56 @@ class NepaliPatro {
   static now(): NepaliDate {
     return this.getCurrentBSDate();
   }
+
+  /**
+   * Creates a functional datepicker instance
+   * @param config Datepicker configuration
+   * @returns Cleanup function
+   */
+  static createDatepicker(config: DatepickerConfig): (() => void) {
+    return createNepaliDatepicker(config);
+  }
+
+  /**
+   * Initializes a datepicker with advanced options
+   * @param inputElement Input element to attach datepicker to
+   * @param options Datepicker options
+   * @returns Datepicker control object
+   */
+  static initDatepicker(
+    inputElement: HTMLInputElement,
+    options: {
+      dateFormatter?: (date: Date) => string
+      onDateChange?: (date: Date) => void
+    } = {}
+  ) {
+    return initNepaliDatepicker(inputElement, options);
+  }
 }
 
-export default NepaliPatro;
+// Named exports
 export { 
   NepaliDate, 
   NepaliMonth, 
   NepaliMonthNepali,
   NepaliWeekDay,
   NepaliWeekDayNepali,
-  NepaliPatroOptions
+  NepaliPatroOptions,
+  NepaliDatepicker,
+  createNepaliDatepicker,
+  initNepaliDatepicker,
+  DatepickerConfig,
+  DatepickerState,
+  convertADToBS,
+  convertBSToAD,
+  getCurrentBSDate,
+  formatBSDate,
+  toNepaliDigits,
+  getDaysInMonth
 };
+
+// Default export
+export default NepaliPatro;
+
+// For UMD compatibility, also export NepaliPatro as named export
+export { NepaliPatro };
