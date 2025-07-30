@@ -1,95 +1,126 @@
-export class NepaliDatepicker {
-  private inputElement: HTMLInputElement
-  private calendarVisible = false
-  private currentDate: Date = new Date()
-  private floatingCalendar: HTMLElement | null = null
+import { BS_CALENDAR_DATA } from "../constants/calendar-data";
+import {
+  getCurrentBSDate,
+  convertBSToAD,
+  formatBSDate,
+  NepaliDate,
+  NepaliMonth,
+  NepaliDatepickerOptions
+} from "../index";
 
-  constructor(inputElement: HTMLInputElement) {
-    this.inputElement = inputElement
-    this.init()
+export class NepaliDatepicker {
+  private inputElement: HTMLInputElement;
+  private calendarVisible = false;
+  private currentBSYear: number = getCurrentBSDate().year;
+  private currentBSMonth: number = getCurrentBSDate().month - 1;
+  private currentBSDay: number = getCurrentBSDate().day;
+  private floatingCalendar: HTMLElement | null = null;
+  private format: string;
+  private theme: "light" | "dark";
+  private language: "en" | "np";
+
+  constructor(
+    inputElement: HTMLInputElement,
+    options: NepaliDatepickerOptions = {}
+  ) {
+    this.inputElement = inputElement;
+    this.format = options.format || "MMMM D, YYYY";
+    this.theme = options.theme || "light";
+    this.language = options.language || "en";
+    this.init();
   }
 
   private init(): void {
     this.inputElement.addEventListener("click", (e) => {
-      e.stopPropagation()
-      this.toggleCalendar()
-    })
+      e.stopPropagation();
+      this.toggleCalendar();
+    });
 
-    document.addEventListener("click", this.handleClickOutside)
+    document.addEventListener("click", this.handleClickOutside);
   }
 
   private toggleCalendar(): void {
     if (this.calendarVisible) {
-      this.closeCalendar()
+      this.closeCalendar();
     } else {
-      this.openCalendar()
+      this.openCalendar();
     }
   }
 
   private handleClickOutside = (event: MouseEvent): void => {
-    const target = event.target as Node | null
+    const target = event.target as Node | null;
     if (
       this.floatingCalendar &&
       target &&
       !this.floatingCalendar.contains(target) &&
       !this.inputElement.contains(target)
     ) {
-      this.closeCalendar()
+      this.closeCalendar();
     }
-  }
+  };
 
   private openCalendar(): void {
-    this.calendarVisible = true
-    this.renderCalendar(this.currentDate.getFullYear(), this.currentDate.getMonth())
+    this.calendarVisible = true;
+    this.renderCalendar(this.currentBSYear, this.currentBSMonth);
   }
 
-  private renderCalendar(year: number, month: number): void {
-    // Clear previous calendar if exists
+  private renderCalendar(bsYear: number, bsMonth: number): void {
     if (this.floatingCalendar && this.floatingCalendar.parentNode) {
-      this.floatingCalendar.parentNode.removeChild(this.floatingCalendar)
+      this.floatingCalendar.parentNode.removeChild(this.floatingCalendar);
     }
 
-    // Generate calendar HTML & elements
-    const calendarDiv = document.createElement("div")
-    calendarDiv.className = "nepali-datepicker"
+    const calendarDiv = document.createElement("div");
+    calendarDiv.className = `nepali-datepicker nepali-datepicker-${this.theme}`;
 
-    calendarDiv.innerHTML = this.generateCalendarHtml(year, month)
+    calendarDiv.innerHTML = this.generateCalendarHtml(bsYear, bsMonth);
 
-    // Setup event listeners on calendar controls
-    this.setupCalendarEvents(calendarDiv)
+    this.setupCalendarEvents(calendarDiv);
 
-    // Append to body
-    document.body.appendChild(calendarDiv)
-    this.floatingCalendar = calendarDiv
+    document.body.appendChild(calendarDiv);
+    this.floatingCalendar = calendarDiv;
 
-    this.positionCalendarPopup()
+    this.positionCalendarPopup();
   }
 
-  private generateCalendarHtml(year: number, month: number): string {
-    // Similar to your original month/year options + days grid HTML
-
-    const firstDay = new Date(year, month, 1)
-    const lastDay = new Date(year, month + 1, 0)
-    const daysInMonth = lastDay.getDate()
-    const firstDayOfWeek = firstDay.getDay()
-    const lastDayOfPrevMonth = new Date(year, month, 0).getDate()
-
-    const monthNames = [
-      "January", "February", "March", "April", "May", "June",
-      "July", "August", "September", "October", "November", "December",
-    ]
-
-    let monthOptions = ""
+  private generateCalendarHtml(bsYear: number, bsMonth: number): string {
+    // Get available years from BS_CALENDAR_DATA
+    const bsYears = Object.keys(BS_CALENDAR_DATA)
+      .map(Number)
+      .sort((a, b) => a - b);
+    let yearOptions = "";
+    for (const y of bsYears) {
+      yearOptions += `<option value="${y}"${
+        y === bsYear ? " selected" : ""
+      }>${y}</option>`;
+    }
+    let monthOptions = "";
     for (let i = 0; i < 12; i++) {
-      monthOptions += `<option value="${i}"${i === month ? " selected" : ""}>${monthNames[i]}</option>`
+      monthOptions += `<option value="${i}"${
+        i === bsMonth ? " selected" : ""
+      }>${NepaliMonth[i + 1]}</option>`;
     }
-
-    let yearOptions = ""
-    const currentYear = new Date().getFullYear()
-    for (let y = currentYear - 100; y <= currentYear + 20; y++) {
-      yearOptions += `<option value="${y}"${y === year ? " selected" : ""}>${y}</option>`
+    // Get days in this BS month
+    const rawDaysInMonth = BS_CALENDAR_DATA[bsYear]?.[0][bsMonth];
+    const daysInMonth = Array.isArray(rawDaysInMonth)
+      ? rawDaysInMonth[0]
+      : typeof rawDaysInMonth === "number"
+      ? rawDaysInMonth
+      : 30;
+    // Calculate the weekday of the 1st day of this BS month
+    const firstDayOfWeek = this.getBSFirstDayOfWeek(bsYear, bsMonth);
+    // Get days in previous month
+    let prevMonth = bsMonth - 1;
+    let prevYear = bsYear;
+    if (prevMonth < 0) {
+      prevMonth = 11;
+      prevYear--;
     }
-
+    const rawLastDayOfPrevMonth = BS_CALENDAR_DATA[prevYear]?.[0][prevMonth];
+    const lastDayOfPrevMonth = Array.isArray(rawLastDayOfPrevMonth)
+      ? rawLastDayOfPrevMonth[0]
+      : typeof rawLastDayOfPrevMonth === "number"
+      ? rawLastDayOfPrevMonth
+      : 30;
     return `
       <div class="nepali-datepicker-header">
         <button type="button" class="nepali-nav-btn nepali-prev-btn">&#9664;</button>
@@ -109,193 +140,238 @@ export class NepaliDatepicker {
         <div class="nepali-weekday">Sat</div>
       </div>
       <div class="nepali-calendar-body">
-        ${this.generateDaysFullGrid(year, month, daysInMonth, firstDayOfWeek, lastDayOfPrevMonth)}
+        ${this.generateBSDaysFullGrid(
+          bsYear,
+          bsMonth,
+          daysInMonth,
+          firstDayOfWeek,
+          lastDayOfPrevMonth
+        )}
       </div>
-    `
+    `;
   }
 
-  private setupCalendarEvents(calendarDiv: HTMLElement): void {
-    const prevButton = calendarDiv.querySelector<HTMLButtonElement>(".nepali-prev-btn")
-    const nextButton = calendarDiv.querySelector<HTMLButtonElement>(".nepali-next-btn")
-    const monthSelect = calendarDiv.querySelector<HTMLSelectElement>(".nepali-month-select")
-    const yearSelect = calendarDiv.querySelector<HTMLSelectElement>(".nepali-year-select")
-
-    prevButton?.addEventListener("click", (e) => {
-      e.stopPropagation()
-      this.previousMonth()
-    })
-
-    nextButton?.addEventListener("click", (e) => {
-      e.stopPropagation()
-      this.nextMonth()
-    })
-
-    monthSelect?.addEventListener("change", (e) => {
-      e.stopPropagation()
-      this.changeMonth(e)
-    })
-
-    yearSelect?.addEventListener("change", (e) => {
-      e.stopPropagation()
-      this.changeYear(e)
-    })
-
-    calendarDiv.addEventListener("click", (e) => this.handleDateClick(e))
-  }
-
-  private positionCalendarPopup(): void {
-    if (!this.floatingCalendar) return
-
-    this.floatingCalendar.style.position = "absolute"
-    this.floatingCalendar.style.zIndex = "9999"
-
-    const inputRect = this.inputElement.getBoundingClientRect()
-    const calendarRect = this.floatingCalendar.getBoundingClientRect()
-
-    let top = inputRect.bottom + window.scrollY + 4
-    let left = inputRect.left + window.scrollX
-
-    if (window.innerHeight - inputRect.bottom < calendarRect.height && inputRect.top > calendarRect.height) {
-      top = inputRect.top + window.scrollY - calendarRect.height - 4
-    }
-
-    if (window.innerWidth - inputRect.left < calendarRect.width) {
-      left = inputRect.right + window.scrollX - calendarRect.width
-    }
-
-    this.floatingCalendar.style.top = `${top}px`
-    this.floatingCalendar.style.left = `${left}px`
-  }
-
-  private closeCalendar(): void {
-    this.calendarVisible = false
-    if (this.floatingCalendar && this.floatingCalendar.parentNode) {
-      this.floatingCalendar.parentNode.removeChild(this.floatingCalendar)
-      this.floatingCalendar = null
-    }
-  }
-
-  private handleDateClick(event: MouseEvent): void {
-    const target = event.target as HTMLElement
-    const dayEl = target.closest<HTMLElement>(".nepali-day")
-    if (!dayEl) return
-
-    event.stopPropagation()
-    this.selectDate(dayEl)
-  }
-
-  private selectDate(dayElement: HTMLElement): void {
-    const day = parseInt(dayElement.dataset.day ?? "0", 10)
-    let month = this.currentDate.getMonth()
-    let year = this.currentDate.getFullYear()
-
-    if (this.floatingCalendar) {
-      const monthSelect = this.floatingCalendar.querySelector<HTMLSelectElement>(".nepali-month-select")
-      const yearSelect = this.floatingCalendar.querySelector<HTMLSelectElement>(".nepali-year-select")
-      if (monthSelect && yearSelect) {
-        month = parseInt(monthSelect.value, 10)
-        year = parseInt(yearSelect.value, 10)
+  private getBSFirstDayOfWeek(bsYear: number, bsMonth: number): number {
+    try {
+      const adDate = convertBSToAD({
+        year: bsYear,
+        month: bsMonth + 1,
+        day: 1,
+      });
+      if (adDate instanceof Date && !isNaN(adDate.getTime())) {
+        return adDate.getDay();
       }
+    } catch (e) {
+      console.log("Error converting BS to AD:", e);
     }
-
-    if (dayElement.dataset.other === "prev") {
-      month -= 1
-      if (month < 0) {
-        month = 11
-        year -= 1
-      }
-    } else if (dayElement.dataset.other === "next") {
-      month += 1
-      if (month > 11) {
-        month = 0
-        year += 1
-      }
-    }
-
-    const date = new Date(year, month, day)
-    this.currentDate = new Date(date)
-
-    const monthNames = [
-      "January", "February", "March", "April", "May", "June",
-      "July", "August", "September", "October", "November", "December",
-    ]
-    const formatted = `${monthNames[date.getMonth()]} ${date.getDate()}, ${date.getFullYear()}`
-
-    this.inputElement.value = formatted
-    this.inputElement.dispatchEvent(new Event("change", { bubbles: true }))
-    this.closeCalendar()
+    return 0;
   }
 
-  private isToday(date: Date): boolean {
-    const today = new Date()
-    return date.toDateString() === today.toDateString()
-  }
-
-  private isSelectedDate(date: Date): boolean {
-    if (!this.inputElement.value) return false
-    const inputDate = new Date(this.inputElement.value)
-    return !isNaN(inputDate.getTime()) && inputDate.toDateString() === date.toDateString()
-  }
-
-  private generateDaysFullGrid(
-    year: number,
-    month: number,
+  // Render the days grid for BS calendar
+  private generateBSDaysFullGrid(
+    bsYear: number,
+    bsMonth: number,
     daysInMonth: number,
     firstDayOfWeek: number,
     lastDayOfPrevMonth: number
   ): string {
-    let daysHTML = ""
-    const totalCells = 42
-
+    let daysHTML = "";
+    const totalCells = 42;
     // Previous month days
     for (let i = 0; i < firstDayOfWeek; i++) {
-      const prevDay = lastDayOfPrevMonth - firstDayOfWeek + i + 1
-      daysHTML += `<div class="nepali-day nepali-other-month" data-day="${prevDay}" data-other="prev">${prevDay}</div>`
+      const prevDay = lastDayOfPrevMonth - firstDayOfWeek + i + 1;
+      daysHTML += `<div class="nepali-day nepali-other-month" data-day="${prevDay}" data-other="prev">${prevDay}</div>`;
     }
-
     // Current month days
     for (let day = 1; day <= daysInMonth; day++) {
-      const date = new Date(year, month, day)
-      const isToday = this.isToday(date)
-      const isSelected = this.isSelectedDate(date)
-      let classes = "nepali-day"
-
-      if (isToday) classes += " nepali-today"
-      if (isSelected) classes += " nepali-selected"
-
-      daysHTML += `<div class="${classes}" data-day="${day}">${day}</div>`
+      let classes = "nepali-day";
+      if (this.isBSSelectedDate(bsYear, bsMonth, day))
+        classes += " nepali-selected";
+      daysHTML += `<div class="${classes}" data-day="${day}">${day}</div>`;
     }
-
     // Next month days
-    const daysFilled = firstDayOfWeek + daysInMonth
+    const daysFilled = firstDayOfWeek + daysInMonth;
     for (let i = 1; i <= totalCells - daysFilled; i++) {
-      daysHTML += `<div class="nepali-day nepali-other-month" data-day="${i}" data-other="next">${i}</div>`
+      daysHTML += `<div class="nepali-day nepali-other-month" data-day="${i}" data-other="next">${i}</div>`;
+    }
+    return daysHTML;
+  }
+
+  private isBSSelectedDate(
+    bsYear: number,
+    bsMonth: number,
+    bsDay: number
+  ): boolean {
+    return (
+      bsYear === this.currentBSYear &&
+      bsMonth === this.currentBSMonth &&
+      bsDay === this.currentBSDay
+    );
+  }
+
+  private setupCalendarEvents(calendarDiv: HTMLElement): void {
+    const prevButton =
+      calendarDiv.querySelector<HTMLButtonElement>(".nepali-prev-btn");
+    const nextButton =
+      calendarDiv.querySelector<HTMLButtonElement>(".nepali-next-btn");
+    const monthSelect = calendarDiv.querySelector<HTMLSelectElement>(
+      ".nepali-month-select"
+    );
+    const yearSelect = calendarDiv.querySelector<HTMLSelectElement>(
+      ".nepali-year-select"
+    );
+
+    prevButton?.addEventListener("click", (e) => {
+      e.stopPropagation();
+      this.previousBSMonth();
+    });
+
+    nextButton?.addEventListener("click", (e) => {
+      e.stopPropagation();
+      this.nextBSMonth();
+    });
+
+    monthSelect?.addEventListener("change", (e) => {
+      e.stopPropagation();
+      this.changeBSMonth(e);
+    });
+
+    yearSelect?.addEventListener("change", (e) => {
+      e.stopPropagation();
+      this.changeBSYear(e);
+    });
+
+    calendarDiv.addEventListener("click", (e) => this.handleBSDateClick(e));
+  }
+
+  private handleBSDateClick(event: MouseEvent): void {
+    const target = event.target as HTMLElement;
+    const dayEl = target.closest<HTMLElement>(".nepali-day");
+    if (!dayEl) return;
+    event.stopPropagation();
+    this.selectBSDate(dayEl);
+  }
+
+  private selectBSDate(dayElement: HTMLElement): void {
+    let day = parseInt(dayElement.dataset.day ?? "0", 10);
+    let month = this.currentBSMonth;
+    let year = this.currentBSYear;
+
+    if (this.floatingCalendar) {
+      const monthSelect =
+        this.floatingCalendar.querySelector<HTMLSelectElement>(
+          ".nepali-month-select"
+        );
+      const yearSelect = this.floatingCalendar.querySelector<HTMLSelectElement>(
+        ".nepali-year-select"
+      );
+      if (monthSelect && yearSelect) {
+        month = parseInt(monthSelect.value, 10);
+        year = parseInt(yearSelect.value, 10);
+      }
     }
 
-    return daysHTML
+    if (dayElement.dataset.other === "prev") {
+      month -= 1;
+      if (month < 0) {
+        month = 11;
+        year -= 1;
+      }
+    } else if (dayElement.dataset.other === "next") {
+      month += 1;
+      if (month > 11) {
+        month = 0;
+        year += 1;
+      }
+    }
+
+    this.currentBSYear = year;
+    this.currentBSMonth = month;
+    this.currentBSDay = day;
+
+    const date: NepaliDate = {
+      year: this.currentBSYear,
+      month: this.currentBSMonth + 1,
+      day: this.currentBSDay,
+    };
+    const formatted = formatBSDate(date, this.format, {
+      language: this.language,
+    });
+    this.inputElement.value = formatted;
+    this.inputElement.dispatchEvent(new Event("change", { bubbles: true }));
+    this.closeCalendar();
   }
 
-  private previousMonth(): void {
-    this.currentDate.setMonth(this.currentDate.getMonth() - 1)
-    this.renderCalendar(this.currentDate.getFullYear(), this.currentDate.getMonth())
+  private previousBSMonth(): void {
+    let month = this.currentBSMonth - 1;
+    let year = this.currentBSYear;
+    if (month < 0) {
+      month = 11;
+      year--;
+    }
+    this.currentBSMonth = month;
+    this.currentBSYear = year;
+    this.renderCalendar(year, month);
   }
 
-  private nextMonth(): void {
-    this.currentDate.setMonth(this.currentDate.getMonth() + 1)
-    this.renderCalendar(this.currentDate.getFullYear(), this.currentDate.getMonth())
+  private nextBSMonth(): void {
+    let month = this.currentBSMonth + 1;
+    let year = this.currentBSYear;
+    if (month > 11) {
+      month = 0;
+      year++;
+    }
+    this.currentBSMonth = month;
+    this.currentBSYear = year;
+    this.renderCalendar(year, month);
   }
 
-  private changeMonth(event: Event): void {
-    const target = event.target as HTMLSelectElement
-    const newMonth = parseInt(target.value, 10)
-    this.currentDate.setMonth(newMonth)
-    this.renderCalendar(this.currentDate.getFullYear(), newMonth)
+  private changeBSMonth(event: Event): void {
+    const target = event.target as HTMLSelectElement;
+    const newMonth = parseInt(target.value, 10);
+    this.currentBSMonth = newMonth;
+    this.renderCalendar(this.currentBSYear, newMonth);
   }
 
-  private changeYear(event: Event): void {
-    const target = event.target as HTMLSelectElement
-    const newYear = parseInt(target.value, 10)
-    this.currentDate.setFullYear(newYear)
-    this.renderCalendar(newYear, this.currentDate.getMonth())
+  private changeBSYear(event: Event): void {
+    const target = event.target as HTMLSelectElement;
+    const newYear = parseInt(target.value, 10);
+    this.currentBSYear = newYear;
+    this.renderCalendar(newYear, this.currentBSMonth);
+  }
+
+  private positionCalendarPopup(): void {
+    if (!this.floatingCalendar) return;
+
+    this.floatingCalendar.style.position = "absolute";
+    this.floatingCalendar.style.zIndex = "9999";
+
+    const inputRect = this.inputElement.getBoundingClientRect();
+    const calendarRect = this.floatingCalendar.getBoundingClientRect();
+
+    let top = inputRect.bottom + window.scrollY + 4;
+    let left = inputRect.left + window.scrollX;
+
+    if (
+      window.innerHeight - inputRect.bottom < calendarRect.height &&
+      inputRect.top > calendarRect.height
+    ) {
+      top = inputRect.top + window.scrollY - calendarRect.height - 4;
+    }
+
+    if (window.innerWidth - inputRect.left < calendarRect.width) {
+      left = inputRect.right + window.scrollX - calendarRect.width;
+    }
+
+    this.floatingCalendar.style.top = `${top}px`;
+    this.floatingCalendar.style.left = `${left}px`;
+  }
+
+  private closeCalendar(): void {
+    this.calendarVisible = false;
+    if (this.floatingCalendar && this.floatingCalendar.parentNode) {
+      this.floatingCalendar.parentNode.removeChild(this.floatingCalendar);
+      this.floatingCalendar = null;
+    }
   }
 }

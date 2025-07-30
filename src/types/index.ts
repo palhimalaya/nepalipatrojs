@@ -77,3 +77,13 @@ export interface NepaliPatroOptions {
   format?: string;
   returnType?: 'string' | 'object';
 }
+
+
+/**
+ * Options for the Nepali Datepicker UI component
+ */
+export interface NepaliDatepickerOptions {
+  format?: string;
+  theme?: "light" | "dark";
+  language?: "en" | "np";
+};

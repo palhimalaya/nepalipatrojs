@@ -7,9 +7,7 @@ import {
   NepaliPatroOptions 
 } from '../types';
 import { convertBSToAD } from '../converters/bs-to-ad';
-
-// Nepali digits for numeric conversion
-const NEPALI_DIGITS = ['०', '१', '२', '३', '४', '५', '६', '७', '८', '९'];
+import { NEPALI_DIGITS } from '../constants/calendar-data';
 
 /**
  * Converts English digits to Nepali digits

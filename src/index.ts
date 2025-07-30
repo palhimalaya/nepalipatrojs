@@ -4,7 +4,8 @@ import {
   NepaliMonthNepali,
   NepaliWeekDay,
   NepaliWeekDayNepali,
-  NepaliPatroOptions 
+  NepaliPatroOptions,
+  NepaliDatepickerOptions,
 } from './types';
 import { BS_CALENDAR_DATA, MIN_BS_YEAR, MAX_BS_YEAR, MIN_AD_YEAR } from './constants/calendar-data';
 import { convertADToBS, getCurrentBSDate } from './converters/ad-to-bs';
@@ -122,6 +123,7 @@ export {
   NepaliWeekDayNepali,
   NepaliPatroOptions,
   NepaliDatepicker,
+  NepaliDatepickerOptions,
   createNepaliDatepicker,
   initNepaliDatepicker,
   DatepickerConfig,
