@@ -1,6 +1,6 @@
-import { NepaliDatepicker } from '../../ui/NepaliDatepicker';
+import { NepaliDatePicker } from '../../ui/NepaliDatePicker';
 
-describe('NepaliDatepicker', () => {
+describe('NepaliDatePicker', () => {
   let input: HTMLInputElement;
 
   beforeEach(() => {
@@ -9,21 +9,21 @@ describe('NepaliDatepicker', () => {
   });
 
   it('should initialize and attach click event', () => {
-    const dp = new NepaliDatepicker(input);
+    const dp = new NepaliDatePicker(input);
     expect(input).toBeDefined();
     input.click();
     expect(document.querySelector('.nepali-datepicker')).toBeTruthy();
   });
 
   it('should respect format and theme options', () => {
-    const dp = new NepaliDatepicker(input, { format: 'YYYY/MM/DD', theme: 'dark', language: 'en' });
+    const dp = new NepaliDatePicker(input, { format: 'YYYY/MM/DD', theme: 'dark', language: 'en' });
     input.click();
     const calendar = document.querySelector('.nepali-datepicker-dark');
     expect(calendar).toBeTruthy();
   });
 
   it('should select a date and update input value', () => {
-    const dp = new NepaliDatepicker(input, { format: 'YYYY-MM-DD', language: 'en' });
+    const dp = new NepaliDatePicker(input, { format: 'YYYY-MM-DD', language: 'en' });
     input.click();
     const firstDay = document.querySelector('.nepali-day[data-day="1"]') as HTMLElement;
     firstDay.click();
@@ -31,7 +31,7 @@ describe('NepaliDatepicker', () => {
   });
 
   it('should close calendar on outside click', () => {
-    const dp = new NepaliDatepicker(input);
+    const dp = new NepaliDatePicker(input);
     input.click();
     expect(document.querySelector('.nepali-datepicker')).toBeTruthy();
     document.body.click();
