@@ -24,7 +24,7 @@ export class NepaliDatePicker {
     options: NepaliDatePickerOptions = {}
   ) {
     this.inputElement = inputElement;
-    this.format = options.format || "MMMM D, YYYY";
+    this.format = options.format || "YYYY-MM-DD";
     this.theme = options.theme || "light";
     this.language = options.language || "en";
     this.init();

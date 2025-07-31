@@ -1,6 +1,6 @@
 {
   "name": "nepalipatrojs",
-  "version": "1.0.2",
+  "version": "1.0.4",
   "description": "A JavaScript library for Nepali date conversion and calendar utilities",
   "type": "module",
   "main": "dist/nepali-patro-js.umd.js",
