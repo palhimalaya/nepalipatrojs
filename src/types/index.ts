@@ -80,9 +80,9 @@ export interface NepaliPatroOptions {
 
 
 /**
- * Options for the Nepali Datepicker UI component
+ * Options for the Nepali DatePicker UI component
  */
-export interface NepaliDatepickerOptions {
+export interface NepaliDatePickerOptions {
   format?: string;
   theme?: "light" | "dark";
   language?: "en" | "np";

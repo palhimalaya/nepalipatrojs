@@ -5,7 +5,7 @@ import {
   NepaliWeekDay,
   NepaliWeekDayNepali,
   NepaliPatroOptions,
-  NepaliDatepickerOptions,
+  NepaliDatePickerOptions,
 } from "./types";
 import {
   BS_CALENDAR_DATA,
@@ -20,7 +20,7 @@ import {
   formatBS as formatBSDate,
   toNepaliDigits,
 } from "./formatters/date-formatter";
-import { NepaliDatepicker } from "./ui/NepaliDatepicker";
+import { NepaliDatePicker } from "./ui/NepaliDatePicker";
 class NepaliPatro {
   static readonly MIN_YEAR = MIN_BS_YEAR;
   static readonly MAX_YEAR = MAX_BS_YEAR;
@@ -103,8 +103,8 @@ export {
   NepaliWeekDay,
   NepaliWeekDayNepali,
   NepaliPatroOptions,
-  NepaliDatepicker,
-  NepaliDatepickerOptions,
+  NepaliDatePicker,
+  NepaliDatePickerOptions,
   convertADToBS,
   convertBSToAD,
   getCurrentBSDate,
@@ -120,6 +120,6 @@ export default NepaliPatro;
 export { NepaliPatro };
 
 if (typeof window !== "undefined") {
-  (window as any).NepaliDatepicker = NepaliDatepicker;
+  (window as any).NepaliDatePicker = NepaliDatePicker;
 }
 

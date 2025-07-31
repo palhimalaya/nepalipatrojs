@@ -4,15 +4,11 @@ import {
   convertBSToAD,
   formatBSDate,
   NepaliDate,
-  NepaliMonth,
-  NepaliMonthNepali,
-  NepaliWeekDay,
-  NepaliWeekDayNepali,
-  NepaliDatepickerOptions
+  NepaliDatePickerOptions
 } from "../index";
 import { localizeDigits, localizeMonth } from "../utils/helpers";
 
-export class NepaliDatepicker {
+export class NepaliDatePicker {
   private inputElement: HTMLInputElement;
   private calendarVisible = false;
   private currentBSYear: number = getCurrentBSDate().year;
@@ -25,7 +21,7 @@ export class NepaliDatepicker {
 
   constructor(
     inputElement: HTMLInputElement,
-    options: NepaliDatepickerOptions = {}
+    options: NepaliDatePickerOptions = {}
   ) {
     this.inputElement = inputElement;
     this.format = options.format || "MMMM D, YYYY";

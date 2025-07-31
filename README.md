@@ -50,8 +50,8 @@ The library provides a ready-to-use Nepali datepicker UI for web apps.
 1. Include the CSS and JS in your HTML:
 
 ```html
-<link rel="stylesheet" href="/dist/nepalipatrojs.css" />
-<script src="/dist/nepalipatrojs.umd.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/nepalipatrojs/dist/nepali-patro-js.css" />
+<script src="https://cdn.jsdelivr.net/npm/nepalipatrojs/dist/nepali-patro-js.umd.js"></script>
 ```
 
 2. Add an input element:
@@ -63,9 +63,9 @@ The library provides a ready-to-use Nepali datepicker UI for web apps.
 3. Initialize the datepicker:
 
 ```js
-// For UMD build, NepaliDatepicker is available globally
+// For UMD build, NepaliDatePicker is available globally
 const input = document.getElementById('dateInput');
-const dp = new NepaliDatepicker(input, {
+const dp = new NepaliDatePicker(input, {
   format: 'YYYY/MM/DD', // or 'MMMM D, YYYY', etc.
   theme: 'dark',        // 'light' (default) or 'dark'
   language: 'en',       // 'en' (default) or 'np'
@@ -75,10 +75,10 @@ const dp = new NepaliDatepicker(input, {
 ### Usage (ESM/TypeScript)
 
 ```typescript
-import { NepaliDatepicker } from 'nepalipatrojs';
+import { NepaliDatePicker } from 'nepalipatrojs';
 
 const input = document.getElementById('dateInput');
-const dp = new NepaliDatepicker(input, {
+const dp = new NepaliDatePicker(input, {
   format: 'YYYY/MM/DD',
   theme: 'dark',
   language: 'np',
@@ -243,5 +243,3 @@ This library works in all modern browsers, Node.js, and with bundlers like Rollu
 Contributions are welcome! Feel free to open issues or submit pull requests.
 
 ## 📄 License
-
-MIT
