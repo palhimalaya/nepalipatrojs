@@ -1,5 +1,12 @@
-import { BS_CALENDAR_DATA, MAX_BS_YEAR, MIN_BS_YEAR } from '../constants/calendar-data';
-import { NepaliDate } from '../types';
+import { BS_CALENDAR_DATA, MAX_BS_YEAR, MIN_BS_YEAR, NEPALI_DIGITS } from '../constants/calendar-data';
+import { 
+  NepaliDate, 
+  NepaliMonth, 
+  NepaliMonthNepali,
+  NepaliWeekDay,
+  NepaliWeekDayNepali,
+  NepaliPatroOptions 
+} from '../types';
 
 /**
  * Gets the number of days in a Nepali month
@@ -47,3 +54,42 @@ export function parseDateInput(date: NepaliDate | number[]): { year: number; mon
     throw new Error('Invalid date format. Provide a NepaliDate object or [year, month, day] array.');
   }
 }
+
+
+/** 
+ * Localize number to Nepali digits based on language
+ * @param num The number to localize
+ * @param language The language code ('en' or 'np')
+ * @returns Localized string with Nepali digits if language is 'np', otherwise returns the original number as a string
+ */
+
+export function localizeDigits(num: string | number, language: string): string {
+  switch (language) {
+    case "np":
+    return String(num)
+      .split("")
+      .map((digit) =>
+        /\d/.test(digit) ? NEPALI_DIGITS[parseInt(digit, 10)] : digit
+      )
+      .join("");
+    default:
+      return String(num); 
+  }
+}
+
+/**
+ * Localizes the month name based on the language
+ * @param month The month number (1-12)
+ * @param language The language code ('en' or 'np')
+ * @returns Localized month name in either English or Nepali
+ */
+
+export function localizeMonth(month: number, language: string): string {
+  if (language === 'np') {
+    return NepaliMonthNepali[month];
+  } else {
+    return NepaliMonth[month];
+  }
+}
+
+

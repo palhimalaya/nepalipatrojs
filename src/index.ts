@@ -1,18 +1,26 @@
-import { 
-  NepaliDate, 
-  NepaliMonth, 
+import {
+  NepaliDate,
+  NepaliMonth,
   NepaliMonthNepali,
   NepaliWeekDay,
   NepaliWeekDayNepali,
-  NepaliPatroOptions 
-} from './types';
-import { BS_CALENDAR_DATA, MIN_BS_YEAR, MAX_BS_YEAR, MIN_AD_YEAR } from './constants/calendar-data';
-import { convertADToBS, getCurrentBSDate } from './converters/ad-to-bs';
-import { convertBSToAD } from './converters/bs-to-ad';
-import { getDaysInMonth } from './utils/helpers';
-import { formatBS as formatBSDate, toNepaliDigits } from './formatters/date-formatter';
-
-
+  NepaliPatroOptions,
+  NepaliDatepickerOptions,
+} from "./types";
+import {
+  BS_CALENDAR_DATA,
+  MIN_BS_YEAR,
+  MAX_BS_YEAR,
+  MIN_AD_YEAR,
+} from "./constants/calendar-data";
+import { convertADToBS, getCurrentBSDate } from "./converters/ad-to-bs";
+import { convertBSToAD } from "./converters/bs-to-ad";
+import { getDaysInMonth } from "./utils/helpers";
+import {
+  formatBS as formatBSDate,
+  toNepaliDigits,
+} from "./formatters/date-formatter";
+import { NepaliDatepicker } from "./ui/NepaliDatepicker";
 class NepaliPatro {
   static readonly MIN_YEAR = MIN_BS_YEAR;
   static readonly MAX_YEAR = MAX_BS_YEAR;
@@ -51,10 +59,14 @@ class NepaliPatro {
    * @param options : {} Formatting options
    * @returns Formatted date string
    */
-  static formatBS(date: NepaliDate, format: string = 'YYYY-MM-DD', options: NepaliPatroOptions = {}): string {
+  static formatBS(
+    date: NepaliDate,
+    format: string = "YYYY-MM-DD",
+    options: NepaliPatroOptions = {},
+  ): string {
     return formatBSDate(date, format, options);
   }
-  
+
   /**
    * Gets the number of days in a Nepali month
    * @param year The Nepali year in BS calendar
@@ -73,6 +85,7 @@ class NepaliPatro {
   static toNepaliDigits(num: number | string): string {
     return toNepaliDigits(num);
   }
+
   /**
    * Gets the current date by using .now() method
    * @returns Current date as NepaliDate object
@@ -82,12 +95,31 @@ class NepaliPatro {
   }
 }
 
-export default NepaliPatro;
-export { 
-  NepaliDate, 
-  NepaliMonth, 
+// Named exports
+export {
+  NepaliDate,
+  NepaliMonth,
   NepaliMonthNepali,
   NepaliWeekDay,
   NepaliWeekDayNepali,
-  NepaliPatroOptions
+  NepaliPatroOptions,
+  NepaliDatepicker,
+  NepaliDatepickerOptions,
+  convertADToBS,
+  convertBSToAD,
+  getCurrentBSDate,
+  formatBSDate,
+  toNepaliDigits,
+  getDaysInMonth,
 };
+
+// Default export
+export default NepaliPatro;
+
+// For UMD compatibility, also export NepaliPatro as named export
+export { NepaliPatro };
+
+if (typeof window !== "undefined") {
+  (window as any).NepaliDatepicker = NepaliDatepicker;
+}
+
