@@ -15,9 +15,10 @@
     <script>
       // Use the global variable from UMD build
       const input = document.getElementById("dateInput");
-      const dp = new NepaliPatroJs.NepaliDatepicker(input, {
-        format: "YYYY/MM/DD",
-        theme: "dark",
+      const dp = new NepaliDatepicker(input, {
+        format: "MMMM D, YYYY",
+        theme: "light",
+        language: "np",
       });
     </script>
   </body>

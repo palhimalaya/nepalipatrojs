@@ -5,8 +5,12 @@ import {
   formatBSDate,
   NepaliDate,
   NepaliMonth,
+  NepaliMonthNepali,
+  NepaliWeekDay,
+  NepaliWeekDayNepali,
   NepaliDatepickerOptions
 } from "../index";
+import { localizeDigits, localizeMonth } from "../utils/helpers";
 
 export class NepaliDatepicker {
   private inputElement: HTMLInputElement;
@@ -91,13 +95,13 @@ export class NepaliDatepicker {
     for (const y of bsYears) {
       yearOptions += `<option value="${y}"${
         y === bsYear ? " selected" : ""
-      }>${y}</option>`;
+      }>${localizeDigits(y, this.language)}</option>`;
     }
     let monthOptions = "";
     for (let i = 0; i < 12; i++) {
       monthOptions += `<option value="${i}"${
         i === bsMonth ? " selected" : ""
-      }>${NepaliMonth[i + 1]}</option>`;
+      }>${localizeMonth(i + 1, this.language)}</option>`;
     }
     // Get days in this BS month
     const rawDaysInMonth = BS_CALENDAR_DATA[bsYear]?.[0][bsMonth];
@@ -121,6 +125,10 @@ export class NepaliDatepicker {
       : typeof rawLastDayOfPrevMonth === "number"
       ? rawLastDayOfPrevMonth
       : 30;
+    const weekdays = this.language === "np"
+    ? ["आ", "सो", "मं", "बु", "बि", "शु", "श"]
+    : ["S", "M", "T", "W", "T", "F", "S"];
+
     return `
       <div class="nepali-datepicker-header">
         <button type="button" class="nepali-nav-btn nepali-prev-btn">&#9664;</button>
@@ -131,13 +139,7 @@ export class NepaliDatepicker {
         <button type="button" class="nepali-nav-btn nepali-next-btn">&#9654;</button>
       </div>
       <div class="nepali-weekdays">
-        <div class="nepali-weekday">Sun</div>
-        <div class="nepali-weekday">Mon</div>
-        <div class="nepali-weekday">Tue</div>
-        <div class="nepali-weekday">Wed</div>
-        <div class="nepali-weekday">Thu</div>
-        <div class="nepali-weekday">Fri</div>
-        <div class="nepali-weekday">Sat</div>
+        ${weekdays.map(day => `<div class="nepali-weekday">${day}</div>`).join('')}
       </div>
       <div class="nepali-calendar-body">
         ${this.generateBSDaysFullGrid(
@@ -180,19 +182,19 @@ export class NepaliDatepicker {
     // Previous month days
     for (let i = 0; i < firstDayOfWeek; i++) {
       const prevDay = lastDayOfPrevMonth - firstDayOfWeek + i + 1;
-      daysHTML += `<div class="nepali-day nepali-other-month" data-day="${prevDay}" data-other="prev">${prevDay}</div>`;
+      daysHTML += `<div class="nepali-day nepali-other-month" data-day="${prevDay}" data-other="prev">${localizeDigits(prevDay, this.language)}</div>`;
     }
     // Current month days
     for (let day = 1; day <= daysInMonth; day++) {
       let classes = "nepali-day";
       if (this.isBSSelectedDate(bsYear, bsMonth, day))
         classes += " nepali-selected";
-      daysHTML += `<div class="${classes}" data-day="${day}">${day}</div>`;
+      daysHTML += `<div class="${classes}" data-day="${day}">${localizeDigits(day, this.language)}</div>`;
     }
     // Next month days
     const daysFilled = firstDayOfWeek + daysInMonth;
     for (let i = 1; i <= totalCells - daysFilled; i++) {
-      daysHTML += `<div class="nepali-day nepali-other-month" data-day="${i}" data-other="next">${i}</div>`;
+      daysHTML += `<div class="nepali-day nepali-other-month" data-day="${i}" data-other="next">${localizeDigits(i, this.language)}</div>`;
     }
     return daysHTML;
   }

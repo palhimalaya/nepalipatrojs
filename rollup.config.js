@@ -14,9 +14,11 @@ export default [
       {
         file: 'dist/nepali-patro-js.umd.js',
         format: 'umd',
-        name: 'NepaliPatroJs',
+        name: 'NepaliPatro',
         sourcemap: true,
-        globals: {}
+        globals: {
+          NepaliDatepicker: 'NepaliDatepicker',
+        },
       },
       {
         file: 'dist/nepali-patro-js.esm.js',

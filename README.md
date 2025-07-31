@@ -26,9 +26,10 @@ Or with yarn:
 yarn add nepalipatrojs
 ```
 
+
 ## 🚀 Usage
 
-### Import
+### Import (Node, Bundlers, or TypeScript)
 
 ```typescript
 // ES6 import
@@ -37,6 +38,66 @@ import NepaliPatro from 'nepalipatrojs';
 // CommonJS require
 const NepaliPatro = require('nepalipatrojs').default;
 ```
+
+---
+
+## 🖼️ Nepali Datepicker UI Component
+
+The library provides a ready-to-use Nepali datepicker UI for web apps.
+
+### Usage (Browser/UMD)
+
+1. Include the CSS and JS in your HTML:
+
+```html
+<link rel="stylesheet" href="/dist/nepalipatrojs.css" />
+<script src="/dist/nepalipatrojs.umd.js"></script>
+```
+
+2. Add an input element:
+
+```html
+<input id="dateInput" placeholder="Select Nepali Date" />
+```
+
+3. Initialize the datepicker:
+
+```js
+// For UMD build, NepaliDatepicker is available globally
+const input = document.getElementById('dateInput');
+const dp = new NepaliDatepicker(input, {
+  format: 'YYYY/MM/DD', // or 'MMMM D, YYYY', etc.
+  theme: 'dark',        // 'light' (default) or 'dark'
+  language: 'en',       // 'en' (default) or 'np'
+});
+```
+
+### Usage (ESM/TypeScript)
+
+```typescript
+import { NepaliDatepicker } from 'nepalipatrojs';
+
+const input = document.getElementById('dateInput');
+const dp = new NepaliDatepicker(input, {
+  format: 'YYYY/MM/DD',
+  theme: 'dark',
+  language: 'np',
+});
+```
+
+#### Options
+
+| Option   | Type                | Default           | Description                                 |
+|----------|---------------------|-------------------|---------------------------------------------|
+| format   | string              | 'MMMM D, YYYY'    | Date format string                          |
+| theme    | 'light' \| 'dark'   | 'light'           | Calendar theme                              |
+| language | 'en' \| 'np'        | 'en'              | Language for month/digits                   |
+
+#### Theming
+
+The datepicker supports both light and dark themes. You can customize the CSS for `.nepali-datepicker-light` and `.nepali-datepicker-dark` classes.
+
+---
 
 ### Convert AD to BS
 
@@ -172,9 +233,10 @@ interface NepaliPatroOptions {
 | DD | 2-digit day | 02 |
 | D | 1-digit day | 2 |
 
-## 🌐 Browser Compatibility
 
-This library works in all modern browsers and Node.js environments.
+## 🌐 Browser & Bundler Compatibility
+
+This library works in all modern browsers, Node.js, and with bundlers like Rollup, Webpack, Vite, etc.
 
 ## 🤝 Contributing
 

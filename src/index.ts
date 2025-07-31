@@ -1,24 +1,26 @@
-import { 
-  NepaliDate, 
-  NepaliMonth, 
+import {
+  NepaliDate,
+  NepaliMonth,
   NepaliMonthNepali,
   NepaliWeekDay,
   NepaliWeekDayNepali,
   NepaliPatroOptions,
   NepaliDatepickerOptions,
-} from './types';
-import { BS_CALENDAR_DATA, MIN_BS_YEAR, MAX_BS_YEAR, MIN_AD_YEAR } from './constants/calendar-data';
-import { convertADToBS, getCurrentBSDate } from './converters/ad-to-bs';
-import { convertBSToAD } from './converters/bs-to-ad';
-import { getDaysInMonth } from './utils/helpers';
-import { formatBS as formatBSDate, toNepaliDigits } from './formatters/date-formatter';
-import { NepaliDatepicker } from './ui/NepaliDatepicker';
-import { 
-  createNepaliDatepicker, 
-  initNepaliDatepicker,
-  type DatepickerConfig,
-  type DatepickerState 
-} from './ui/FunctionalNepaliDatepicker';
+} from "./types";
+import {
+  BS_CALENDAR_DATA,
+  MIN_BS_YEAR,
+  MAX_BS_YEAR,
+  MIN_AD_YEAR,
+} from "./constants/calendar-data";
+import { convertADToBS, getCurrentBSDate } from "./converters/ad-to-bs";
+import { convertBSToAD } from "./converters/bs-to-ad";
+import { getDaysInMonth } from "./utils/helpers";
+import {
+  formatBS as formatBSDate,
+  toNepaliDigits,
+} from "./formatters/date-formatter";
+import { NepaliDatepicker } from "./ui/NepaliDatepicker";
 class NepaliPatro {
   static readonly MIN_YEAR = MIN_BS_YEAR;
   static readonly MAX_YEAR = MAX_BS_YEAR;
@@ -57,10 +59,14 @@ class NepaliPatro {
    * @param options : {} Formatting options
    * @returns Formatted date string
    */
-  static formatBS(date: NepaliDate, format: string = 'YYYY-MM-DD', options: NepaliPatroOptions = {}): string {
+  static formatBS(
+    date: NepaliDate,
+    format: string = "YYYY-MM-DD",
+    options: NepaliPatroOptions = {},
+  ): string {
     return formatBSDate(date, format, options);
   }
-  
+
   /**
    * Gets the number of days in a Nepali month
    * @param year The Nepali year in BS calendar
@@ -87,53 +93,24 @@ class NepaliPatro {
   static now(): NepaliDate {
     return this.getCurrentBSDate();
   }
-
-  /**
-   * Creates a functional datepicker instance
-   * @param config Datepicker configuration
-   * @returns Cleanup function
-   */
-  static createDatepicker(config: DatepickerConfig): (() => void) {
-    return createNepaliDatepicker(config);
-  }
-
-  /**
-   * Initializes a datepicker with advanced options
-   * @param inputElement Input element to attach datepicker to
-   * @param options Datepicker options
-   * @returns Datepicker control object
-   */
-  static initDatepicker(
-    inputElement: HTMLInputElement,
-    options: {
-      dateFormatter?: (date: Date) => string
-      onDateChange?: (date: Date) => void
-    } = {}
-  ) {
-    return initNepaliDatepicker(inputElement, options);
-  }
 }
 
 // Named exports
-export { 
-  NepaliDate, 
-  NepaliMonth, 
+export {
+  NepaliDate,
+  NepaliMonth,
   NepaliMonthNepali,
   NepaliWeekDay,
   NepaliWeekDayNepali,
   NepaliPatroOptions,
   NepaliDatepicker,
   NepaliDatepickerOptions,
-  createNepaliDatepicker,
-  initNepaliDatepicker,
-  DatepickerConfig,
-  DatepickerState,
   convertADToBS,
   convertBSToAD,
   getCurrentBSDate,
   formatBSDate,
   toNepaliDigits,
-  getDaysInMonth
+  getDaysInMonth,
 };
 
 // Default export
@@ -141,3 +118,8 @@ export default NepaliPatro;
 
 // For UMD compatibility, also export NepaliPatro as named export
 export { NepaliPatro };
+
+if (typeof window !== "undefined") {
+  (window as any).NepaliDatepicker = NepaliDatepicker;
+}
+
