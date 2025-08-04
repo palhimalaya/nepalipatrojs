@@ -6,9 +6,11 @@ import {
   NepaliDate,
   NepaliDatePickerOptions
 } from "../index";
-import { localizeDigits, localizeMonth } from "../utils/helpers";
+import { localizeDigits, localizeMonth, nepaliDigitsToEnglish, getDateFormatPatterns } from "../utils/helpers";
 
 export class NepaliDatePicker {
+  private static instances: Set<NepaliDatePicker> = new Set();
+  
   private inputElement: HTMLInputElement;
   private calendarVisible = false;
   private currentBSYear: number = getCurrentBSDate().year;
@@ -27,6 +29,9 @@ export class NepaliDatePicker {
     this.format = options.format || "YYYY-MM-DD";
     this.theme = options.theme || "light";
     this.language = options.language || "en";
+    
+    NepaliDatePicker.instances.add(this);
+    
     this.init();
   }
 
@@ -59,7 +64,132 @@ export class NepaliDatePicker {
     }
   };
 
+  private parseAndSetDateFromInput(): void {
+    const inputValue = this.inputElement.value.trim();
+    if (!inputValue) {
+      // No value in input, keep current date
+      return;
+    }
+
+    try {
+      const parsedDate = this.parseDateString(inputValue);
+      if (parsedDate) {
+        this.currentBSYear = parsedDate.year;
+        this.currentBSMonth = parsedDate.month - 1; // Convert to 0-based index
+        this.currentBSDay = parsedDate.day;
+      }
+    } catch (error) {
+      // If parsing fails, keep current date
+      console.warn("Unable to parse date from input:", inputValue, error);
+    }
+  }
+
+  private parseDateString(dateString: string): NepaliDate | null {
+    if (!dateString) return null;
+
+    const normalizedString = nepaliDigitsToEnglish(dateString);
+    
+    const monthNameDate = this.parseWithMonthNames(normalizedString);
+    if (monthNameDate) {
+      return monthNameDate;
+    }
+    
+    const formatPatterns = getDateFormatPatterns();
+    
+    for (const pattern of formatPatterns) {
+      const match = normalizedString.match(pattern.regex);
+      if (match) {
+        try {
+          const year = parseInt(match[pattern.yearIndex], 10);
+          const month = parseInt(match[pattern.monthIndex], 10);
+          const day = parseInt(match[pattern.dayIndex], 10);
+          
+          // Validate the parsed date
+          if (this.isValidBSDate(year, month, day)) {
+            return { year, month, day };
+          }
+        } catch (e) {
+          continue;
+        }
+      }
+    }
+    
+    return null;
+  }
+
+  private parseWithMonthNames(dateString: string): NepaliDate | null {
+    const englishMonths: string[] = [];
+    const nepaliMonths: string[] = [];
+    
+    for (let i = 1; i <= 12; i++) {
+      englishMonths.push(localizeMonth(i, "en"));
+      nepaliMonths.push(localizeMonth(i, "np"));
+    }
+    
+    // Try English month names first
+    for (let i = 0; i < englishMonths.length; i++) {
+      const monthName = englishMonths[i];
+      // Escape special regex characters and create flexible patterns
+      const escapedMonth = monthName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      const monthRegex = new RegExp(`${escapedMonth}\\s+(\\d{1,2}),?\\s+(\\d{4})|${escapedMonth}\\s+(\\d{1,2})\\s+(\\d{4})|(\\d{1,2})\\s+${escapedMonth}\\s+(\\d{4})`, 'i');
+      const match = dateString.match(monthRegex);
+      
+      if (match) {
+        const day = parseInt(match[1] || match[3] || match[5], 10);
+        const year = parseInt(match[2] || match[4] || match[6], 10);
+        const month = i + 1;
+        
+        if (this.isValidBSDate(year, month, day)) {
+          return { year, month, day };
+        }
+      }
+    }
+    
+    // Try Nepali month names
+    for (let i = 0; i < nepaliMonths.length; i++) {
+      const monthName = nepaliMonths[i];
+      // Escape special regex characters for Nepali month names
+      const escapedMonth = monthName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      const monthRegex = new RegExp(`${escapedMonth}\\s+(\\d{1,2}),?\\s+(\\d{4})|${escapedMonth}\\s+(\\d{1,2})\\s+(\\d{4})|(\\d{1,2})\\s+${escapedMonth}\\s+(\\d{4})`);
+      const match = dateString.match(monthRegex);
+      
+      if (match) {
+        const day = parseInt(match[1] || match[3] || match[5], 10);
+        const year = parseInt(match[2] || match[4] || match[6], 10);
+        const month = i + 1;
+        
+        if (this.isValidBSDate(year, month, day)) {
+          return { year, month, day };
+        }
+      }
+    }
+    
+    return null;
+  }
+
+  private isValidBSDate(year: number, month: number, day: number): boolean {
+    if (!BS_CALENDAR_DATA[year]) {
+      return false;
+    }
+    
+    if (month < 1 || month > 12) {
+      return false;
+    }
+    
+    // Check if day is valid for the given month and year
+    const monthData = BS_CALENDAR_DATA[year][0][month - 1];
+    const daysInMonth = Array.isArray(monthData) ? monthData[0] : monthData;
+    
+    return day >= 1 && day <= daysInMonth;
+  }
+
   private openCalendar(): void {
+    // Close all other calendars before opening this one
+    this.closeAllOtherCalendars();
+    
+    // Parse existing value from input field if present
+    this.parseAndSetDateFromInput();
+    
     this.calendarVisible = true;
     this.renderCalendar(this.currentBSYear, this.currentBSMonth);
   }
@@ -371,5 +501,19 @@ export class NepaliDatePicker {
       this.floatingCalendar.parentNode.removeChild(this.floatingCalendar);
       this.floatingCalendar = null;
     }
+  }
+
+  private closeAllOtherCalendars(): void {
+    NepaliDatePicker.instances.forEach(instance => {
+      if (instance !== this && instance.calendarVisible) {
+        instance.closeCalendar();
+      }
+    });
+  }
+
+  public destroy(): void {
+    this.closeCalendar();
+    document.removeEventListener("click", this.handleClickOutside);
+    NepaliDatePicker.instances.delete(this);
   }
 }

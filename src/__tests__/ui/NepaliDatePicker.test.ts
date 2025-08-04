@@ -37,4 +37,61 @@ describe('NepaliDatePicker', () => {
     document.body.click();
     expect(document.querySelector('.nepali-datepicker')).toBeFalsy();
   });
+
+  it('should parse predefined date from input and highlight it in calendar', () => {
+    // Set a predefined date value
+    input.value = '2081-01-15';
+    
+    const dp = new NepaliDatePicker(input, { format: 'YYYY-MM-DD', language: 'en' });
+    input.click();
+    
+    // Check if calendar opened
+    expect(document.querySelector('.nepali-datepicker')).toBeTruthy();
+    
+    // Check if the day 15 is selected/highlighted
+    const selectedDay = document.querySelector('.nepali-day.nepali-selected');
+    expect(selectedDay).toBeTruthy();
+    expect(selectedDay?.getAttribute('data-day')).toBe('15');
+  });
+
+  it('should parse different date formats', () => {
+    // Test DD/MM/YYYY format
+    input.value = '15/01/2081';
+    
+    const dp = new NepaliDatePicker(input, { format: 'DD/MM/YYYY', language: 'en' });
+    input.click();
+    
+    // Check if calendar opened and correct date is selected
+    const selectedDay = document.querySelector('.nepali-day.nepali-selected');
+    expect(selectedDay).toBeTruthy();
+    expect(selectedDay?.getAttribute('data-day')).toBe('15');
+  });
+
+  it('should parse Nepali digits', () => {
+    // Test with Nepali digits
+    input.value = '२०८१-०१-१५';
+    
+    const dp = new NepaliDatePicker(input, { format: 'YYYY-MM-DD', language: 'np' });
+    input.click();
+    
+    // Check if calendar opened and correct date is selected
+    const selectedDay = document.querySelector('.nepali-day.nepali-selected');
+    expect(selectedDay).toBeTruthy();
+    expect(selectedDay?.getAttribute('data-day')).toBe('15');
+  });
+
+  it('should handle empty input gracefully', () => {
+    // Empty input should use current date
+    input.value = '';
+    
+    const dp = new NepaliDatePicker(input);
+    input.click();
+    
+    // Calendar should still open
+    expect(document.querySelector('.nepali-datepicker')).toBeTruthy();
+    
+    // Should have some selected date (current date)
+    const selectedDay = document.querySelector('.nepali-day.nepali-selected');
+    expect(selectedDay).toBeTruthy();
+  });
 });

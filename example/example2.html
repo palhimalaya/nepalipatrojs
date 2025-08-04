@@ -8,6 +8,7 @@
   </head>
   <body>
     <input id="dateInput" placeholder="Click here for Nepali Calendar" />
+    <input id="dateInput1" placeholder="Click here for Nepali Calendar" />
 
     <!-- Load your UMD JS bundle -->
     <script src="../dist/nepali-patro-js.umd.js"></script>
@@ -15,9 +16,15 @@
     <script>
       // Use the global variable from UMD build
       const input = document.getElementById("dateInput");
+      const input1 = document.getElementById("dateInput1");
+      // Initialize the NepaliDatePicker with default options
+      const dp1 = new NepaliDatePicker(input1, {
+        format: "YYYY-MM-DD",
+        theme: "light",
+      });
       const dp = new NepaliDatePicker(input, {
         format: "MMMM D, YYYY",
-        theme: "light",
+        theme: "dark",
         language: "np",
       });
     </script>
