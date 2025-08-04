@@ -3,7 +3,11 @@ node_modules/
 jspm_packages/
 
 # TypeScript compiled output
-dist/
+dist/*
+!dist/nepali-patro-js.css
+!dist/nepali-patro-js.umd.js
+!dist/nepali-patro-js.esm.js
+
 build/
 *.tsbuildinfo
 
