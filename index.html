@@ -1,0 +1,1383 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>NepaliPatroJS - Nepali Date Library for JavaScript</title>
+    <meta
+      name="description"
+      content="A powerful JavaScript/TypeScript library for Nepali date conversion, calendar utilities, and date picker UI component."
+    />
+
+    <!-- NepaliPatroJS Styles -->
+    <link rel="stylesheet" href="dist/nepali-patro-js.css" />
+
+    <!-- Fonts -->
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Noto+Sans+Devanagari:wght@300;400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+
+    <!-- Icons -->
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+
+    <!-- Prism.js for syntax highlighting -->
+    <link
+      href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css"
+      rel="stylesheet"
+    />
+
+    <style>
+      :root {
+        --primary-color: #dc2626;
+        --primary-dark: #b91c1c;
+        --secondary-color: #059669;
+        --accent-color: #f59e0b;
+        --text-dark: #1f2937;
+        --text-light: #6b7280;
+        --bg-light: #f9fafb;
+        --bg-white: #ffffff;
+        --border-color: #e5e7eb;
+        --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+        --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+        --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1);
+        --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1);
+      }
+
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: "Inter", sans-serif;
+        line-height: 1.6;
+        color: var(--text-dark);
+        overflow-x: hidden;
+      }
+
+      .nepali-font {
+        font-family: "Noto Sans Devanagari", sans-serif;
+      }
+
+      /* Header */
+      .header {
+        background: linear-gradient(
+          135deg,
+          var(--primary-color) 0%,
+          var(--primary-dark) 100%
+        );
+        color: white;
+        padding: 2rem 0;
+        position: relative;
+        overflow: hidden;
+      }
+
+      .header::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="20" cy="20" r="1" fill="white" opacity="0.1"/><circle cx="80" cy="40" r="1" fill="white" opacity="0.1"/><circle cx="40" cy="80" r="1" fill="white" opacity="0.1"/></pattern></defs><rect width="100" height="100" fill="url(%23grain)"/></svg>');
+        opacity: 0.1;
+      }
+
+      .container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 0 2rem;
+        position: relative;
+        z-index: 1;
+      }
+
+      .hero {
+        text-align: center;
+        padding: 4rem 0;
+      }
+
+      .hero h1 {
+        font-size: 3.5rem;
+        font-weight: 700;
+        margin-bottom: 1rem;
+        background: linear-gradient(45deg, #ffffff, #f3f4f6);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+      }
+
+      .hero .subtitle {
+        font-size: 1.25rem;
+        margin-bottom: 2rem;
+        opacity: 0.9;
+        font-weight: 300;
+      }
+
+      .hero .nepali-subtitle {
+        font-size: 1.5rem;
+        margin-bottom: 2rem;
+        color: #fbbf24;
+        font-weight: 500;
+      }
+
+      .badges {
+        display: flex;
+        justify-content: center;
+        gap: 1rem;
+        margin-bottom: 3rem;
+        flex-wrap: wrap;
+      }
+
+      .badge {
+        background: rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        padding: 0.5rem 1rem;
+        border-radius: 2rem;
+        font-size: 0.875rem;
+        font-weight: 500;
+      }
+
+      .cta-buttons {
+        display: flex;
+        justify-content: center;
+        gap: 1rem;
+        flex-wrap: wrap;
+      }
+
+      .btn {
+        padding: 1rem 2rem;
+        border-radius: 0.5rem;
+        text-decoration: none;
+        font-weight: 600;
+        font-size: 1rem;
+        transition: all 0.3s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        border: none;
+        cursor: pointer;
+      }
+
+      .btn-primary {
+        background: white;
+        color: var(--primary-color);
+        box-shadow: var(--shadow-lg);
+      }
+
+      .btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-xl);
+      }
+
+      .btn-secondary {
+        background: transparent;
+        color: white;
+        border: 2px solid rgba(255, 255, 255, 0.3);
+      }
+
+      .btn-secondary:hover {
+        background: rgba(255, 255, 255, 0.1);
+        border-color: rgba(255, 255, 255, 0.5);
+      }
+
+      /* Navigation */
+      .nav {
+        background: var(--bg-white);
+        border-bottom: 1px solid var(--border-color);
+        position: sticky;
+        top: 0;
+        z-index: 100;
+        box-shadow: var(--shadow-sm);
+      }
+
+      .nav-container {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 1rem 2rem;
+        max-width: 1200px;
+        margin: 0 auto;
+      }
+
+      .nav-links {
+        display: flex;
+        gap: 2rem;
+        list-style: none;
+      }
+
+      .nav-links a {
+        text-decoration: none;
+        color: var(--text-dark);
+        font-weight: 500;
+        transition: color 0.3s ease;
+      }
+
+      .nav-links a:hover {
+        color: var(--primary-color);
+      }
+
+      /* Sections */
+      .section {
+        padding: 5rem 0;
+      }
+
+      .section:nth-child(even) {
+        background: var(--bg-light);
+      }
+
+      .section-title {
+        text-align: center;
+        font-size: 2.5rem;
+        font-weight: 700;
+        margin-bottom: 1rem;
+        color: var(--text-dark);
+      }
+
+      .section-subtitle {
+        text-align: center;
+        font-size: 1.125rem;
+        color: var(--text-light);
+        margin-bottom: 4rem;
+        max-width: 600px;
+        margin-left: auto;
+        margin-right: auto;
+      }
+
+      /* Features Grid */
+      .features-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 2rem;
+        margin-top: 3rem;
+      }
+
+      .feature-card {
+        background: var(--bg-white);
+        padding: 2rem;
+        border-radius: 1rem;
+        box-shadow: var(--shadow-md);
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+      }
+
+      .feature-card:hover {
+        transform: translateY(-5px);
+        box-shadow: var(--shadow-lg);
+      }
+
+      .feature-icon {
+        width: 4rem;
+        height: 4rem;
+        background: linear-gradient(
+          135deg,
+          var(--primary-color),
+          var(--primary-dark)
+        );
+        border-radius: 1rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 1.5rem;
+        margin-bottom: 1.5rem;
+      }
+
+      .feature-title {
+        font-size: 1.25rem;
+        font-weight: 600;
+        margin-bottom: 1rem;
+        color: var(--text-dark);
+      }
+
+      .feature-description {
+        color: var(--text-light);
+        line-height: 1.6;
+      }
+
+      /* Demo Section */
+      .demo-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+        gap: 3rem;
+        margin-top: 3rem;
+      }
+
+      .demo-card {
+        background: var(--bg-white);
+        border-radius: 1rem;
+        overflow: hidden;
+        box-shadow: var(--shadow-lg);
+      }
+
+      .demo-header {
+        background: var(--text-dark);
+        color: white;
+        padding: 1rem 1.5rem;
+        font-weight: 600;
+      }
+
+      .demo-content {
+        padding: 2rem;
+      }
+
+      .demo-input {
+        width: 100%;
+        padding: 1rem;
+        border: 2px solid var(--border-color);
+        border-radius: 0.5rem;
+        font-size: 1rem;
+        margin-bottom: 1rem;
+        transition: border-color 0.3s ease;
+      }
+
+      .demo-input:focus {
+        outline: none;
+        border-color: var(--primary-color);
+      }
+
+      .demo-result {
+        background: var(--bg-light);
+        padding: 1rem;
+        border-radius: 0.5rem;
+        font-family: "Courier New", monospace;
+        font-size: 0.875rem;
+        margin-top: 1rem;
+      }
+
+      /* Code Examples */
+      .code-tabs {
+        display: flex;
+        background: var(--text-dark);
+        border-radius: 0.5rem 0.5rem 0 0;
+        overflow: hidden;
+      }
+
+      .code-tab {
+        padding: 1rem 1.5rem;
+        background: transparent;
+        color: rgba(255, 255, 255, 0.7);
+        border: none;
+        cursor: pointer;
+        font-weight: 500;
+        transition: all 0.3s ease;
+      }
+
+      .code-tab.active {
+        background: rgba(255, 255, 255, 0.1);
+        color: white;
+      }
+
+      .code-content {
+        background: #2d3748;
+        border-radius: 0 0 0.5rem 0.5rem;
+        overflow: hidden;
+      }
+
+      .code-content pre {
+        margin: 0;
+        padding: 1.5rem;
+        overflow-x: auto;
+      }
+
+      /* Installation */
+      .install-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 2rem;
+        margin-top: 3rem;
+      }
+
+      .install-card {
+        background: var(--bg-white);
+        border-radius: 1rem;
+        overflow: hidden;
+        box-shadow: var(--shadow-md);
+      }
+
+      .install-header {
+        background: linear-gradient(135deg, var(--secondary-color), #047857);
+        color: white;
+        padding: 1.5rem;
+        text-align: center;
+      }
+
+      .install-content {
+        padding: 2rem;
+      }
+
+      .install-command {
+        background: var(--text-dark);
+        color: #10b981;
+        padding: 1rem;
+        border-radius: 0.5rem;
+        font-family: "Courier New", monospace;
+        font-size: 0.875rem;
+        margin: 1rem 0;
+        position: relative;
+      }
+
+      .copy-btn {
+        position: absolute;
+        top: 0.5rem;
+        right: 0.5rem;
+        background: rgba(255, 255, 255, 0.1);
+        border: none;
+        color: white;
+        padding: 0.25rem 0.5rem;
+        border-radius: 0.25rem;
+        cursor: pointer;
+        font-size: 0.75rem;
+      }
+
+      /* Footer */
+      .footer {
+        background: var(--text-dark);
+        color: white;
+        padding: 3rem 0 2rem;
+      }
+
+      .footer-content {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 2rem;
+        margin-bottom: 2rem;
+      }
+
+      .footer-section h3 {
+        margin-bottom: 1rem;
+        color: white;
+      }
+
+      .footer-links {
+        list-style: none;
+      }
+
+      .footer-links li {
+        margin-bottom: 0.5rem;
+      }
+
+      .footer-links a {
+        color: rgba(255, 255, 255, 0.7);
+        text-decoration: none;
+        transition: color 0.3s ease;
+      }
+
+      .footer-links a:hover {
+        color: white;
+      }
+
+      .footer-bottom {
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
+        padding-top: 2rem;
+        text-align: center;
+        color: rgba(255, 255, 255, 0.7);
+      }
+
+      /* Responsive */
+      @media (max-width: 768px) {
+        .hero h1 {
+          font-size: 2.5rem;
+        }
+
+        .container {
+          padding: 0 1rem;
+        }
+
+        .demo-grid {
+          grid-template-columns: 1fr;
+        }
+
+        .nav-links {
+          display: none;
+        }
+      }
+
+      /* Animations */
+      @keyframes fadeInUp {
+        from {
+          opacity: 0;
+          transform: translateY(30px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      .animate-fade-in-up {
+        animation: fadeInUp 0.6s ease-out;
+      }
+
+      /* Scroll Animation */
+      .scroll-animate {
+        opacity: 0;
+        transform: translateY(30px);
+        transition: all 0.6s ease-out;
+      }
+
+      .scroll-animate.visible {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Header -->
+    <header class="header">
+      <div class="container">
+        <div class="hero">
+          <h1 class="animate-fade-in-up">NepaliPatroJS</h1>
+          <p class="subtitle animate-fade-in-up">
+            A powerful JavaScript/TypeScript library for Nepali date conversion
+            and calendar utilities
+          </p>
+          <p class="nepali-subtitle nepali-font animate-fade-in-up">
+            नेपाली पात्रो जावास्क्रिप्ट लाइब्रेरी
+          </p>
+
+          <div class="badges animate-fade-in-up">
+            <span class="badge"><i class="fab fa-npm"></i> v1.0.5</span>
+            <span class="badge"><i class="fas fa-code"></i> TypeScript</span>
+            <span class="badge"
+              ><i class="fas fa-mobile-alt"></i> Responsive</span
+            >
+            <span class="badge"><i class="fas fa-palette"></i> Themeable</span>
+          </div>
+
+          <div class="cta-buttons animate-fade-in-up">
+            <a href="#demo" class="btn btn-primary">
+              <i class="fas fa-play"></i>
+              Try Demo
+            </a>
+            <a
+              href="https://github.com/palhimalaya/nepalipatrojs"
+              class="btn btn-secondary"
+              target="_blank"
+            >
+              <i class="fab fa-github"></i>
+              View on GitHub
+            </a>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- Navigation -->
+    <nav class="nav">
+      <div class="nav-container">
+        <div class="nav-brand">
+          <strong>NepaliPatroJS</strong>
+        </div>
+        <ul class="nav-links">
+          <li><a href="#features">Features</a></li>
+          <li><a href="#demo">Demo</a></li>
+          <li><a href="#installation">Installation</a></li>
+          <li><a href="#examples">Examples</a></li>
+          <li><a href="#api">API</a></li>
+        </ul>
+      </div>
+    </nav>
+
+    <!-- Features Section -->
+    <section id="features" class="section">
+      <div class="container">
+        <h2 class="section-title scroll-animate">Features</h2>
+        <p class="section-subtitle scroll-animate">
+          Everything you need for Nepali date handling in your web applications
+        </p>
+
+        <div class="features-grid">
+          <div class="feature-card scroll-animate">
+            <div class="feature-icon">
+              <i class="fas fa-exchange-alt"></i>
+            </div>
+            <h3 class="feature-title">Date Conversion</h3>
+            <p class="feature-description">
+              Convert dates between Bikram Sambat (BS) and Gregorian (AD)
+              calendars with high accuracy and support for a wide range of
+              years.
+            </p>
+          </div>
+
+          <div class="feature-card scroll-animate">
+            <div class="feature-icon">
+              <i class="fas fa-calendar-alt"></i>
+            </div>
+            <h3 class="feature-title">Date Picker UI</h3>
+            <p class="feature-description">
+              Ready-to-use Nepali date picker component with customizable
+              themes, formats, and language support for seamless integration.
+            </p>
+          </div>
+
+          <div class="feature-card scroll-animate">
+            <div class="feature-icon">
+              <i class="fas fa-language"></i>
+            </div>
+            <h3 class="feature-title">Multilingual Support</h3>
+            <p class="feature-description">
+              Full support for both English and Nepali (Devanagari) languages
+              with proper digit localization and month names.
+            </p>
+          </div>
+
+          <div class="feature-card scroll-animate">
+            <div class="feature-icon">
+              <i class="fas fa-code"></i>
+            </div>
+            <h3 class="feature-title">TypeScript Ready</h3>
+            <p class="feature-description">
+              Built with TypeScript with full type definitions, providing
+              excellent developer experience and code completion.
+            </p>
+          </div>
+
+          <div class="feature-card scroll-animate">
+            <div class="feature-icon">
+              <i class="fas fa-palette"></i>
+            </div>
+            <h3 class="feature-title">Customizable Themes</h3>
+            <p class="feature-description">
+              Light and dark themes with easy customization options to match
+              your application's design system.
+            </p>
+          </div>
+
+          <div class="feature-card scroll-animate">
+            <div class="feature-icon">
+              <i class="fas fa-cog"></i>
+            </div>
+            <h3 class="feature-title">Flexible Formatting</h3>
+            <p class="feature-description">
+              Powerful date formatting with custom format strings, supporting
+              various display patterns and localization options.
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Demo Section -->
+    <section id="demo" class="section">
+      <div class="container">
+        <h2 class="section-title scroll-animate">Interactive Demo</h2>
+        <p class="section-subtitle scroll-animate">
+          Try out the features and see how NepaliPatroJS works in action
+        </p>
+
+        <div class="demo-grid">
+          <div class="demo-card scroll-animate">
+            <div class="demo-header">
+              <i class="fas fa-calendar-alt"></i> Nepali Date Picker
+            </div>
+            <div class="demo-content">
+              <label for="demo-datepicker">Select a Nepali Date:</label>
+              <input
+                type="text"
+                id="demo-datepicker"
+                class="demo-input"
+                placeholder="Click to open Nepali calendar"
+              />
+
+              <label
+                for="demo-datepicker-dark"
+                style="margin-top: 1rem; display: block"
+                >Dark Theme:</label
+              >
+              <input
+                type="text"
+                id="demo-datepicker-dark"
+                class="demo-input"
+                placeholder="Click for dark theme picker"
+              />
+
+              <label
+                for="demo-datepicker-nepali"
+                style="margin-top: 1rem; display: block"
+                >Nepali Language:</label
+              >
+              <input
+                type="text"
+                id="demo-datepicker-nepali"
+                class="demo-input"
+                placeholder="नेपाली क्यालेन्डर"
+              />
+
+              <div class="demo-result" id="picker-result">
+                Selected dates will appear here...
+              </div>
+            </div>
+          </div>
+
+          <div class="demo-card scroll-animate">
+            <div class="demo-header">
+              <i class="fas fa-exchange-alt"></i> Date Conversion
+            </div>
+            <div class="demo-content">
+              <label for="ad-date">AD Date (YYYY-MM-DD):</label>
+              <input type="date" id="ad-date" class="demo-input" />
+
+              <label for="bs-date" style="margin-top: 1rem; display: block"
+                >BS Date (YYYY-MM-DD):</label
+              >
+              <input
+                type="text"
+                id="bs-date"
+                class="demo-input"
+                placeholder="e.g., 2081-01-15"
+              />
+
+              <div class="demo-result" id="conversion-result">
+                <div>
+                  <strong>AD to BS:</strong> <span id="ad-to-bs">-</span>
+                </div>
+                <div>
+                  <strong>BS to AD:</strong> <span id="bs-to-ad">-</span>
+                </div>
+                <div>
+                  <strong>Formatted BS:</strong>
+                  <span id="formatted-bs">-</span>
+                </div>
+                <div>
+                  <strong>In Nepali:</strong>
+                  <span id="nepali-format" class="nepali-font">-</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Installation Section -->
+    <section id="installation" class="section">
+      <div class="container">
+        <h2 class="section-title scroll-animate">Installation</h2>
+        <p class="section-subtitle scroll-animate">
+          Get started with NepaliPatroJS in your project
+        </p>
+
+        <div class="install-grid">
+          <div class="install-card scroll-animate">
+            <div class="install-header">
+              <i class="fab fa-npm"></i>
+              <h3>NPM</h3>
+            </div>
+            <div class="install-content">
+              <p>Install via npm for Node.js projects:</p>
+              <div class="install-command">
+                npm install nepalipatrojs
+                <button
+                  class="copy-btn"
+                  onclick="copyToClipboard('npm install nepalipatrojs')"
+                >
+                  Copy
+                </button>
+              </div>
+              <p><strong>Then import:</strong></p>
+              <div class="install-command">
+                import NepaliPatro from 'nepalipatrojs';
+              </div>
+            </div>
+          </div>
+
+          <div class="install-card scroll-animate">
+            <div class="install-header">
+              <i class="fab fa-yarn"></i>
+              <h3>Yarn</h3>
+            </div>
+            <div class="install-content">
+              <p>Install via Yarn package manager:</p>
+              <div class="install-command">
+                yarn add nepalipatrojs
+                <button
+                  class="copy-btn"
+                  onclick="copyToClipboard('yarn add nepalipatrojs')"
+                >
+                  Copy
+                </button>
+              </div>
+              <p><strong>Then import:</strong></p>
+              <div class="install-command">
+                import { NepaliDatePicker } from 'nepalipatrojs';
+              </div>
+            </div>
+          </div>
+
+          <div class="install-card scroll-animate">
+            <div class="install-header">
+              <i class="fas fa-globe"></i>
+              <h3>CDN</h3>
+            </div>
+            <div class="install-content">
+              <p>Use directly in HTML via CDN:</p>
+              <div class="install-command">
+                &lt;script
+                src="https://cdn.jsdelivr.net/npm/nepalipatrojs/dist/nepali-patro-js.umd.js"&gt;&lt;/script&gt;
+                <button
+                  class="copy-btn"
+                  onclick="copyToClipboard('https://cdn.jsdelivr.net/npm/nepalipatrojs/dist/nepali-patro-js.umd.js')"
+                >
+                  Copy
+                </button>
+              </div>
+              <p><strong>Don't forget the CSS:</strong></p>
+              <div class="install-command">
+                &lt;link rel="stylesheet"
+                href="https://cdn.jsdelivr.net/npm/nepalipatrojs/dist/nepali-patro-js.css"&gt;
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Examples Section -->
+    <section id="examples" class="section">
+      <div class="container">
+        <h2 class="section-title scroll-animate">Code Examples</h2>
+        <p class="section-subtitle scroll-animate">
+          Learn how to use NepaliPatroJS with practical examples
+        </p>
+
+        <div class="scroll-animate">
+          <div class="code-tabs">
+            <button class="code-tab active" onclick="showTab('datepicker')">
+              Date Picker
+            </button>
+            <button class="code-tab" onclick="showTab('conversion')">
+              Date Conversion
+            </button>
+            <button class="code-tab" onclick="showTab('formatting')">
+              Date Formatting
+            </button>
+            <button class="code-tab" onclick="showTab('utilities')">
+              Utilities
+            </button>
+          </div>
+
+          <div class="code-content">
+            <div id="datepicker-code" class="code-panel">
+              <pre><code class="language-javascript">// Basic Date Picker
+import { NepaliDatePicker } from 'nepalipatrojs';
+
+const input = document.getElementById('dateInput');
+const datePicker = new NepaliDatePicker(input, {
+  format: 'YYYY-MM-DD',
+  theme: 'light',
+  language: 'en'
+});
+
+// Dark Theme with Nepali Language
+const darkPicker = new NepaliDatePicker(input2, {
+  format: 'MMMM D, YYYY',
+  theme: 'dark',
+  language: 'np'
+});
+
+// Listen for date changes
+input.addEventListener('change', (e) => {
+  console.log('Selected date:', e.target.value);
+});
+
+// UMD/Browser Usage
+&lt;script src="https://cdn.jsdelivr.net/npm/nepalipatrojs/dist/nepali-patro-js.umd.js"&gt;&lt;/script&gt;
+&lt;script&gt;
+  const dp = new NepaliDatePicker(document.getElementById('dateInput'));
+&lt;/script&gt;</code></pre>
+            </div>
+
+            <div id="conversion-code" class="code-panel" style="display: none">
+              <pre><code class="language-javascript">import NepaliPatro from 'nepalipatrojs';
+
+// Convert AD to BS
+const adDate = new Date(2024, 0, 1); // January 1, 2024
+const bsDate = NepaliPatro.convertADToBS(adDate);
+console.log(bsDate); // { year: 2080, month: 9, day: 17 }
+
+// Convert BS to AD
+const bsDate2 = { year: 2081, month: 1, day: 15 };
+const adDate2 = NepaliPatro.convertBSToAD(bsDate2);
+console.log(adDate2); // Date object
+
+// Using array format
+const bsFromArray = NepaliPatro.convertADToBS([2024, 1, 1]);
+const adFromArray = NepaliPatro.convertBSToAD([2081, 1, 15]);
+
+// Get current Nepali date
+const today = NepaliPatro.getCurrentBSDate();
+console.log(today); // { year: 2081, month: 4, day: 20 }
+
+// Alternative method
+const now = NepaliPatro.now();
+console.log(now);</code></pre>
+            </div>
+
+            <div id="formatting-code" class="code-panel" style="display: none">
+              <pre><code class="language-javascript">import NepaliPatro from 'nepalipatrojs';
+
+const bsDate = { year: 2081, month: 1, day: 15 };
+
+// Default format (YYYY-MM-DD)
+const defaultFormat = NepaliPatro.formatBSDate(bsDate);
+console.log(defaultFormat); // "2081-01-15"
+
+// Custom formats
+const customFormat1 = NepaliPatro.formatBSDate(bsDate, 'DD/MM/YYYY');
+console.log(customFormat1); // "15/01/2081"
+
+const customFormat2 = NepaliPatro.formatBSDate(bsDate, 'MMMM D, YYYY');
+console.log(customFormat2); // "Baisakh 15, 2081"
+
+// Nepali language
+const nepaliFormat = NepaliPatro.formatBSDate(bsDate, 'MMMM D, YYYY', {
+  language: 'np'
+});
+console.log(nepaliFormat); // "बैशाख १५, २०८१"
+
+// Different format patterns
+const patterns = [
+  'YYYY-MM-DD',    // 2081-01-15
+  'YY/M/D',        // 81/1/15
+  'MMMM DD, YYYY', // Baisakh 15, 2081
+  'DD MMMM YYYY'   // 15 Baisakh 2081
+];</code></pre>
+            </div>
+
+            <div id="utilities-code" class="code-panel" style="display: none">
+              <pre><code class="language-javascript">import NepaliPatro from 'nepalipatrojs';
+
+// Get days in a specific month
+const daysInBaisakh = NepaliPatro.getDaysInMonth(2081, 1);
+console.log(daysInBaisakh); // 31
+
+const daysInFalgun = NepaliPatro.getDaysInMonth(2080, 11);
+console.log(daysInFalgun); // 29 or 30 (depends on year)
+
+// Convert to Nepali digits
+const nepaliDigits = NepaliPatro.toNepaliDigits(2081);
+console.log(nepaliDigits); // "२०८१"
+
+const nepaliYear = NepaliPatro.toNepaliDigits('2081-01-15');
+console.log(nepaliYear); // "२०८१-०१-१५"
+
+// Working with month names
+const monthNames = {
+  en: ['Baisakh', 'Jestha', 'Ashadh', /* ... */],
+  np: ['बैशाख', 'जेष्ठ', 'आषाढ', /* ... */]
+};
+
+// Validate BS date
+function isValidBSDate(year, month, day) {
+  try {
+    const maxDays = NepaliPatro.getDaysInMonth(year, month);
+    return day >= 1 && day <= maxDays;
+  } catch (e) {
+    return false;
+  }
+}</code></pre>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- API Reference Section -->
+    <section id="api" class="section">
+      <div class="container">
+        <h2 class="section-title scroll-animate">API Reference</h2>
+        <p class="section-subtitle scroll-animate">
+          Complete API documentation for all available methods and options
+        </p>
+
+        <div class="features-grid">
+          <div class="feature-card scroll-animate">
+            <div class="feature-icon">
+              <i class="fas fa-exchange-alt"></i>
+            </div>
+            <h3 class="feature-title">convertADToBS(date)</h3>
+            <p class="feature-description">
+              <strong>Parameters:</strong> <code>Date | [year, month, day]</code
+              ><br />
+              <strong>Returns:</strong> <code>{ year, month, day }</code><br />
+              Converts Gregorian date to Bikram Sambat date.
+            </p>
+          </div>
+
+          <div class="feature-card scroll-animate">
+            <div class="feature-icon">
+              <i class="fas fa-undo"></i>
+            </div>
+            <h3 class="feature-title">convertBSToAD(bsDate)</h3>
+            <p class="feature-description">
+              <strong>Parameters:</strong>
+              <code>{ year, month, day } | [year, month, day]</code><br />
+              <strong>Returns:</strong> <code>Date</code><br />
+              Converts Bikram Sambat date to Gregorian date.
+            </p>
+          </div>
+
+          <div class="feature-card scroll-animate">
+            <div class="feature-icon">
+              <i class="fas fa-clock"></i>
+            </div>
+            <h3 class="feature-title">getCurrentBSDate()</h3>
+            <p class="feature-description">
+              <strong>Parameters:</strong> None<br />
+              <strong>Returns:</strong> <code>{ year, month, day }</code><br />
+              Returns current date in Bikram Sambat calendar.
+            </p>
+          </div>
+
+          <div class="feature-card scroll-animate">
+            <div class="feature-icon">
+              <i class="fas fa-text-width"></i>
+            </div>
+            <h3 class="feature-title">formatBSDate(date, format, options)</h3>
+            <p class="feature-description">
+              <strong>Parameters:</strong>
+              <code>bsDate, formatString?, options?</code><br />
+              <strong>Returns:</strong> <code>string</code><br />
+              Formats BS date with custom format patterns.
+            </p>
+          </div>
+
+          <div class="feature-card scroll-animate">
+            <div class="feature-icon">
+              <i class="fas fa-calendar-day"></i>
+            </div>
+            <h3 class="feature-title">getDaysInMonth(year, month)</h3>
+            <p class="feature-description">
+              <strong>Parameters:</strong> <code>number, number</code><br />
+              <strong>Returns:</strong> <code>number</code><br />
+              Returns total days in specified BS month and year.
+            </p>
+          </div>
+
+          <div class="feature-card scroll-animate">
+            <div class="feature-icon">
+              <i class="fas fa-calendar-alt"></i>
+            </div>
+            <h3 class="feature-title">NepaliDatePicker</h3>
+            <p class="feature-description">
+              <strong>Constructor:</strong>
+              <code>new NepaliDatePicker(input, options?)</code><br />
+              <strong>Options:</strong> format, theme, language<br />
+              Interactive date picker UI component.
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+      <div class="container">
+        <div class="footer-content">
+          <div class="footer-section">
+            <h3>NepaliPatroJS</h3>
+            <p>
+              A powerful JavaScript library for Nepali date conversion and
+              calendar utilities. Built with ❤️ for the Nepali developer
+              community.
+            </p>
+          </div>
+
+          <div class="footer-section">
+            <h3>Quick Links</h3>
+            <ul class="footer-links">
+              <li><a href="#features">Features</a></li>
+              <li><a href="#demo">Demo</a></li>
+              <li><a href="#installation">Installation</a></li>
+              <li><a href="#examples">Examples</a></li>
+              <li><a href="#api">API Reference</a></li>
+            </ul>
+          </div>
+
+          <div class="footer-section">
+            <h3>Resources</h3>
+            <ul class="footer-links">
+              <li>
+                <a
+                  href="https://github.com/palhimalaya/nepalipatrojs"
+                  target="_blank"
+                  >GitHub Repository</a
+                >
+              </li>
+              <li>
+                <a
+                  href="https://www.npmjs.com/package/nepalipatrojs"
+                  target="_blank"
+                  >NPM Package</a
+                >
+              </li>
+              <li>
+                <a
+                  href="https://github.com/palhimalaya/nepalipatrojs/issues"
+                  target="_blank"
+                  >Report Issues</a
+                >
+              </li>
+              <li>
+                <a
+                  href="https://github.com/palhimalaya/nepalipatrojs/blob/main/CONTRIBUTING.md"
+                  target="_blank"
+                  >Contributing</a
+                >
+              </li>
+            </ul>
+          </div>
+
+          <div class="footer-section">
+            <h3>Community</h3>
+            <ul class="footer-links">
+              <li>
+                <a href="https://github.com/palhimalaya" target="_blank"
+                  >Developer</a
+                >
+              </li>
+              <li>
+                <a
+                  href="https://github.com/palhimalaya/nepalipatrojs/discussions"
+                  target="_blank"
+                  >Discussions</a
+                >
+              </li>
+              <li>
+                <a href="https://twitter.com/palhimalaya" target="_blank"
+                  >Twitter</a
+                >
+              </li>
+              <li><a href="mailto:contact@palhimalaya.com">Contact</a></li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="footer-bottom">
+          <p>&copy; 2024 NepaliPatroJS. Released under the MIT License.</p>
+        </div>
+      </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="dist/nepali-patro-js.umd.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-core.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/autoloader/prism-autoloader.min.js"></script>
+
+    <script>
+      // Initialize date pickers
+      document.addEventListener("DOMContentLoaded", function () {
+        // Debug: Check what's available
+        console.log(
+          "NepaliPatro object:",
+          typeof NepaliPatro !== "undefined" ? NepaliPatro : "undefined"
+        );
+        console.log(
+          "NepaliDatePicker:",
+          typeof NepaliDatePicker !== "undefined" ? "available" : "undefined"
+        );
+
+        // Demo date pickers
+        const pickerInput = document.getElementById("demo-datepicker");
+        const pickerDark = document.getElementById("demo-datepicker-dark");
+        const pickerNepali = document.getElementById("demo-datepicker-nepali");
+        const pickerResult = document.getElementById("picker-result");
+
+        // Light theme picker
+        if (pickerInput) {
+          const dp1 = new NepaliDatePicker(pickerInput, {
+            format: "MMMM D, YYYY",
+            theme: "light",
+            language: "en",
+          });
+
+          pickerInput.addEventListener("change", function () {
+            updatePickerResult();
+          });
+        }
+
+        // Dark theme picker
+        if (pickerDark) {
+          const dp2 = new NepaliDatePicker(pickerDark, {
+            format: "YYYY-MM-DD",
+            theme: "dark",
+            language: "en",
+          });
+
+          pickerDark.addEventListener("change", function () {
+            updatePickerResult();
+          });
+        }
+
+        // Nepali language picker
+        if (pickerNepali) {
+          const dp3 = new NepaliDatePicker(pickerNepali, {
+            format: "MMMM D, YYYY",
+            theme: "light",
+            language: "np",
+          });
+
+          pickerNepali.addEventListener("change", function () {
+            updatePickerResult();
+          });
+        }
+
+        function updatePickerResult() {
+          const values = [
+            `Light Theme: ${pickerInput.value || "Not selected"}`,
+            `Dark Theme: ${pickerDark.value || "Not selected"}`,
+            `Nepali Language: ${pickerNepali.value || "चयन गरिएको छैन"}`,
+          ];
+          pickerResult.innerHTML = values.join("<br>");
+        }
+
+        // Date conversion demo
+        const adDateInput = document.getElementById("ad-date");
+        const bsDateInput = document.getElementById("bs-date");
+        const adToBsSpan = document.getElementById("ad-to-bs");
+        const bsToAdSpan = document.getElementById("bs-to-ad");
+        const formattedBsSpan = document.getElementById("formatted-bs");
+        const nepaliFormatSpan = document.getElementById("nepali-format");
+
+        // Alias for easier usage
+        const patro = NepaliPatro;
+
+        adDateInput.addEventListener("change", function () {
+          try {
+            const adDate = new Date(this.value);
+            const bsDate = patro.convertADToBS(adDate);
+            adToBsSpan.textContent = `${bsDate.year}-${String(
+              bsDate.month
+            ).padStart(2, "0")}-${String(bsDate.day).padStart(2, "0")}`;
+
+            const formatted = patro.formatBSDate(bsDate, "MMMM D, YYYY");
+            formattedBsSpan.textContent = formatted;
+
+            const nepaliFormatted = patro.formatBSDate(bsDate, "MMMM D, YYYY", {
+              language: "np",
+            });
+            nepaliFormatSpan.textContent = nepaliFormatted;
+          } catch (e) {
+            console.error("AD to BS conversion error:", e);
+            adToBsSpan.textContent = "Invalid date";
+            formattedBsSpan.textContent = "-";
+            nepaliFormatSpan.textContent = "-";
+          }
+        });
+
+        new NepaliDatePicker(bsDateInput, {
+          theme: "dark",
+        });
+
+        // Function to handle BS date conversion
+        function convertBSDateToAD() {
+          try {
+            const value = bsDateInput.value.trim();
+            if (!value) {
+              bsToAdSpan.textContent = "-";
+              return;
+            }
+
+            const parts = value.split("-");
+            if (parts.length === 3) {
+              const bsDate = {
+                year: parseInt(parts[0]),
+                month: parseInt(parts[1]),
+                day: parseInt(parts[2]),
+              };
+              const adDate = patro.convertBSToAD(bsDate);
+              bsToAdSpan.textContent = adDate.toDateString();
+            } else {
+              bsToAdSpan.textContent = "Invalid format";
+            }
+          } catch (e) {
+            console.error("BS to AD conversion error:", e);
+            bsToAdSpan.textContent = "Invalid BS date";
+          }
+        }
+
+        // Listen for both input (manual typing) and change (date picker selection) events
+        bsDateInput.addEventListener("input", convertBSDateToAD);
+        bsDateInput.addEventListener("change", convertBSDateToAD);
+
+        // Set today's date as default
+        const today = new Date();
+        adDateInput.value = today.toISOString().split("T")[0];
+        adDateInput.dispatchEvent(new Event("change"));
+      });
+
+      // Code tab switching
+      function showTab(tabName) {
+        // Hide all panels
+        document.querySelectorAll(".code-panel").forEach((panel) => {
+          panel.style.display = "none";
+        });
+
+        // Remove active class from all tabs
+        document.querySelectorAll(".code-tab").forEach((tab) => {
+          tab.classList.remove("active");
+        });
+
+        // Show selected panel
+        document.getElementById(tabName + "-code").style.display = "block";
+
+        // Add active class to clicked tab
+        event.target.classList.add("active");
+      }
+
+      // Copy to clipboard function
+      function copyToClipboard(text) {
+        navigator.clipboard.writeText(text).then(function () {
+          // Show temporary feedback
+          const btn = event.target;
+          const originalText = btn.textContent;
+          btn.textContent = "Copied!";
+          setTimeout(() => {
+            btn.textContent = originalText;
+          }, 1000);
+        });
+      }
+
+      // Smooth scrolling for navigation links
+      document.querySelectorAll('a[href^="#"]').forEach((anchor) => {
+        anchor.addEventListener("click", function (e) {
+          e.preventDefault();
+          const target = document.querySelector(this.getAttribute("href"));
+          if (target) {
+            target.scrollIntoView({
+              behavior: "smooth",
+              block: "start",
+            });
+          }
+        });
+      });
+
+      // Scroll animations
+      const observerOptions = {
+        threshold: 0.1,
+        rootMargin: "0px 0px -100px 0px",
+      };
+
+      const observer = new IntersectionObserver(function (entries) {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add("visible");
+          }
+        });
+      }, observerOptions);
+
+      document.querySelectorAll(".scroll-animate").forEach((el) => {
+        observer.observe(el);
+      });
+    </script>
+  </body>
+</html>

@@ -78,6 +78,16 @@ export interface NepaliPatroOptions {
   returnType?: 'string' | 'object';
 }
 
+/**
+ * Interface for date format patterns used in parsing
+ */
+export interface DateFormatPattern {
+  regex: RegExp;
+  yearIndex: number;
+  monthIndex: number;
+  dayIndex: number;
+  description?: string;
+}
 
 /**
  * Options for the Nepali DatePicker UI component

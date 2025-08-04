@@ -3,6 +3,7 @@ import {
   NepaliDate, 
   NepaliMonth, 
   NepaliMonthNepali,
+  DateFormatPattern,
   NepaliWeekDay,
   NepaliWeekDayNepali,
   NepaliPatroOptions 
@@ -90,6 +91,69 @@ export function localizeMonth(month: number, language: string): string {
   } else {
     return NepaliMonth[month];
   }
+}
+
+/**
+ * Converts Nepali digits to English digits
+ * @param text The text containing Nepali digits to convert
+ * @returns String with English digits
+ */
+export function nepaliDigitsToEnglish(text: string): string {
+  const nepaliToEnglish: { [key: string]: string } = {
+    '०': '0', '१': '1', '२': '2', '३': '3', '४': '4',
+    '५': '5', '६': '6', '७': '7', '८': '8', '९': '9'
+  };
+  
+  return text.replace(/[०-९]/g, (match) => nepaliToEnglish[match] || match);
+}
+
+/**
+ * Gets common date format patterns for parsing various date formats
+ * @returns Array of date format patterns with regex and index mappings
+ */
+export function getDateFormatPatterns(): DateFormatPattern[] {
+  return [
+    // YYYY-MM-DD, YYYY/MM/DD, YYYY.MM.DD
+    { 
+      regex: /(\d{4})[-/.]\s*(\d{1,2})[-/.]\s*(\d{1,2})/, 
+      yearIndex: 1, 
+      monthIndex: 2, 
+      dayIndex: 3,
+      description: 'YYYY-MM-DD format'
+    },
+    // DD-MM-YYYY, DD/MM/YYYY, DD.MM.YYYY  
+    { 
+      regex: /(\d{1,2})[-/.]\s*(\d{1,2})[-/.]\s*(\d{4})/, 
+      yearIndex: 3, 
+      monthIndex: 2, 
+      dayIndex: 1,
+      description: 'DD-MM-YYYY format'
+    },
+    // MM-DD-YYYY, MM/DD/YYYY, MM.DD.YYYY (less common but possible)
+    { 
+      regex: /(\d{1,2})[-/.]\s*(\d{1,2})[-/.]\s*(\d{4})/, 
+      yearIndex: 3, 
+      monthIndex: 1, 
+      dayIndex: 2,
+      description: 'MM-DD-YYYY format'
+    },
+    // YYYYMMDD
+    { 
+      regex: /(\d{4})(\d{2})(\d{2})/, 
+      yearIndex: 1, 
+      monthIndex: 2, 
+      dayIndex: 3,
+      description: 'YYYYMMDD format'
+    },
+    // DDMMYYYY
+    { 
+      regex: /(\d{2})(\d{2})(\d{4})/, 
+      yearIndex: 3, 
+      monthIndex: 2, 
+      dayIndex: 1,
+      description: 'DDMMYYYY format'
+    }
+  ];
 }
 
 

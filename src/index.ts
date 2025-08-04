@@ -6,6 +6,7 @@ import {
   NepaliWeekDayNepali,
   NepaliPatroOptions,
   NepaliDatePickerOptions,
+  DateFormatPattern
 } from "./types";
 import {
   BS_CALENDAR_DATA,
@@ -15,7 +16,7 @@ import {
 } from "./constants/calendar-data";
 import { convertADToBS, getCurrentBSDate } from "./converters/ad-to-bs";
 import { convertBSToAD } from "./converters/bs-to-ad";
-import { getDaysInMonth } from "./utils/helpers";
+import { getDaysInMonth, nepaliDigitsToEnglish, getDateFormatPatterns } from "./utils/helpers";
 import {
   formatBS as formatBSDate,
   toNepaliDigits,
@@ -87,6 +88,23 @@ class NepaliPatro {
   }
 
   /**
+   * Converts Nepali digits to English digits
+   * @param text The text containing Nepali digits to convert
+   * @returns String with English digits
+   */
+  static nepaliDigitsToEnglish(text: string): string {
+    return nepaliDigitsToEnglish(text);
+  }
+
+  /**
+   * Gets common date format patterns for parsing various date formats
+   * @returns Array of date format patterns with regex and index mappings
+   */
+  static getDateFormatPatterns(): DateFormatPattern[] {
+    return getDateFormatPatterns();
+  }
+
+  /**
    * Gets the current date by using .now() method
    * @returns Current date as NepaliDate object
    */
@@ -110,6 +128,9 @@ export {
   getCurrentBSDate,
   formatBSDate,
   toNepaliDigits,
+  nepaliDigitsToEnglish,
+  getDateFormatPatterns,
+  DateFormatPattern,
   getDaysInMonth,
 };
 
