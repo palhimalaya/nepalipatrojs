@@ -20,7 +20,7 @@ export class NepaliDatePicker {
   private format: string;
   private theme: "light" | "dark";
   private language: "en" | "np";
-  private zIndex: number; // Add z-index property
+  private zIndex: number;
 
   constructor(
     inputElement: HTMLInputElement,
@@ -48,12 +48,10 @@ export class NepaliDatePicker {
     // Find the highest z-index in the current context
     const highestZIndex = this.getHighestZIndex();
     
-    // If inside a modal or high z-index context, use a higher value
-    if (highestZIndex > 9999) {
-      return highestZIndex + 100;
-    }
+    // Use a much higher base z-index for modals
+    const baseZIndex = Math.max(highestZIndex + 1000, 999999);
     
-    return 9999;
+    return baseZIndex;
   }
 
   // Method to find the highest z-index in the current document
@@ -73,17 +71,22 @@ export class NepaliDatePicker {
       element = element.parentElement;
     }
 
-    // Also check for common modal classes and their z-indexes
     const modalSelectors = [
       '.modal',
       '.Modal',
       '[role="dialog"]',
+      '[data-modal]',
       '.ant-modal',
       '.MuiModal-root',
       '.v-dialog',
       '.el-dialog',
       '.ui-dialog',
-      '.swal2-container'
+      '.swal2-container',
+      '.popup',
+      '.overlay',
+      '.modal-overlay',
+      '.dialog',
+      '.lightbox'
     ];
 
     modalSelectors.forEach(selector => {
@@ -97,6 +100,17 @@ export class NepaliDatePicker {
           }
         }
       });
+    });
+
+    const allElements = document.querySelectorAll('*');
+    allElements.forEach(el => {
+      const zIndex = window.getComputedStyle(el as HTMLElement).zIndex;
+      if (zIndex !== 'auto' && zIndex !== '' && !isNaN(parseInt(zIndex))) {
+        const numericZIndex = parseInt(zIndex);
+        if (numericZIndex > highest) {
+          highest = numericZIndex;
+        }
+      }
     });
 
     return highest;
@@ -142,7 +156,7 @@ export class NepaliDatePicker {
       const parsedDate = this.parseDateString(inputValue);
       if (parsedDate) {
         this.currentBSYear = parsedDate.year;
-        this.currentBSMonth = parsedDate.month - 1; // Convert to 0-based index
+        this.currentBSMonth = parsedDate.month - 1;
         this.currentBSDay = parsedDate.day;
       }
     } catch (error) {
@@ -276,10 +290,46 @@ export class NepaliDatePicker {
 
     this.setupCalendarEvents(calendarDiv);
 
-    document.body.appendChild(calendarDiv);
+    const modalContainer = this.findModalContainer();
+    const appendTarget = modalContainer || document.body;
+    
+    appendTarget.appendChild(calendarDiv);
     this.floatingCalendar = calendarDiv;
 
     this.positionCalendarPopup();
+  }
+
+  private findModalContainer(): HTMLElement | null {
+    let element: HTMLElement | null = this.inputElement;
+    
+    while (element && element !== document.body) {
+      const classList = element.classList;
+      const role = element.getAttribute('role');
+      const tagName = element.tagName.toLowerCase();
+      
+      if (tagName === 'dialog') {
+        return element;
+      }
+      
+      if (
+        classList.contains('modal') ||
+        classList.contains('Modal') ||
+        classList.contains('popup') ||
+        classList.contains('dialog') ||
+        classList.contains('overlay') ||
+        role === 'dialog' ||
+        element.hasAttribute('data-modal') ||
+        // Check for high z-index that might indicate a modal
+        (window.getComputedStyle(element).zIndex !== 'auto' && 
+         parseInt(window.getComputedStyle(element).zIndex) > 1000)
+      ) {
+        return element;
+      }
+      
+      element = element.parentElement;
+    }
+    
+    return null;
   }
 
   private generateCalendarHtml(bsYear: number, bsMonth: number): string {
