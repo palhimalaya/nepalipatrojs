@@ -586,8 +586,77 @@ class NepaliDatePicker {
         this.format = options.format || "YYYY-MM-DD";
         this.theme = options.theme || "light";
         this.language = options.language || "en";
+        // Calculate appropriate z-index
+        this.zIndex = this.calculateZIndex(options.zIndex);
         NepaliDatePicker.instances.add(this);
         this.init();
+    }
+    // Method to calculate the appropriate z-index
+    calculateZIndex(customZIndex) {
+        if (customZIndex) {
+            return customZIndex;
+        }
+        // Find the highest z-index in the current context
+        const highestZIndex = this.getHighestZIndex();
+        // Use a much higher base z-index for modals
+        const baseZIndex = Math.max(highestZIndex + 1000, 999999);
+        return baseZIndex;
+    }
+    // Method to find the highest z-index in the current document
+    getHighestZIndex() {
+        let highest = 0;
+        // Check if input is inside a modal or high z-index container
+        let element = this.inputElement;
+        while (element && element !== document.body) {
+            const zIndex = window.getComputedStyle(element).zIndex;
+            if (zIndex !== 'auto' && zIndex !== '' && !isNaN(parseInt(zIndex))) {
+                const numericZIndex = parseInt(zIndex);
+                if (numericZIndex > highest) {
+                    highest = numericZIndex;
+                }
+            }
+            element = element.parentElement;
+        }
+        const modalSelectors = [
+            '.modal',
+            '.Modal',
+            '[role="dialog"]',
+            '[data-modal]',
+            '.ant-modal',
+            '.MuiModal-root',
+            '.v-dialog',
+            '.el-dialog',
+            '.ui-dialog',
+            '.swal2-container',
+            '.popup',
+            '.overlay',
+            '.modal-overlay',
+            '.dialog',
+            '.lightbox'
+        ];
+        modalSelectors.forEach(selector => {
+            const modals = document.querySelectorAll(selector);
+            modals.forEach(modal => {
+                const zIndex = window.getComputedStyle(modal).zIndex;
+                if (zIndex !== 'auto' && zIndex !== '' && !isNaN(parseInt(zIndex))) {
+                    const numericZIndex = parseInt(zIndex);
+                    if (numericZIndex > highest) {
+                        highest = numericZIndex;
+                    }
+                }
+            });
+        });
+        const allElements = document.querySelectorAll('*');
+        allElements.forEach(el => {
+            const zIndex = window.getComputedStyle(el).zIndex;
+            if (zIndex !== 'auto' && zIndex !== '' && !isNaN(parseInt(zIndex))) {
+                const numericZIndex = parseInt(zIndex);
+                if (numericZIndex > highest) {
+                    highest = numericZIndex;
+                }
+            }
+        });
+        return highest;
     }
     init() {
         this.inputElement.addEventListener("click", (e) => {
@@ -614,7 +683,7 @@ class NepaliDatePicker {
             const parsedDate = this.parseDateString(inputValue);
             if (parsedDate) {
                 this.currentBSYear = parsedDate.year;
-                this.currentBSMonth = parsedDate.month - 1; // Convert to 0-based index
+                this.currentBSMonth = parsedDate.month - 1;
                 this.currentBSDay = parsedDate.day;
             }
         }
@@ -707,6 +776,8 @@ class NepaliDatePicker {
     openCalendar() {
         // Close all other calendars before opening this one
         this.closeAllOtherCalendars();
+        // Recalculate z-index in case the context has changed
+        this.zIndex = this.calculateZIndex();
         // Parse existing value from input field if present
         this.parseAndSetDateFromInput();
         this.calendarVisible = true;
@@ -720,9 +791,36 @@ class NepaliDatePicker {
         calendarDiv.className = `nepali-datepicker nepali-datepicker-${this.theme}`;
         calendarDiv.innerHTML = this.generateCalendarHtml(bsYear, bsMonth);
         this.setupCalendarEvents(calendarDiv);
-        document.body.appendChild(calendarDiv);
+        const modalContainer = this.findModalContainer();
+        const appendTarget = modalContainer || document.body;
+        appendTarget.appendChild(calendarDiv);
         this.floatingCalendar = calendarDiv;
         this.positionCalendarPopup();
+    }
+    findModalContainer() {
+        let element = this.inputElement;
+        while (element && element !== document.body) {
+            const classList = element.classList;
+            const role = element.getAttribute('role');
+            const tagName = element.tagName.toLowerCase();
+            if (tagName === 'dialog') {
+                return element;
+            }
+            if (classList.contains('modal') ||
+                classList.contains('Modal') ||
+                classList.contains('popup') ||
+                classList.contains('dialog') ||
+                classList.contains('overlay') ||
+                role === 'dialog' ||
+                element.hasAttribute('data-modal') ||
+                // Check for high z-index that might indicate a modal
+                (window.getComputedStyle(element).zIndex !== 'auto' &&
+                    parseInt(window.getComputedStyle(element).zIndex) > 1000)) {
+                return element;
+            }
+            element = element.parentElement;
+        }
+        return null;
     }
     generateCalendarHtml(bsYear, bsMonth) {
         var _a, _b;
@@ -935,7 +1033,7 @@ class NepaliDatePicker {
         if (!this.floatingCalendar)
             return;
         this.floatingCalendar.style.position = "absolute";
-        this.floatingCalendar.style.zIndex = "9999";
+        this.floatingCalendar.style.zIndex = this.zIndex.toString();
         const inputRect = this.inputElement.getBoundingClientRect();
         const calendarRect = this.floatingCalendar.getBoundingClientRect();
         let top = inputRect.bottom + window.scrollY + 4;
@@ -963,6 +1061,12 @@ class NepaliDatePicker {
                 instance.closeCalendar();
             }
         });
+    }
+    setZIndex(zIndex) {
+        this.zIndex = zIndex;
+        if (this.floatingCalendar) {
+            this.floatingCalendar.style.zIndex = zIndex.toString();
+        }
     }
     destroy() {
         this.closeCalendar();

@@ -96,4 +96,5 @@ export interface NepaliDatePickerOptions {
   format?: string;
   theme?: "light" | "dark";
   language?: "en" | "np";
+  zIndex?: number;
 };
