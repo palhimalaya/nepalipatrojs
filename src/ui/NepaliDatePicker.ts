@@ -20,6 +20,7 @@ export class NepaliDatePicker {
   private format: string;
   private theme: "light" | "dark";
   private language: "en" | "np";
+  private zIndex: number; // Add z-index property
 
   constructor(
     inputElement: HTMLInputElement,
@@ -30,9 +31,75 @@ export class NepaliDatePicker {
     this.theme = options.theme || "light";
     this.language = options.language || "en";
     
+    // Calculate appropriate z-index
+    this.zIndex = this.calculateZIndex(options.zIndex);
+    
     NepaliDatePicker.instances.add(this);
     
     this.init();
+  }
+
+  // Method to calculate the appropriate z-index
+  private calculateZIndex(customZIndex?: number): number {
+    if (customZIndex) {
+      return customZIndex;
+    }
+
+    // Find the highest z-index in the current context
+    const highestZIndex = this.getHighestZIndex();
+    
+    // If inside a modal or high z-index context, use a higher value
+    if (highestZIndex > 9999) {
+      return highestZIndex + 100;
+    }
+    
+    return 9999;
+  }
+
+  // Method to find the highest z-index in the current document
+  private getHighestZIndex(): number {
+    let highest = 0;
+    
+    // Check if input is inside a modal or high z-index container
+    let element: HTMLElement | null = this.inputElement;
+    while (element && element !== document.body) {
+      const zIndex = window.getComputedStyle(element).zIndex;
+      if (zIndex !== 'auto' && zIndex !== '' && !isNaN(parseInt(zIndex))) {
+        const numericZIndex = parseInt(zIndex);
+        if (numericZIndex > highest) {
+          highest = numericZIndex;
+        }
+      }
+      element = element.parentElement;
+    }
+
+    // Also check for common modal classes and their z-indexes
+    const modalSelectors = [
+      '.modal',
+      '.Modal',
+      '[role="dialog"]',
+      '.ant-modal',
+      '.MuiModal-root',
+      '.v-dialog',
+      '.el-dialog',
+      '.ui-dialog',
+      '.swal2-container'
+    ];
+
+    modalSelectors.forEach(selector => {
+      const modals = document.querySelectorAll(selector);
+      modals.forEach(modal => {
+        const zIndex = window.getComputedStyle(modal as HTMLElement).zIndex;
+        if (zIndex !== 'auto' && zIndex !== '' && !isNaN(parseInt(zIndex))) {
+          const numericZIndex = parseInt(zIndex);
+          if (numericZIndex > highest) {
+            highest = numericZIndex;
+          }
+        }
+      });
+    });
+
+    return highest;
   }
 
   private init(): void {
@@ -186,6 +253,9 @@ export class NepaliDatePicker {
   private openCalendar(): void {
     // Close all other calendars before opening this one
     this.closeAllOtherCalendars();
+    
+    // Recalculate z-index in case the context has changed
+    this.zIndex = this.calculateZIndex();
     
     // Parse existing value from input field if present
     this.parseAndSetDateFromInput();
@@ -472,7 +542,7 @@ export class NepaliDatePicker {
     if (!this.floatingCalendar) return;
 
     this.floatingCalendar.style.position = "absolute";
-    this.floatingCalendar.style.zIndex = "9999";
+    this.floatingCalendar.style.zIndex = this.zIndex.toString();
 
     const inputRect = this.inputElement.getBoundingClientRect();
     const calendarRect = this.floatingCalendar.getBoundingClientRect();
@@ -509,6 +579,13 @@ export class NepaliDatePicker {
         instance.closeCalendar();
       }
     });
+  }
+
+  public setZIndex(zIndex: number): void {
+    this.zIndex = zIndex;
+    if (this.floatingCalendar) {
+      this.floatingCalendar.style.zIndex = zIndex.toString();
+    }
   }
 
   public destroy(): void {
