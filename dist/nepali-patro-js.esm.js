@@ -67,9 +67,20 @@ const MIN_AD_YEAR = 1943;
 /**
  * Reference dates for calendar conversion
  * 2000-01-01 BS == 1943-04-14 AD
+ *
+ * REF_AD_YMD is the canonical date-only epoch (ADR-002).
+ * REF_AD is the legacy local-midnight Date wrapper (TZ-sensitive timestamp;
+ * local Y/M/D fields always equal REF_AD_YMD).
  */
 const REF_BS = { year: 2000, month: 1, day: 1 };
-const REF_AD = new Date(1943, 3, 14);
+const REF_AD_YMD = { year: 1943, month: 4, day: 14 };
+/** Legacy: local civil midnight of REF_AD_YMD. Prefer REF_AD_YMD for arithmetic. */
+new Date(REF_AD_YMD.year, REF_AD_YMD.month - 1, REF_AD_YMD.day);
+/**
+ * JS getDay() of REF_AD_YMD (1943-04-14 was a Wednesday → 3).
+ * Used for timezone-independent weekday derivation.
+ */
+const REF_AD_JS_WEEKDAY = 3;
 /**
  * Bikram Sambat calendar data with days in each month for years 2000-2099
  * Each year entry contains:
@@ -181,6 +192,63 @@ const BS_CALENDAR_DATA = {
 const NEPALI_DIGITS = ['०', '१', '२', '३', '४', '५', '६', '७', '८', '९'];
 
 /**
+ * Pure Gregorian (proleptic) civil-date helpers.
+ * No `Date` / timezone dependence — ADR-002 date-only arithmetic.
+ */
+/** Days in Gregorian month (1–12). */
+function daysInGregorianMonth(year, month) {
+    if (month < 1 || month > 12) {
+        throw new Error('Month must be between 1 and 12');
+    }
+    const lengths = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+    if (month === 2 && isGregorianLeapYear(year)) {
+        return 29;
+    }
+    return lengths[month - 1];
+}
+function isGregorianLeapYear(year) {
+    return year % 4 === 0 && (year % 100 !== 0 || year % 400 === 0);
+}
+/**
+ * Julian Day Number for a Gregorian civil date (integer, noon-independent).
+ * Standard civil conversion; differences equal calendar day counts.
+ */
+function gregorianDayNumber(year, month, day) {
+    const a = Math.floor((14 - month) / 12);
+    const y = year + 4800 - a;
+    const m = month + 12 * a - 3;
+    return (day +
+        Math.floor((153 * m + 2) / 5) +
+        365 * y +
+        Math.floor(y / 4) -
+        Math.floor(y / 100) +
+        Math.floor(y / 400) -
+        32045);
+}
+/** Exclusive day difference: date2 − date1 in civil days. */
+function daysBetweenGregorian(a, b) {
+    return (gregorianDayNumber(b.year, b.month, b.day) -
+        gregorianDayNumber(a.year, a.month, a.day));
+}
+/** Convert Julian Day Number back to Gregorian YMD. */
+function gregorianFromDayNumber(jdn) {
+    const a = jdn + 32044;
+    const b = Math.floor((4 * a + 3) / 146097);
+    const c = a - Math.floor((146097 * b) / 4);
+    const d = Math.floor((4 * c + 3) / 1461);
+    const e = c - Math.floor((1461 * d) / 4);
+    const m = Math.floor((5 * e + 2) / 153);
+    const day = e - Math.floor((153 * m + 2) / 5) + 1;
+    const month = m + 3 - 12 * Math.floor(m / 10);
+    const year = 100 * b + d - 4800 + Math.floor(m / 10);
+    return { year, month, day };
+}
+/** Add (or subtract) civil days to a Gregorian date. */
+function addGregorianDays(date, days) {
+    return gregorianFromDayNumber(gregorianDayNumber(date.year, date.month, date.day) + days);
+}
+
+/**
  * Validates a Bikram Sambat (BS) date
  * @param year The BS year to validate
  * @param month The month to validate (1-12)
@@ -220,7 +288,7 @@ function validateAdDate(year, month, day) {
         throw new Error('Month must be between 1 and 12');
     }
     if (day !== undefined) {
-        const daysInMonth = new Date(year, month, 0).getDate();
+        const daysInMonth = daysInGregorianMonth(year, month);
         if (day < 1 || day > daysInMonth) {
             throw new Error(`Day must be between 1 and ${daysInMonth} for month ${month} in year ${year}`);
         }
@@ -363,49 +431,53 @@ function getDateFormatPatterns() {
     ];
 }
 
-/**
- * Calculates the number of days between two AD dates
- * @param date1 The first date
- * @param date2 The second date
- * @returns Number of days between the two dates
- */
-function daysBetweenAD(date1, date2) {
-    const msPerDay = 24 * 60 * 60 * 1000;
-    return Math.round((date2.getTime() - date1.getTime()) / msPerDay);
+function compareBs(a, b) {
+    if (a.year !== b.year)
+        return a.year - b.year;
+    if (a.month !== b.month)
+        return a.month - b.month;
+    return a.day - b.day;
 }
 /**
- * Converts a Gregorian (AD) date to Bikram Sambat (BS) date
- * @param date Date to convert, can be a Date object or [year, month, day] array
- * @returns NepaliDate object representing the equivalent BS date
- * @throws Error if date is in invalid format or out of supported range
+ * Absolute day index of a BS date relative to REF_BS (2000-01-01 = 0).
  */
-function convertADToBS(date) {
-    let adYear;
-    let adMonth;
-    let adDay;
-    if (date instanceof Date) {
-        adYear = date.getFullYear();
-        adMonth = date.getMonth() + 1;
-        adDay = date.getDate();
+function daysFromRefBs(date) {
+    let days = 0;
+    for (let year = REF_BS.year; year < date.year; year++) {
+        days += BS_CALENDAR_DATA[year][1];
     }
-    else if (Array.isArray(date) && date.length >= 3) {
-        adYear = date[0];
-        adMonth = date[1];
-        adDay = date[2];
+    for (let month = 1; month < date.month; month++) {
+        days += getDaysInMonth(date.year, month);
     }
-    else {
-        throw new Error('Invalid date format. Provide a Date object or [year, month, day] array.');
-    }
-    validateAdDate(adYear, adMonth, adDay);
-    const inputAD = new Date(adYear, adMonth - 1, adDay);
-    const daysDiff = daysBetweenAD(REF_AD, inputAD);
+    days += date.day - REF_BS.day;
+    return days;
+}
+/**
+ * Number of BS calendar days from date1 to date2 (date2 - date1).
+ */
+function daysBetweenBS(date1, date2) {
+    if (compareBs(date1, date2) === 0)
+        return 0;
+    return daysFromRefBs(date2) - daysFromRefBs(date1);
+}
+
+/**
+ * Date-only AD ↔ BS conversion (ADR-002).
+ * Operates solely on CalendarDate values — host timezone independent.
+ */
+/**
+ * Convert Gregorian (AD) civil date → Bikram Sambat.
+ */
+function convertAdToBs(ad) {
+    validateAdDate(ad.year, ad.month, ad.day);
+    const daysDiff = daysBetweenGregorian(REF_AD_YMD, ad);
     let bsYear = REF_BS.year;
     let bsMonth = REF_BS.month;
     let bsDay = REF_BS.day;
     let daysLeft = daysDiff;
     while (daysLeft > 0) {
-        const daysInMonth = getDaysInMonth(bsYear, bsMonth);
-        if (bsDay < daysInMonth) {
+        const dim = getDaysInMonth(bsYear, bsMonth);
+        if (bsDay < dim) {
             bsDay++;
         }
         else {
@@ -442,67 +514,72 @@ function convertADToBS(date) {
         }
         daysLeft++;
     }
-    return {
-        year: bsYear,
-        month: bsMonth,
-        day: bsDay
-    };
+    return { year: bsYear, month: bsMonth, day: bsDay };
 }
 /**
- * Gets the current date in Bikram Sambat calendar
- * @returns Current date as NepaliDate object
+ * Convert Bikram Sambat civil date → Gregorian (AD) date-only.
+ */
+function convertBsToAd(bs) {
+    validateBsDate(bs.year, bs.month, bs.day);
+    const daysDiff = daysBetweenBS(REF_BS, bs);
+    return addGregorianDays(REF_AD_YMD, daysDiff);
+}
+/**
+ * Nepali weekday index for a BS date: 1=Aitabar … 7=Sanibar.
+ * Derived from day offset vs REF (no `Date.getDay()`).
+ */
+function getBsWeekdayIndex(bs) {
+    validateBsDate(bs.year, bs.month, bs.day);
+    const days = daysFromRefBs(bs);
+    const jsDay = (((REF_AD_JS_WEEKDAY + days) % 7) + 7) % 7;
+    return jsDay + 1;
+}
+
+/**
+ * Legacy AD → BS converter (ADR-002).
+ *
+ * - `Date` input: extracts **local** calendar fields (`getFullYear` / `getMonth`+1 / `getDate`).
+ *   Same instant can yield different BS dates under different host timezones — intentional v1 behavior.
+ * - `[year, month, day]` array (1-based month): treated as a civil date-only value (TZ-independent).
+ *
+ * Prefer {@link convertAdToBs} for an explicit date-only API.
+ */
+function convertADToBS(date) {
+    let adYear;
+    let adMonth;
+    let adDay;
+    if (date instanceof Date) {
+        adYear = date.getFullYear();
+        adMonth = date.getMonth() + 1;
+        adDay = date.getDate();
+    }
+    else if (Array.isArray(date) && date.length >= 3) {
+        adYear = date[0];
+        adMonth = date[1];
+        adDay = date[2];
+    }
+    else {
+        throw new Error('Invalid date format. Provide a Date object or [year, month, day] array.');
+    }
+    return convertAdToBs({ year: adYear, month: adMonth, day: adDay });
+}
+/**
+ * Gets the current date in Bikram Sambat calendar.
+ * Uses the host's local civil date of "now" (timezone-sensitive by design).
  */
 function getCurrentBSDate() {
     return convertADToBS(new Date());
 }
 
-function compareBs(a, b) {
-    if (a.year !== b.year)
-        return a.year - b.year;
-    if (a.month !== b.month)
-        return a.month - b.month;
-    return a.day - b.day;
-}
 /**
- * Absolute day index of a BS date relative to REF_BS (2000-01-01 = 0).
- * Built from year totals and month lengths — auditable and free of rollover bugs.
- */
-function daysFromRefBs(date) {
-    let days = 0;
-    for (let year = REF_BS.year; year < date.year; year++) {
-        days += BS_CALENDAR_DATA[year][1];
-    }
-    for (let month = 1; month < date.month; month++) {
-        days += getDaysInMonth(date.year, month);
-    }
-    days += date.day - REF_BS.day;
-    return days;
-}
-/**
- * Number of BS calendar days from date1 to date2 (date2 - date1).
- * Negative if date2 is before date1.
- *
- * Exported for unit tests (ISS-019).
- */
-function daysBetweenBS(date1, date2) {
-    const cmp = compareBs(date1, date2);
-    if (cmp === 0)
-        return 0;
-    return daysFromRefBs(date2) - daysFromRefBs(date1);
-}
-/**
- * Converts a Bikram Sambat (BS) date to Gregorian (AD) date
- * @param bsDate BS date to convert, can be a NepaliDate object or [year, month, day] array
- * @returns JavaScript Date object representing the equivalent AD date
- * @throws Error if date is invalid or out of supported range
+ * Legacy BS → AD: returns a local-midnight `Date` (v1 local-field semantics, ADR-002).
+ * Prefer {@link convertBsToAd} for timezone-independent date-only results.
  */
 function convertBSToAD(bsDate) {
     const { year, month, day } = parseDateInput(bsDate);
-    validateBsDate(year, month, day);
-    const daysDiff = daysBetweenBS(REF_BS, { year, month, day });
-    const adDate = new Date(REF_AD);
-    adDate.setDate(adDate.getDate() + daysDiff);
-    return adDate;
+    const ad = convertBsToAd({ year, month, day });
+    // Local civil construction — timestamp varies by host TZ; Y/M/D fields match `ad`.
+    return new Date(ad.year, ad.month - 1, ad.day);
 }
 
 /**
@@ -530,8 +607,8 @@ const FORMAT_TOKEN = /\[([^\]]*)\]|YYYY|YY|MMMM|MMM|MM|M|dddd|ddd|DD|D|d/g;
 function formatBS(date, format = 'YYYY-MM-DD', options = {}) {
     const { language = 'en' } = options;
     const useNepaliDigits = language === 'np';
-    const adDate = convertBSToAD(date);
-    const weekDay = adDate.getDay() + 1;
+    // Weekday from civil day index (ADR-002) — not Date.getDay().
+    const weekDay = getBsWeekdayIndex(date);
     const digits = (value) => useNepaliDigits ? toNepaliDigits(value) : String(value);
     const pad2 = (n) => n.toString().padStart(2, '0');
     const monthName = language === 'en' ? NepaliMonth[date.month] : NepaliMonthNepali[date.month];
@@ -1103,6 +1180,18 @@ class NepaliPatro {
         return convertBSToAD(bsDate);
     }
     /**
+     * Date-only AD → BS (timezone-independent). Prefer over Date-based convertADToBS.
+     */
+    static convertAdToBs(ad) {
+        return convertAdToBs(ad);
+    }
+    /**
+     * Date-only BS → AD civil date (timezone-independent). Prefer over convertBSToAD.
+     */
+    static convertBsToAd(bs) {
+        return convertBsToAd(bs);
+    }
+    /**
      * Gets the current date in Bikram Sambat calendar
      * @returns Current date as NepaliDate object
      */
@@ -1166,5 +1255,5 @@ if (typeof window !== "undefined") {
     window.NepaliDatePicker = NepaliDatePicker;
 }
 
-export { NepaliDatePicker, NepaliMonth, NepaliMonthNepali, NepaliPatro, NepaliWeekDay, NepaliWeekDayNepali, convertADToBS, convertBSToAD, NepaliPatro as default, formatBS as formatBSDate, getCurrentBSDate, getDateFormatPatterns, getDaysInMonth, nepaliDigitsToEnglish, toNepaliDigits };
+export { NepaliDatePicker, NepaliMonth, NepaliMonthNepali, NepaliPatro, NepaliWeekDay, NepaliWeekDayNepali, REF_AD_YMD, REF_BS, convertADToBS, convertAdToBs, convertBSToAD, convertBsToAd, NepaliPatro as default, formatBS as formatBSDate, getBsWeekdayIndex, getCurrentBSDate, getDateFormatPatterns, getDaysInMonth, nepaliDigitsToEnglish, toNepaliDigits };
 //# sourceMappingURL=nepali-patro-js.esm.js.map

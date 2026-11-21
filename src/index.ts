@@ -1,4 +1,7 @@
 import {
+  CalendarDate,
+  AdDate,
+  BsDate,
   NepaliDate,
   NepaliMonth,
   NepaliMonthNepali,
@@ -13,9 +16,16 @@ import {
   MIN_BS_YEAR,
   MAX_BS_YEAR,
   MIN_AD_YEAR,
+  REF_AD_YMD,
+  REF_BS,
 } from "./constants/calendar-data";
 import { convertADToBS, getCurrentBSDate } from "./converters/ad-to-bs";
 import { convertBSToAD } from "./converters/bs-to-ad";
+import {
+  convertAdToBs,
+  convertBsToAd,
+  getBsWeekdayIndex,
+} from "./converters/date-only";
 import { getDaysInMonth, nepaliDigitsToEnglish, getDateFormatPatterns } from "./utils/helpers";
 import {
   formatBS as formatBSDate,
@@ -43,6 +53,20 @@ class NepaliPatro {
    */
   static convertBSToAD(bsDate: NepaliDate | number[]): Date {
     return convertBSToAD(bsDate);
+  }
+
+  /**
+   * Date-only AD → BS (timezone-independent). Prefer over Date-based convertADToBS.
+   */
+  static convertAdToBs(ad: CalendarDate): NepaliDate {
+    return convertAdToBs(ad);
+  }
+
+  /**
+   * Date-only BS → AD civil date (timezone-independent). Prefer over convertBSToAD.
+   */
+  static convertBsToAd(bs: CalendarDate): AdDate {
+    return convertBsToAd(bs);
   }
 
   /**
@@ -115,6 +139,9 @@ class NepaliPatro {
 
 // Named exports
 export {
+  CalendarDate,
+  AdDate,
+  BsDate,
   NepaliDate,
   NepaliMonth,
   NepaliMonthNepali,
@@ -125,6 +152,9 @@ export {
   NepaliDatePickerOptions,
   convertADToBS,
   convertBSToAD,
+  convertAdToBs,
+  convertBsToAd,
+  getBsWeekdayIndex,
   getCurrentBSDate,
   formatBSDate,
   toNepaliDigits,
@@ -132,6 +162,8 @@ export {
   getDateFormatPatterns,
   DateFormatPattern,
   getDaysInMonth,
+  REF_AD_YMD,
+  REF_BS,
 };
 
 // Default export

@@ -1,5 +1,5 @@
 import { MIN_BS_YEAR, MAX_BS_YEAR, MIN_AD_YEAR, BS_CALENDAR_DATA } from '../constants/calendar-data';
-import { NepaliDate } from '../types';
+import { daysInGregorianMonth } from './gregorian';
 
 /**
  * Validates a Bikram Sambat (BS) date
@@ -47,7 +47,7 @@ export function validateAdDate(year: number, month: number, day?: number): void 
   }
   
   if (day !== undefined) {
-    const daysInMonth = new Date(year, month, 0).getDate();
+    const daysInMonth = daysInGregorianMonth(year, month);
     if (day < 1 || day > daysInMonth) {
       throw new Error(`Day must be between 1 and ${daysInMonth} for month ${month} in year ${year}`);
     }

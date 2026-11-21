@@ -1,6 +1,6 @@
 # Core calendar engine
 
-## Current behavior (verified after ISS-019)
+## Current behavior (verified after Phase 1 Step 5)
 
 ### Dataset
 
@@ -14,80 +14,87 @@
 ### Reference epoch
 
 ```
-REF_BS = { year: 2000, month: 1, day: 1 }
-REF_AD = new Date(1943, 3, 14)  // local timezone constructor — ISS-002
+REF_BS     = { year: 2000, month: 1, day: 1 }          // date-only
+REF_AD_YMD = { year: 1943, month: 4, day: 14 }         // date-only (canonical)
+REF_AD     = new Date(1943, 3, 14)                     // legacy local midnight
+REF_AD_JS_WEEKDAY = 3                                  // Wednesday (for weekday math)
 ```
 
 Documented: **2000-01-01 BS == 1943-04-14 AD**.
 
-### Algorithms and assumptions
+### Date API audit (Step 5)
 
-**AD → BS** (`converters/ad-to-bs.ts`)
+| Location | API | Role |
+|----------|-----|------|
+| `REF_AD` | `new Date(y,m-1,d)` | Legacy instant at local midnight of epoch — **calendar fields** used only as compatibility mirror of `REF_AD_YMD` |
+| `convertADToBS(Date)` | `getFullYear` / `getMonth` / `getDate` | **Legacy:** extract local civil fields → date-only convert |
+| `convertADToBS([y,m,d])` | array | **Civil date-only** (TZ-independent) |
+| `convertAdToBs` / `convertBsToAd` | `CalendarDate` | **Date-only** — pure arithmetic, no `Date` |
+| `convertBSToAD` | `new Date(y,m-1,d)` return | **Legacy wrapper:** civil result as local midnight `Date` |
+| `getCurrentBSDate` / `now` | `new Date()` | **Instant → local civil** (inherently TZ-sensitive) |
+| `formatBS` weekday | `getBsWeekdayIndex` | **Date-only** (no `Date.getDay`) |
+| `validateAdDate` | `daysInGregorianMonth` | **Date-only** (no `new Date(y,m,0)`) |
+| `daysBetweenAD` (removed) | was `getTime()/86400000` | Replaced by Gregorian day numbers |
+| Datepicker grid | `convertBSToAD().getDay()` | Uses legacy `Date` weekday; civil Y/M/D still correct |
+| Core converters | no ISO string parse | Objects / `[y,m,d]` only — avoids `YYYY-MM-DD` → UTC midnight shift |
+| Datepicker input | regex `getDateFormatPatterns` | Parses digit groups to Y/M/D integers (not `Date.parse`) |
 
-1. Normalize to Y/M/D via **local** `Date` getters or `[y,m,d]` (1-based month).
-2. `validateAdDate` (min AD year 1943).
-3. Day delta vs `REF_AD` using `Math.round((t2-t1)/86400000)`.
-4. Walk forward/backward **one BS day at a time** using `getDaysInMonth`.
+**Calendar date** = `{year,month,day}` civil triple. **Instant** = JavaScript `Date` timestamp.
 
-Assumptions: local civil fields; table covers the walked years; ms-based day diff matches calendar days when both `Date`s are local midnights.
+### Algorithms
 
-**Status:** Golden AD→BS fixtures (New Years, leap day, REF) **match** dataset-implied / agreeing public sources.
+**Date-only AD → BS** (`converters/date-only.ts` → `convertAdToBs`)
 
-**BS → AD** (`converters/bs-to-ad.ts`)
+1. Validate AD YMD (pure Gregorian month lengths).
+2. `daysDiff = gregorianDayNumber(ad) − gregorianDayNumber(REF_AD_YMD)`.
+3. Walk BS day-by-day from `REF_BS` — **O(daysFromRef)** (ISS-003).
 
-1. Parse object/array; `validateBsDate`.
-2. `daysBetweenBS(REF_BS, target)` via absolute day indices (see below).
-3. `new Date(REF_AD)` then `setDate(getDate() + daysDiff)`.
+**Performance (Step 6 assessment):** late dates ~1.3 ms; full 36,525 Ad→Bs ~23 s. Prefix-sum alternative ~3 ms for full range (~6 KiB). See `docs/progress/algorithm-assessment-step6.md`. **No rewrite until authorized.**
 
-**`daysBetweenBS` (ISS-019 corrected)**
+**Date-only BS → AD** (`convertBsToAd`)
 
-```
-daysFromRefBs(date) =
-  sum(year totals for y in [REF_BS.year .. date.year))
-  + sum(month lengths for m in [1 .. date.month))
-  + (date.day - REF_BS.day)
+1. Validate BS YMD.
+2. `daysDiff = daysBetweenBS(REF_BS, bs)` (absolute BS day index — ISS-019).
+3. `addGregorianDays(REF_AD_YMD, daysDiff)`.
 
-daysBetweenBS(a, b) = daysFromRefBs(b) - daysFromRefBs(a)
-```
+**Legacy wrappers**
 
-Semantics: exclusive day difference (`b − a`). Same calendar day → 0; adjacent days → 1. No month-cursor rollover; no full-month over-count past month 12.
+- `convertADToBS`: Date → local fields → `convertAdToBs`; array → `convertAdToBs`.
+- `convertBSToAD`: `convertBsToAd` then `new Date(y, m-1, d)` (local construction).
 
-Assumptions: local `setDate` preserves civil arithmetic (timezone matrix still Step 5 / ISS-002).
+### Correctness layers
 
-**Status:** Goldens pass; exhaustive BS→AD→BS **36525 / 36525** zero failures.
+| Layer | After Step 5 |
+|-------|--------------|
+| Structural integrity | Pass |
+| Golden accuracy | AD↔BS pass (dataset-implied / agreeing sources) |
+| Round-trip consistency | **36525 / 36525** |
+| Timezone (date-only) | Identical under UTC / Asia/Kathmandu / America/Los_Angeles |
 
-### Correctness layers (do not conflate)
-
-| Layer | Meaning | After ISS-019 |
-|-------|---------|---------------|
-| Structural integrity | Table internally consistent | Pass |
-| Golden accuracy | Matches sourced civil pairs | AD→BS + BS→AD pass (dataset-implied / agreeing sources) |
-| Round-trip consistency | Invertible on this table | **36525 / 36525** |
-
-Round-trips ≠ historical proof of the table (ADR-003). ISS-016 provenance remains open — one-day disagreements with some public New Year tables stay documented, not silently “verified.”
+Round-trips ≠ historical proof (ADR-003). ISS-016 remains open.
 
 ### Verified correctness issues
 
 | ID | Issue | Status |
 |----|-------|--------|
 | ISS-001 | Wrong validation index into calendar tuple | **Resolved** |
-| ISS-002 | Local `Date` / timezone sensitivity | Open (Step 5) |
-| ISS-003 | AD→BS O(days) walk | Open (Step 6; after Step 5) |
+| ISS-002 | Local `Date` / timezone sensitivity | **Resolved** (date-only path; legacy local by design) |
+| ISS-003 | AD→BS O(days) walk | **Assessed** — prefix recommended; not implemented (Step 6) |
 | ISS-004 | No max AD bound tied to BS 2099 | Open |
 | ISS-016 | Dataset provenance unknown | Open (investigated) |
 | ISS-019 | `daysBetweenBS` over-count | **Resolved** |
 
 ## Accepted v2 core responsibilities (ADR-002, ADR-003)
 
-1. **Date-only types** — `CalendarDate` `{ year, month, day }`.
+1. **Date-only types** — `CalendarDate` / `AdDate` / `BsDate`.
 2. **Converters** — pure functions over date-only inputs.
 3. **Legacy `Date` adapters** — v1 local-field semantics; explicit UTC API only if added deliberately.
-4. **Validation** — correct month-length lookup.
-5. **Arithmetic** — correct day counts (**ISS-019 fixed**).
+4. **Validation** — correct month-length lookup (BS table + pure Gregorian).
+5. **Arithmetic** — correct day counts (ISS-019) + Gregorian day numbers.
 6. **Integrity** — checksum + structural tests; provenance honest.
 
 ## Non-negotiables
 
 - Do not replace/extend dataset without approval.
-- Do not optimize (prefix sums) until timezone verification (Step 5) is complete and goldens remain green.
+- Do not silently change legacy `Date` local getters to UTC.
 - Fail loudly on unsupported inputs.

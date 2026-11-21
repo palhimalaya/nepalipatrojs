@@ -7,7 +7,7 @@ Overall status: **IN PROGRESS** (Phase 0 CLOSED; Phase 1 IN PROGRESS — baselin
 | Phase | Name | Status |
 |-------|------|--------|
 | 0 | Repository audit & documentation bootstrap | **COMPLETED** / CLOSED |
-| 1 | Core correctness | **IN PROGRESS** (Steps 1–4 + ISS-019 COMPLETED; next Step 5 timezone) |
+| 1 | Core correctness | **IN PROGRESS** (Steps 1–6 assessment COMPLETED; ISS-003 impl pending auth) |
 | 2 | Architecture / module boundaries | NOT STARTED |
 | 3 | Datepicker redesign | NOT STARTED |
 | 4 | Framework integration (React) | NOT STARTED |
@@ -61,8 +61,9 @@ Overall status: **IN PROGRESS** (Phase 0 CLOSED; Phase 1 IN PROGRESS — baselin
 3. ~~Fix ISS-006 (formatter token corruption)~~ **DONE 2026-11-21**
 4. ~~Golden fixtures, integrity, round-trips~~ **DONE 2026-11-21** (discovered ISS-019; converters not rewritten)
 5. ~~Fix ISS-019 `daysBetweenBS`~~ **DONE 2026-11-21** (absolute day index; 36525/36525 round-trips)
-6. Timezone verification ← **NEXT** (await authorization)
-7. Algorithm assessment only after Step 5 / correctness gates remain green
+6. ~~Timezone verification~~ **DONE 2026-11-21** (date-only TZ matrix + legacy local semantics)
+7. ~~Algorithm assessment~~ **DONE 2026-11-21** — recommend prefix Ad→Bs; **not implemented**
+8. ISS-003 prefix implementation ← **NEXT** only if authorized; else Phase 2
 
 ### Tasks
 
@@ -73,12 +74,13 @@ Overall status: **IN PROGRESS** (Phase 0 CLOSED; Phase 1 IN PROGRESS — baselin
 - [x] Golden conversion fixtures with sourced expectations; AD→BS matches; BS→AD gated by ISS-019
 - [x] Exhaustive BS→AD→BS round-trips (~36.5k dates, ~22–32s); ~3090 failures documented (ISS-019)
 - [x] **Fix ISS-019** `daysBetweenBS` — absolute day indices; goldens + 36525/36525; `.failing` removed
+- [x] Introduce `CalendarDate` / date-only AD/BS APIs; `REF_AD_YMD`; pure Gregorian day numbers
+- [x] Date-only conversion identical under `UTC`, `Asia/Kathmandu`, `America/Los_Angeles`
+- [x] Preserve legacy `Date` APIs with **local** calendar-field semantics (ADR-002)
+- [x] Algorithm assessment + benches (`scripts/bench-conversion.mjs`); recommend Option B/C for Ad→Bs
+- [ ] **Optional (auth required):** implement prefix-sum AD→BS (ISS-003) — no silent rewrite
 - [ ] Unify locale `ne`/`np` (ISS-005) — deferred
 - [ ] Document complete v1 public API inventory (ISS-017)
-- [ ] Introduce `CalendarDate` / date-only AD/BS types; store REF_AD as plain YMD
-- [ ] Date-only conversion identical under multiple `TZ` values (Step 5)
-- [ ] Preserve legacy `Date` APIs with **local** calendar-field semantics (ADR-002)
-- [ ] Optional: prefix-sum day index — only after Step 5 and goldens remain green
 
 ### Acceptance criteria
 

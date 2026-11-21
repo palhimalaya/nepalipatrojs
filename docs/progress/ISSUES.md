@@ -18,18 +18,20 @@ Severity: `critical` | `high` | `medium` | `low`
 ## ISS-002 — Timezone-dependent calendar arithmetic
 
 - **Severity:** high  
-- **Module:** converters, `REF_AD`, `getCurrentBSDate`, formatter weekday via `Date`  
-- **Status:** open  
-- **Description:** Local `Date` constructors/getters and `setDate` can shift civil days across zones.  
-- **Proposed:** Date-only model (ADR-002); timezone matrix tests.  
+- **Module:** converters, `REF_AD`, `getCurrentBSDate`, formatter weekday  
+- **Status:** **resolved** (Phase 1 Step 5, 2026-11-21) — date-only path TZ-safe; legacy `Date` path intentionally local-field  
+- **Description:** Local `Date` constructors/getters made conversion/weekday sensitive to host TZ.  
+- **Fix:** Introduced `CalendarDate` / `REF_AD_YMD`, pure Gregorian day-number arithmetic, `convertAdToBs` / `convertBsToAd`, weekday via day index. Legacy APIs keep local getters/construction (ADR-002). TZ matrix: UTC, Asia/Kathmandu, America/Los_Angeles.  
+- **Remaining by design:** `convertADToBS(Date)`, returned `Date` from `convertBSToAD`, and `getCurrentBSDate()` remain timezone-sensitive. Explicit UTC Date API not added (propose before implement).  
 
 ## ISS-003 — AD→BS O(days) walk
 
 - **Severity:** medium  
-- **Module:** `ad-to-bs.ts`  
-- **Status:** open  
-- **Description:** Day-by-day iteration from reference; correct but slow for far dates.  
-- **Proposed:** Optimize only after golden tests (prefix day counts).  
+- **Module:** `converters/date-only.ts` (`convertAdToBs`)  
+- **Status:** **assessed** (Phase 1 Step 6, 2026-11-21) — optimization recommended, **not implemented**  
+- **Description:** Day-by-day iteration from REF; O(|daysFromRef|). Benchmarks: late date ~1.3 ms median; full 36,525 Ad→Bs ~23 s; latency linear in days from REF.  
+- **Assessment:** See [algorithm-assessment-step6.md](./algorithm-assessment-step6.md). Recommend Option B/C prefix tables (~6 KiB, ~10⁴× faster on late/bulk). BS→AD already adequate (~1–2 µs).  
+- **Proposed next:** Authorize prefix-sum implementation separately; gate on goldens + 36525 round-trips + TZ matrix.  
 
 ## ISS-004 — No explicit max AD bound tied to BS 2099 end
 

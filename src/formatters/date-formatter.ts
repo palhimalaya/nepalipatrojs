@@ -6,7 +6,7 @@ import {
   NepaliWeekDayNepali,
   NepaliPatroOptions,
 } from '../types';
-import { convertBSToAD } from '../converters/bs-to-ad';
+import { getBsWeekdayIndex } from '../converters/date-only';
 import { NEPALI_DIGITS } from '../constants/calendar-data';
 
 /**
@@ -42,8 +42,8 @@ export function formatBS(
   const { language = 'en' } = options;
   const useNepaliDigits = language === 'np';
 
-  const adDate = convertBSToAD(date);
-  const weekDay = adDate.getDay() + 1;
+  // Weekday from civil day index (ADR-002) — not Date.getDay().
+  const weekDay = getBsWeekdayIndex(date);
 
   const digits = (value: number | string): string =>
     useNepaliDigits ? toNepaliDigits(value) : String(value);

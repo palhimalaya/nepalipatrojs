@@ -79,21 +79,22 @@ npm run build
 
 **Phase 1 — IN PROGRESS.**
 
-- Steps 1–4 COMPLETED (ISS-001, ISS-006 approved; conversion baseline accepted with ISS-019 finding).
-- **ISS-019 RESOLVED:** `daysBetweenBS` absolute day-index fix; BS→AD goldens pass; exhaustive round-trips **36525/36525**; suite **131** tests.
-- Dataset provenance still **unknown** (ISS-016) — do not invent provenance; one-day external New Year disagreements stay documented.
-- **Next:** Step 5 timezone verification (await authorization). Do not start automatically.
+- Steps 1–6 assessment COMPLETED (correctness + timezone approved; algorithm assessed).
+- Date-only APIs TZ-independent; legacy `Date` local-field semantics preserved.
+- **ISS-003 assessed:** AD→BS day-walk is O(days) (~1.3 ms late; ~23 s for 36,525). Recommend prefix sums when authorized — **not implemented**.
+- Dataset provenance still **unknown** (ISS-016).
+- **Next:** Await decision on ISS-003 implementation, or next authorized phase item. Do not optimize without authorization.
 
 ## Known limitations (v1)
 
-- No timezone-safe date-only API (Step 5 / ISS-002)
+- Legacy `Date` APIs remain timezone-sensitive by design (prefer date-only APIs)
 - Dataset provenance unknown (ISS-016)
 - No generated `.d.ts` in `dist/` despite `package.json` `types` field
 - CSS export path `./styles` → missing `only-styles.css`
 - CI can “pass” with failed build/test (`continue-on-error: true`)
 - Datepicker: no min/max, weak a11y, scans entire DOM for z-index
 - BS range ends at 2099
-- AD→BS still O(days) walk (ISS-003; assess after Step 5)
+- AD→BS still O(days) walk (ISS-003 assessed; impl pending auth) — see `docs/progress/algorithm-assessment-step6.md`
 
 ## Where to go next
 

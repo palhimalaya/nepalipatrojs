@@ -5,6 +5,7 @@ import {
   MIN_AD_YEAR,
   REF_BS,
   REF_AD,
+  REF_AD_YMD,
 } from '../../constants/calendar-data';
 import { getDaysInMonth } from '../../utils/helpers';
 import { validateBsDate } from '../../utils/validations';
@@ -66,10 +67,12 @@ describe('Calendar dataset structural integrity', () => {
 
   it('reference constants match documented epoch', () => {
     expect(REF_BS).toEqual({ year: 2000, month: 1, day: 1 });
+    expect(REF_AD_YMD).toEqual({ year: 1943, month: 4, day: 14 });
     expect(MIN_AD_YEAR).toBe(1943);
-    expect(REF_AD.getFullYear()).toBe(1943);
-    expect(REF_AD.getMonth() + 1).toBe(4);
-    expect(REF_AD.getDate()).toBe(14);
+    // Legacy REF_AD Date: local civil fields always match REF_AD_YMD
+    expect(REF_AD.getFullYear()).toBe(REF_AD_YMD.year);
+    expect(REF_AD.getMonth() + 1).toBe(REF_AD_YMD.month);
+    expect(REF_AD.getDate()).toBe(REF_AD_YMD.day);
   });
 
   it('first and last supported BS dates validate', () => {

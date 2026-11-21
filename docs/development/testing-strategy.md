@@ -15,10 +15,18 @@
 - Record real results in `docs/progress/TEST-RESULTS.md`.
 - Coverage thresholds: set after baseline capture (Phase 1), not before.
 
-## Current suite (v1 locations)
+## Current suite locations
 
-- `src/__tests__/index.test.ts`
+- `src/__tests__/conversion/*` — integrity, goldens, round-trips, days-between-bs, **timezone-date-semantics**
+- `src/__tests__/utils/gregorian.test.ts` — pure Gregorian helpers
 - `src/__tests__/formatters/date-formatter.test.ts`
-- `src/__tests__/utils/helpers.test.ts`
-- `src/__tests__/utils/validations.test.ts` — **encodes ISS-001 indexing bug**
-- `src/__tests__/ui/NepaliDatePicker.test.ts`
+- `src/__tests__/utils/helpers.test.ts` / `validations.test.ts`
+- `src/__tests__/index.test.ts` / `ui/NepaliDatePicker.test.ts`
+
+### Timezone commands
+
+```bash
+TZ=UTC npm test -- --runInBand --coverage=false
+TZ=Asia/Kathmandu npm test -- --runInBand --coverage=false
+TZ=America/Los_Angeles npm test -- --runInBand --coverage=false
+```

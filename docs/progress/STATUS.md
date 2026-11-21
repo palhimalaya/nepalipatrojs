@@ -11,30 +11,29 @@
 | Phase / step | Status |
 |--------------|--------|
 | Phase 0 | COMPLETED |
-| Phase 1 Step 1 — Baseline | COMPLETED |
-| Phase 1 Step 2 — ISS-001 | COMPLETED (approved) |
-| Phase 1 Step 3 — ISS-006 | COMPLETED (approved) |
-| Phase 1 Step 4 — Conversion correctness baseline | COMPLETED (accepted with finding ISS-019) |
-| Phase 1 — ISS-019 fix (BS→AD arithmetic) | **COMPLETED** (await maintainer review) |
-| Phase 1 Step 5 — Timezone verification | NOT STARTED ← next (after ISS-019 acceptance) |
-| Phase 1 Step 6 — Algorithm assessment | NOT STARTED (blocked until Step 5 done / authorized) |
+| Phase 1 Steps 1–5 | COMPLETED (approved) |
+| Phase 1 — ISS-019 | COMPLETED (approved) |
+| Phase 1 Step 5 — Timezone | COMPLETED (approved) |
+| Phase 1 Step 6 — Algorithm assessment | **COMPLETED** (await review; **no code change**) |
+| ISS-003 implementation (prefix Ad→Bs) | NOT STARTED — needs separate authorization |
 
-## Latest verification (after ISS-019)
+## Latest verification (Step 6)
 
 | Check | Result |
 |-------|--------|
-| Conversion integrity / goldens / round-trip | **PASS** — 36525/36525 zero failures; no `.failing` gates |
-| Focused arithmetic + goldens | PASS |
-| `npm test -- --runInBand` | PASS — **131/131** (~24–33s) |
-| `npx tsc --noEmit` | PASS |
-| `npm run build` | PASS |
+| Assessment doc | [algorithm-assessment-step6.md](./algorithm-assessment-step6.md) |
+| Bench command | `node scripts/bench-conversion.mjs` |
+| Production converters | **unchanged** |
+| Recommendation | Optimize AD→BS with prefix sums (B/C); keep BS→AD; do not implement yet |
 
-## Critical discovery resolved
+## Still open
 
-**ISS-019:** `daysBetweenBS` over-count fixed via absolute day-index arithmetic. BS→AD goldens and exhaustive round-trips green. Dataset / REF / public API unchanged.
-
-**Still open:** ISS-016 (dataset provenance unknown) — do not treat dataset-implied New Years as independently verified when external sources disagree.
+- **ISS-016** dataset provenance
+- **ISS-003** implementation (assessed; awaiting auth)
+- Packaging / datepicker / React — later phases
 
 ## Next exact task
 
-**Phase 1 Step 5 — Timezone verification** (await authorization). Do not start until ISS-019 is accepted.
+Await maintainer decision on ISS-003 implementation.  
+If approved: implement prefix-sum AD→BS only.  
+If deferred: Phase 2 architecture (or next authorized item). **Do not implement without authorization.**

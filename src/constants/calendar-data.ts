@@ -1,3 +1,5 @@
+import { CalendarDate } from '../types';
+
 export const MIN_BS_YEAR = 2000;
 export const MAX_BS_YEAR = 2099;
 export const MIN_AD_YEAR = 1943;
@@ -5,10 +7,23 @@ export const MIN_AD_YEAR = 1943;
 /**
  * Reference dates for calendar conversion
  * 2000-01-01 BS == 1943-04-14 AD
+ *
+ * REF_AD_YMD is the canonical date-only epoch (ADR-002).
+ * REF_AD is the legacy local-midnight Date wrapper (TZ-sensitive timestamp;
+ * local Y/M/D fields always equal REF_AD_YMD).
  */
 
-export const REF_BS = { year: 2000, month: 1, day: 1 };
-export const REF_AD = new Date(1943, 3, 14);
+export const REF_BS: CalendarDate = { year: 2000, month: 1, day: 1 };
+export const REF_AD_YMD: CalendarDate = { year: 1943, month: 4, day: 14 };
+
+/** Legacy: local civil midnight of REF_AD_YMD. Prefer REF_AD_YMD for arithmetic. */
+export const REF_AD = new Date(REF_AD_YMD.year, REF_AD_YMD.month - 1, REF_AD_YMD.day);
+
+/**
+ * JS getDay() of REF_AD_YMD (1943-04-14 was a Wednesday → 3).
+ * Used for timezone-independent weekday derivation.
+ */
+export const REF_AD_JS_WEEKDAY = 3;
 
 /**
  * Bikram Sambat calendar data with days in each month for years 2000-2099

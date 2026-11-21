@@ -238,6 +238,101 @@ npm run build                                   # PASS
 
 ---
 
+## 2026-11-21 — Phase 1 Step 5: Timezone verification
+
+### Node
+
+`v24.15.0`
+
+### Date-only matrix (focused)
+
+```bash
+TZ=UTC npx jest src/__tests__/conversion/timezone-date-semantics.test.ts --runInBand --coverage=false
+TZ=Asia/Kathmandu npx jest src/__tests__/conversion/timezone-date-semantics.test.ts --runInBand --coverage=false
+TZ=America/Los_Angeles npx jest src/__tests__/conversion/timezone-date-semantics.test.ts --runInBand --coverage=false
+```
+
+| TZ | Result | Tests | Time |
+|----|--------|-------|------|
+| UTC | PASS | 16/16 | ~1.2s |
+| Asia/Kathmandu | PASS | 16/16 | ~1.2s |
+| America/Los_Angeles | PASS | 16/16 | ~1.3s |
+
+### Full suite under each TZ
+
+```bash
+TZ=UTC npm test -- --runInBand --coverage=false
+TZ=Asia/Kathmandu npm test -- --runInBand --coverage=false
+TZ=America/Los_Angeles npm test -- --runInBand --coverage=false
+```
+
+| TZ | Result | Tests | Time |
+|----|--------|-------|------|
+| UTC | PASS | **150/150** | ~24.8s |
+| Asia/Kathmandu | PASS | **150/150** | ~23.5s |
+| America/Los_Angeles | PASS | **150/150** | ~23.7s |
+
+Exhaustive round-trips remain **36525/36525** (included in conversion suite).
+
+### Other
+
+```bash
+npx tsc --noEmit   # PASS
+npm run build      # PASS
+```
+
+### Findings recorded
+
+- Date-only civil results identical across three TZs.
+- Legacy `Date.UTC(2023,3,14)` → local Apr 13 under `America/Los_Angeles` → different BS than Apr 14 (intentional local-field behavior).
+- No ISO date-string parsing in core converters (rejects string inputs).
+- Formatter weekdays stable (Sukrabar for 2080-01-01) without `Date.getDay()`.
+
+### Compared to prior step
+
+| Metric | After ISS-019 | After Step 5 |
+|--------|---------------|--------------|
+| Jest | 131 | **150** |
+| ISS-002 | open | **resolved** (date-only + documented legacy) |
+
+---
+
+## 2026-11-21 — Phase 1 Step 6: Algorithm assessment (no production changes)
+
+### Command / environment
+
+```bash
+npm run build
+node scripts/bench-conversion.mjs
+```
+
+Node **v24.15.0**, linux x64. Raw: `docs/progress/benchmarks-step6-raw.txt`. Report: `docs/progress/algorithm-assessment-step6.md`.
+
+### Headline measurements (production)
+
+| Workload | Result |
+|----------|--------|
+| Ad→Bs late (2099-end) median | **~1.26 ms** |
+| Ad→Bs full range 36525 | **~22.9 s** (627 µs/op) |
+| Bs→Ad full range 36525 | **~45 ms** (1.23 µs/op) |
+| Ad→Bs latency vs daysFromRef | linear (0 → 18k → 36k days ≈ 0.1 → 631 → 1263 µs) |
+
+### Prototype (script-only) vs prod
+
+| Ad→Bs bulk 36525 | Time |
+|------------------|------|
+| prod day-walk | 22.9 s |
+| prefix tables | 3.1 ms |
+| full lookup | 2.9 ms |
+
+Prefix init ~0.13 ms / ~5.6 KiB. Lookup ~4.3 ms / ~143 KiB. Prototypes matched prod on 500 random dates (0 failures).
+
+### Recommendation recorded
+
+Optimize AD→BS with prefix sums when authorized; keep BS→AD; **no src algorithm change in Step 6**.
+
+---
+
 ## Prior: 2026-11-21 Phase 0 static checks
 
 See earlier session notes: dataset 2000–2099 contiguous; packaging mismatches; no `node_modules` at that time.
