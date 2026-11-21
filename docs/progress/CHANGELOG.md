@@ -21,7 +21,23 @@ User-facing npm release notes will also live in the root `CHANGELOG` when 2.0 sh
 
 ### Fixed
 
-- (none — no production code changes in Phase 0)
+- **ISS-001:** `validateBsDate` now reads month lengths from `BS_CALENDAR_DATA[year][0][month - 1]` (was wrong tuple index). Invalid days are rejected.
+- Replaced incorrect validation tests with independent 12-month regressions.
+- **ISS-006:** `formatBS` uses longest-first single-pass tokenization so month/weekday names are not corrupted (Mangsir, Magh, Budhabar, etc.).
+- **ISS-019:** `daysBetweenBS` rewritten as absolute day-index difference from `REF_BS` (fixes same-month over-count and month-12→1 extra-Baisakh). BS→AD goldens + exhaustive 36525/36525 round-trips pass. Formatter weekday fixtures updated off the old May-15 encoding.
+
+### Added
+
+- Format literal escape syntax: `[text]` emits literal characters that would otherwise be tokens.
+- Conversion correctness baseline tests: dataset integrity + SHA-256 pin, sourced golden fixtures, exhaustive round-trips.
+- Issue **ISS-019** documenting `daysBetweenBS` BS→AD over-count (discovered Step 4; fixed after authorization).
+- Independent `days-between-bs` arithmetic regressions (same-month, month/year rollover, multi-year spans).
+
+### Changed (process)
+
+- Phase 0 formally CLOSED; Phase 1 AUTHORIZED and started
+- Baseline recorded: Jest 53/53 green; ISS-001/006 still reproducible outside suite
+- After ISS-001: Jest 63/63; ISS-006 still open
 
 ### Breaking Changes
 

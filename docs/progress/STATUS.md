@@ -3,69 +3,38 @@
 **Last updated:** 2026-11-21  
 **Current published version:** 1.0.5  
 **Target version:** 2.0.0  
-**Current phase:** Phase 0 — COMPLETED (ADRs accepted)  
-**Overall:** Architecture approved; **Phase 1 not started** — awaiting explicit maintainer authorization to implement
+**Current phase:** Phase 1 — Core correctness — **IN PROGRESS**  
+**Phase 0:** CLOSED  
 
-## Completion (task-based, not LOC estimates)
+## Completion
 
-| Phase | Status | Notes |
-|-------|--------|-------|
-| 0 Audit + docs + ADR acceptance | COMPLETED | Docs only; all five ADRs Accepted |
-| 1 Core correctness | NOT STARTED | Unblocked architecturally; needs formal go-ahead |
-| 2 Architecture | NOT STARTED | |
-| 3 Datepicker | NOT STARTED | |
-| 4 React | NOT STARTED | |
-| 5 Packaging/CI | NOT STARTED | |
-| 6 Docs site / playground | NOT STARTED | |
-| 7 Final verification | NOT STARTED | |
+| Phase / step | Status |
+|--------------|--------|
+| Phase 0 | COMPLETED |
+| Phase 1 Step 1 — Baseline | COMPLETED |
+| Phase 1 Step 2 — ISS-001 | COMPLETED (approved) |
+| Phase 1 Step 3 — ISS-006 | COMPLETED (approved) |
+| Phase 1 Step 4 — Conversion correctness baseline | COMPLETED (accepted with finding ISS-019) |
+| Phase 1 — ISS-019 fix (BS→AD arithmetic) | **COMPLETED** (await maintainer review) |
+| Phase 1 Step 5 — Timezone verification | NOT STARTED ← next (after ISS-019 acceptance) |
+| Phase 1 Step 6 — Algorithm assessment | NOT STARTED (blocked until Step 5 done / authorized) |
 
-Rough overall modernization progress: **~10%** (Phase 0 fully closed including ADR acceptance; no implementation).
-
-## In progress
-
-- None. Documentation amendment session closed.
-
-## Blocked
-
-| Blocker | Needed |
-|---------|--------|
-| Phase 1 code | Explicit maintainer authorization to begin implementation sequence |
-
-## ADR status
-
-| ADR | Status |
-|-----|--------|
-| 001 Core architecture | Accepted |
-| 002 Date-only / timezone | Accepted (amended) |
-| 003 Calendar dataset | Accepted (amended) |
-| 004 Datepicker | Accepted |
-| 005 Public API | Accepted (amended) |
-
-## Outstanding issues
-
-See [ISSUES.md](ISSUES.md). New from ADR amendments: **ISS-016** (dataset provenance unknown), **ISS-017** (v1 API inventory freeze), **ISS-018** (module boundary enforcement).
-
-Critical implementation targets remain: ISS-001, ISS-006, ISS-008, ISS-009, ISS-010.
-
-## Latest verification
-
-Unchanged from Phase 0 audit — no new test runs this amendment session.
+## Latest verification (after ISS-019)
 
 | Check | Result |
 |-------|--------|
-| Unit tests | NOT RUN (`node_modules` absent) |
-| Implementation files | Unchanged (docs-only session) |
+| Conversion integrity / goldens / round-trip | **PASS** — 36525/36525 zero failures; no `.failing` gates |
+| Focused arithmetic + goldens | PASS |
+| `npm test -- --runInBand` | PASS — **131/131** (~24–33s) |
+| `npx tsc --noEmit` | PASS |
+| `npm run build` | PASS |
 
-## Next recommended actions (after authorization)
+## Critical discovery resolved
 
-1. `npm ci` — baseline tests, build, typecheck; record in TEST-RESULTS  
-2. Fix ISS-001 (validation) + independent month-length regressions  
-3. Fix ISS-006 (formatter tokens)  
-4. Golden fixtures, round-trips, timezone tests for date-only APIs  
-5. Only then begin core refactoring / optimization  
+**ISS-019:** `daysBetweenBS` over-count fixed via absolute day-index arithmetic. BS→AD goldens and exhaustive round-trips green. Dataset / REF / public API unchanged.
 
-## Documentation updated this milestone
+**Still open:** ISS-016 (dataset provenance unknown) — do not treat dataset-implied New Years as independently verified when external sources disagree.
 
-- All five ADRs → Accepted (+ amendments)
-- `DECISIONS.md`, `STATUS.md`, `MASTER-PLAN.md`, `ISSUES.md`, `CHANGELOG.md`
-- `PROJECT_CONTEXT.md`, architecture notes, session log
+## Next exact task
+
+**Phase 1 Step 5 — Timezone verification** (await authorization). Do not start until ISS-019 is accepted.

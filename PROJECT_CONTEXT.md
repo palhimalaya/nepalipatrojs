@@ -75,20 +75,25 @@ npm run build
 
 ## Development status
 
-**Phase 0 — COMPLETED** (audit, docs bootstrap, all five ADRs **Accepted** with amendments).
+**Phase 0 — CLOSED** (ADRs Accepted).
 
-**Phase 1 — NOT STARTED.** Awaiting explicit authorization to implement (baseline → ISS-001 → ISS-006 → goldens/TZ → refactor).
+**Phase 1 — IN PROGRESS.**
+
+- Steps 1–4 COMPLETED (ISS-001, ISS-006 approved; conversion baseline accepted with ISS-019 finding).
+- **ISS-019 RESOLVED:** `daysBetweenBS` absolute day-index fix; BS→AD goldens pass; exhaustive round-trips **36525/36525**; suite **131** tests.
+- Dataset provenance still **unknown** (ISS-016) — do not invent provenance; one-day external New Year disagreements stay documented.
+- **Next:** Step 5 timezone verification (await authorization). Do not start automatically.
 
 ## Known limitations (v1)
 
-- No timezone-safe date-only API
-- Broken/fragile BS day validation (wrong calendar-data indexing)
-- Formatter token replacement corrupts some month/weekday names
+- No timezone-safe date-only API (Step 5 / ISS-002)
+- Dataset provenance unknown (ISS-016)
 - No generated `.d.ts` in `dist/` despite `package.json` `types` field
 - CSS export path `./styles` → missing `only-styles.css`
 - CI can “pass” with failed build/test (`continue-on-error: true`)
 - Datepicker: no min/max, weak a11y, scans entire DOM for z-index
 - BS range ends at 2099
+- AD→BS still O(days) walk (ISS-003; assess after Step 5)
 
 ## Where to go next
 

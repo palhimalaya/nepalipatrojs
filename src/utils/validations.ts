@@ -21,8 +21,9 @@ export function validateBsDate(year: number, month: number, day?: number): void 
     if (!BS_CALENDAR_DATA[year]) {
       throw new Error(`Data not available for year ${year}`);
     }
-    
-    const daysInMonth = BS_CALENDAR_DATA[year][month - 1] as number;
+
+    // Dataset shape: [daysPerMonth[12], totalDays] — index month lengths via [0].
+    const daysInMonth = BS_CALENDAR_DATA[year][0][month - 1];
     if (day < 1 || day > daysInMonth) {
       throw new Error(`Day must be between 1 and ${daysInMonth} for month ${month} in year ${year}`);
     }

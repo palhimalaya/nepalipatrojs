@@ -204,7 +204,8 @@
             if (!BS_CALENDAR_DATA[year]) {
                 throw new Error(`Data not available for year ${year}`);
             }
-            const daysInMonth = BS_CALENDAR_DATA[year][month - 1];
+            // Dataset shape: [daysPerMonth[12], totalDays] — index month lengths via [0].
+            const daysInMonth = BS_CALENDAR_DATA[year][0][month - 1];
             if (day < 1 || day > daysInMonth) {
                 throw new Error(`Day must be between 1 and ${daysInMonth} for month ${month} in year ${year}`);
             }
@@ -461,29 +462,39 @@
         return convertADToBS(new Date());
     }
 
-    function daysBetweenBS(date1, date2) {
+    function compareBs(a, b) {
+        if (a.year !== b.year)
+            return a.year - b.year;
+        if (a.month !== b.month)
+            return a.month - b.month;
+        return a.day - b.day;
+    }
+    /**
+     * Absolute day index of a BS date relative to REF_BS (2000-01-01 = 0).
+     * Built from year totals and month lengths — auditable and free of rollover bugs.
+     */
+    function daysFromRefBs(date) {
         let days = 0;
-        if (date1.year > date2.year ||
-            (date1.year === date2.year && date1.month > date2.month) ||
-            (date1.year === date2.year && date1.month === date2.month && date1.day > date2.day)) {
-            return -daysBetweenBS(date2, date1);
+        for (let year = REF_BS.year; year < date.year; year++) {
+            days += BS_CALENDAR_DATA[year][1];
         }
-        if (date1.year === date2.year && date1.month === date2.month && date1.day === date2.day) {
-            return 0;
+        for (let month = 1; month < date.month; month++) {
+            days += getDaysInMonth(date.year, month);
         }
-        days += getDaysInMonth(date1.year, date1.month) - date1.day;
-        let currentYear = date1.year;
-        let currentMonth = date1.month + 1;
-        while (currentYear < date2.year || (currentYear === date2.year && currentMonth < date2.month)) {
-            if (currentMonth > 12) {
-                currentYear++;
-                currentMonth = 1;
-            }
-            days += getDaysInMonth(currentYear, currentMonth);
-            currentMonth++;
-        }
-        days += date2.day;
+        days += date.day - REF_BS.day;
         return days;
+    }
+    /**
+     * Number of BS calendar days from date1 to date2 (date2 - date1).
+     * Negative if date2 is before date1.
+     *
+     * Exported for unit tests (ISS-019).
+     */
+    function daysBetweenBS(date1, date2) {
+        const cmp = compareBs(date1, date2);
+        if (cmp === 0)
+            return 0;
+        return daysFromRefBs(date2) - daysFromRefBs(date1);
     }
     /**
      * Converts a Bikram Sambat (BS) date to Gregorian (AD) date
@@ -509,67 +520,65 @@
         return num.toString().replace(/[0-9]/g, (match) => NEPALI_DIGITS[parseInt(match)]);
     }
     /**
-     * Formats a Nepali date according to the specified format string
-     * @param date The Nepali date to format
-     * @param format The format string
-     * @param options Formatting options
-     * @returns Formatted date string
+     * Format tokens, longest first so one pass never rewrites substituted text.
+     * Bracket groups `[...]` are literals (content emitted as-is).
+     */
+    const FORMAT_TOKEN = /\[([^\]]*)\]|YYYY|YY|MMMM|MMM|MM|M|dddd|ddd|DD|D|d/g;
+    /**
+     * Formats a Nepali date according to the specified format string.
+     *
+     * Tokens are matched once from the pattern (longest-first). Substituted
+     * month/weekday names are never scanned again, which prevents corruption
+     * such as Mangsir → 8angsir or Budhabar → Bu4habar.
+     *
+     * Use `[text]` to emit literal characters that would otherwise be tokens.
      */
     function formatBS(date, format = 'YYYY-MM-DD', options = {}) {
         const { language = 'en' } = options;
         const useNepaliDigits = language === 'np';
         const adDate = convertBSToAD(date);
         const weekDay = adDate.getDay() + 1;
-        let result = format;
-        // Year formats
-        result = result.replace(/YYYY/g, useNepaliDigits
-            ? toNepaliDigits(date.year)
-            : date.year.toString());
-        result = result.replace(/YY/g, useNepaliDigits
-            ? toNepaliDigits((date.year % 100).toString().padStart(2, '0'))
-            : (date.year % 100).toString().padStart(2, '0'));
-        // Month formats
-        // Full month name
-        if (language === 'en') {
-            result = result.replace(/MMMM/g, exports.NepaliMonth[date.month]);
-            result = result.replace(/MMM/g, exports.NepaliMonth[date.month].substring(0, 3));
-        }
-        else {
-            result = result.replace(/MMMM/g, exports.NepaliMonthNepali[date.month]);
-            result = result.replace(/MMM/g, exports.NepaliMonthNepali[date.month]);
-        }
-        // Two-digit month
-        result = result.replace(/MM/g, useNepaliDigits
-            ? toNepaliDigits(date.month.toString().padStart(2, '0'))
-            : date.month.toString().padStart(2, '0'));
-        // Single-digit month
-        result = result.replace(/M/g, useNepaliDigits
-            ? toNepaliDigits(date.month)
-            : date.month.toString());
-        // Day formats
-        // Two-digit day
-        result = result.replace(/DD/g, useNepaliDigits
-            ? toNepaliDigits(date.day.toString().padStart(2, '0'))
-            : date.day.toString().padStart(2, '0'));
-        // Single-digit day
-        result = result.replace(/D/g, useNepaliDigits
-            ? toNepaliDigits(date.day)
-            : date.day.toString());
-        // Weekday formats
-        // Full weekday name
-        if (language === 'en') {
-            result = result.replace(/dddd/g, exports.NepaliWeekDay[weekDay]);
-            result = result.replace(/ddd/g, exports.NepaliWeekDay[weekDay].substring(0, 3));
-        }
-        else {
-            result = result.replace(/dddd/g, exports.NepaliWeekDayNepali[weekDay]);
-            result = result.replace(/ddd/g, exports.NepaliWeekDayNepali[weekDay]);
-        }
-        // Numeric day of week (1-7)
-        result = result.replace(/d/g, useNepaliDigits
-            ? toNepaliDigits(weekDay)
-            : weekDay.toString());
-        return result;
+        const digits = (value) => useNepaliDigits ? toNepaliDigits(value) : String(value);
+        const pad2 = (n) => n.toString().padStart(2, '0');
+        const monthName = language === 'en' ? exports.NepaliMonth[date.month] : exports.NepaliMonthNepali[date.month];
+        const monthShort = language === 'en' ? exports.NepaliMonth[date.month].substring(0, 3) : exports.NepaliMonthNepali[date.month];
+        const weekdayName = language === 'en'
+            ? exports.NepaliWeekDay[weekDay]
+            : exports.NepaliWeekDayNepali[weekDay];
+        const weekdayShort = language === 'en'
+            ? exports.NepaliWeekDay[weekDay].substring(0, 3)
+            : exports.NepaliWeekDayNepali[weekDay];
+        return format.replace(FORMAT_TOKEN, (match, literal) => {
+            if (literal !== undefined) {
+                return literal;
+            }
+            switch (match) {
+                case 'YYYY':
+                    return digits(date.year);
+                case 'YY':
+                    return digits(pad2(date.year % 100));
+                case 'MMMM':
+                    return monthName;
+                case 'MMM':
+                    return monthShort;
+                case 'MM':
+                    return digits(pad2(date.month));
+                case 'M':
+                    return digits(date.month);
+                case 'DD':
+                    return digits(pad2(date.day));
+                case 'D':
+                    return digits(date.day);
+                case 'dddd':
+                    return weekdayName;
+                case 'ddd':
+                    return weekdayShort;
+                case 'd':
+                    return digits(weekDay);
+                default:
+                    return match;
+            }
+        });
     }
 
     class NepaliDatePicker {

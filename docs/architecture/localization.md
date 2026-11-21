@@ -16,7 +16,7 @@
 | ID | Issue |
 |----|-------|
 | ISS-005 | Docs use `'ne'`; runtime checks `'np'`. Passing `'ne'` does **not** enable Nepali digits/names. |
-| ISS-006 | After substituting `MMMM`/`dddd`, later `/M/g` and `/d/g` replacements corrupt names containing those letters (e.g. **Mangsir** → `8angsir`, **Budhabar** → `Bu4habar`). Tests use **Baisakh**, which hides the bug. |
+| ISS-006 | **Resolved (2026-11-21):** sequential `/M/g` `/d/g` corruption. Fixed via longest-first tokenization + `[literal]` escapes. |
 | ISS-007 | Ambiguous parse patterns: DD-MM-YYYY and MM-DD-YYYY share the same regex; first match wins. |
 
 ## Accepted v2 (ADR-005)

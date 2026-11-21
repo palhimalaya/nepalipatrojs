@@ -9,12 +9,11 @@ Severity: `critical` | `high` | `medium` | `low`
 
 - **Severity:** critical  
 - **Module:** `src/utils/validations.ts` (+ tests)  
-- **Status:** open  
-- **Description:** Uses `BS_CALENDAR_DATA[year][month - 1]` but entries are `[days[], total]`. Month 1 yields an **array**; month 2 yields **year total** (365/366), not Jestha length.  
-- **Reproduction:** Compare `getDaysInMonth(2080, 2)` (32) vs wrong index path (365). Valid days in short months may not throw; invalid days may be accepted.  
-- **Root cause:** Incorrect tuple indexing; tests copy the same mistake (`validations.test.ts` line using `[year][month-1]`).  
-- **Proposed:** Use `[year][0][month-1]`; fix tests; add explicit case for month 2 / last day+1.  
-- **Related:** Phase 1; ADR-003
+- **Status:** **resolved** (2026-11-21, Phase 1 Step 2)  
+- **Description:** Used `BS_CALENDAR_DATA[year][month - 1]` but entries are `[days[], total]`. Invalid days were often accepted.  
+- **Fix:** Read month length via `BS_CALENDAR_DATA[year][0][month - 1]`. Replaced legacy test that used the wrong index with independent regressions covering all 12 months in years 2000, 2078, 2080, 2081, 2099.  
+- **Verification:** Focused validation suite + full Jest (63 passed) + `tsc --noEmit` + build; probes for (2080,2,33)/(2080,9,30)/(2080,1,32) now throw.  
+- **Related:** Phase 1 Step 2; ADR-003
 
 ## ISS-002 — Timezone-dependent calendar arithmetic
 
@@ -51,9 +50,10 @@ Severity: `critical` | `high` | `medium` | `low`
 
 - **Severity:** critical  
 - **Module:** `date-formatter.ts`  
-- **Status:** open  
-- **Description:** After expanding `MMMM`/`dddd`, `/M/g` and `/d/g` replace letters inside names (`Mangsir` → `8angsir`, `Budhabar` → `Bu4habar`). Tests use Baisakh only.  
-- **Proposed:** Tokenize pattern; substitute placeholders; regression tests.  
+- **Status:** **resolved** (2026-11-21, Phase 1 Step 3)  
+- **Description:** Sequential global `.replace(/M/g)` / `.replace(/d/g)` rewrote letters inside already-substituted names (Mangsir → `8angsir`, Magh → `10agh`, Budhabar → `Bu4habar`).  
+- **Fix:** Single-pass longest-first tokenization (`YYYY|YY|MMMM|…|d`) with optional `[literal]` escapes; values substituted once, never rescanned.  
+- **Verification:** Formatter suite + full Jest **96/96**; probes show correct Mangsir/Magh/Budhabar.  
 
 ## ISS-007 — Ambiguous DD-MM vs MM-DD parse patterns
 
@@ -66,8 +66,8 @@ Severity: `critical` | `high` | `medium` | `low`
 
 - **Severity:** high  
 - **Module:** packaging / Rollup  
-- **Status:** open  
-- **Description:** `package.json` `types` → `dist/index.d.ts` but no `.d.ts` in dist; `rollup-plugin-dts` unused; gitignore would drop them.  
+- **Status:** open (partially mitigated)  
+- **Description:** After `npm run build` (2026-11-21), `dist/index.d.ts` **is** emitted by the TS plugin. `rollup-plugin-dts` remains unused. `.gitignore` still excludes most of `dist/` except umd/esm/css — local git may not track declarations. Publish via `prepublishOnly` may include them if present at pack time — needs pack smoke test (Phase 5).  
 
 ## ISS-009 — Broken `./styles` CSS export
 
@@ -114,17 +114,30 @@ Severity: `critical` | `high` | `medium` | `low`
 ## ISS-015 — Weak / absent baseline verification in this workspace
 
 - **Severity:** low (process)  
-- **Status:** open  
-- **Description:** Phase 0 could not run Jest (`node_modules` missing). Baseline must be captured at Phase 1 start.  
+- **Status:** **resolved** (baseline captured 2026-11-21)  
+- **Description:** Phase 0 lacked `node_modules`. Phase 1 Step 1 ran `npm ci`, `npm test`, `npm run build`, `npx tsc --noEmit` and recorded results in TEST-RESULTS.md.  
+- **Note:** Green Jest is insufficient; ISS-001/006 confirmed outside the suite.  
 
 ## ISS-016 — Calendar dataset provenance unknown
 
 - **Severity:** medium (documentation / trust)  
 - **Module:** `src/constants/calendar-data.ts`, docs  
-- **Status:** open  
-- **Description:** No authoritative source citation found in the repository for `BS_CALENDAR_DATA`. Integrity can be checksummed and structurally tested, but historical accuracy is not independently proven.  
-- **Proposed:** Document “provenance unknown”; search git/history/upstream later; never invent a source. Add checksum tests (ADR-003).  
+- **Status:** open — **investigated 2026-11-21, still unresolved**  
+- **Description:** No authoritative source citation in repo comments, README, or git history. `calendar-data.ts` introduced in commit `a6f54aa` (“add converters…”) with no upstream attribution.  
+- **Findings:** Structural integrity + SHA-256 pin added. Some public tables disagree by one day on certain New Years (e.g. merokalam 2078-01-01 = 2021-04-13 vs dataset+REF ⇒ 2021-04-14). Round-trips ≠ historical proof.  
+- **Proposed:** Keep “provenance unknown”; seek author/upstream table; do not replace dataset without ADR-003 approval.  
 - **Related:** ADR-003  
+
+## ISS-019 — `daysBetweenBS` incorrect day count (BS → AD broken for many dates)
+
+- **Severity:** critical  
+- **Module:** `src/converters/bs-to-ad.ts` (`daysBetweenBS`)  
+- **Status:** **resolved** — fixed 2026-11-21 (authorized after Step 4)  
+- **Description:** BS→AD often returned ~+30 days (e.g. 2080-01-01 → 2023-05-15 instead of 2023-04-14).  
+- **Root cause (verified):** The old cursor loop (1) used same-month formula `(len − d1) + d2` (over-counts by one full month when spans start after day 1 / when used from REF), and (2) on month-12→1 rollover incremented the year, reset to month 1, then **added the entire next Baisakh** before adding `date2.day`.  
+- **Fix:** Replace cursor arithmetic with absolute day indices from `REF_BS`: sum complete years + complete months + `(day − REF_BS.day)`; `daysBetweenBS(a,b) = index(b) − index(a)`. Dataset and REF unchanged.  
+- **Evidence after fix:** Exhaustive BS→AD→BS **36525 / 36525** zero failures (~25–31s). All golden BS→AD fixtures pass. Formatter weekday expectations updated from the old May-15 encoding to 2023-04-14.  
+- **Related:** ADR-002/003; Step 4 goldens/round-trips  
 
 ## ISS-017 — Complete v1 public API inventory before removals
 

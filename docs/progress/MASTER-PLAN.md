@@ -1,13 +1,13 @@
 # Master plan — NepaliPatroJS 2.0
 
-Overall status: **IN PROGRESS** (Phase 0 completed; ADRs Accepted; Phase 1 awaiting authorization)
+Overall status: **IN PROGRESS** (Phase 0 CLOSED; Phase 1 IN PROGRESS — baseline done)
 
 ## Phase overview
 
 | Phase | Name | Status |
 |-------|------|--------|
-| 0 | Repository audit & documentation bootstrap | **COMPLETED** (incl. ADR acceptance 2026-11-21) |
-| 1 | Core correctness | NOT STARTED (architecturally unblocked) |
+| 0 | Repository audit & documentation bootstrap | **COMPLETED** / CLOSED |
+| 1 | Core correctness | **IN PROGRESS** (Steps 1–4 + ISS-019 COMPLETED; next Step 5 timezone) |
 | 2 | Architecture / module boundaries | NOT STARTED |
 | 3 | Datepicker redesign | NOT STARTED |
 | 4 | Framework integration (React) | NOT STARTED |
@@ -50,32 +50,35 @@ Overall status: **IN PROGRESS** (Phase 0 completed; ADRs Accepted; Phase 1 await
 
 ## Phase 1 — Core correctness
 
-**Status:** NOT STARTED  
-**Depends on:** Explicit maintainer authorization to implement (ADRs Accepted 2026-11-21)  
+**Status:** IN PROGRESS  
+**Authorized:** 2026-11-21  
 **Objective:** Establish baseline, fix critical correctness bugs, prove conversion against unchanged dataset, introduce date-only APIs — **before** optimization/refactor deep cuts.
 
-### Authorized sequence (when Phase 1 starts)
+### Authorized sequence
 
-1. `npm ci` + baseline tests/build/typecheck → TEST-RESULTS  
-2. Fix ISS-001 (BS validation) + independent month-length regressions  
-3. Fix ISS-006 (formatter token corruption)  
-4. Golden fixtures, boundaries, round-trips, timezone tests (date-only)  
-5. Begin core refactoring only after baseline correctness is understood  
+1. ~~`npm ci` + baseline tests/build/typecheck → TEST-RESULTS~~ **DONE 2026-11-21**
+2. ~~Fix ISS-001 (BS validation) + independent month-length regressions~~ **DONE 2026-11-21**
+3. ~~Fix ISS-006 (formatter token corruption)~~ **DONE 2026-11-21**
+4. ~~Golden fixtures, integrity, round-trips~~ **DONE 2026-11-21** (discovered ISS-019; converters not rewritten)
+5. ~~Fix ISS-019 `daysBetweenBS`~~ **DONE 2026-11-21** (absolute day index; 36525/36525 round-trips)
+6. Timezone verification ← **NEXT** (await authorization)
+7. Algorithm assessment only after Step 5 / correctness gates remain green
 
 ### Tasks
 
-- [ ] Capture baseline verification (ISS-015)
-- [ ] Document complete v1 public API inventory (ISS-017) before any export removals
-- [ ] Record dataset provenance status / checksum plan (ISS-016; ADR-003)
-- [ ] Add golden conversion fixtures (reference + month/year boundaries) **before** algorithm changes
-- [ ] Structural dataset tests (12 months, totals, contiguous years, checksum)
-- [ ] Fix `validateBsDate` calendar-data indexing (ISS-001); fix tests that encode the bug
+- [x] Capture baseline verification (ISS-015) — recorded; suite green but bugs confirmed manually
+- [x] Fix `validateBsDate` calendar-data indexing (ISS-001); replace incorrect tests with independent 12-month regressions
+- [x] Fix formatter token expansion (ISS-006) via longest-first tokenization + `[literal]` escapes
+- [x] Structural dataset tests + SHA-256 pin; provenance investigated → still unknown (ISS-016)
+- [x] Golden conversion fixtures with sourced expectations; AD→BS matches; BS→AD gated by ISS-019
+- [x] Exhaustive BS→AD→BS round-trips (~36.5k dates, ~22–32s); ~3090 failures documented (ISS-019)
+- [x] **Fix ISS-019** `daysBetweenBS` — absolute day indices; goldens + 36525/36525; `.failing` removed
+- [ ] Unify locale `ne`/`np` (ISS-005) — deferred
+- [ ] Document complete v1 public API inventory (ISS-017)
 - [ ] Introduce `CalendarDate` / date-only AD/BS types; store REF_AD as plain YMD
-- [ ] Date-only conversion identical under multiple `TZ` values
-- [ ] Preserve legacy `Date` APIs with **local** calendar-field semantics (ADR-002); document; optional explicit UTC API later
-- [ ] Fix formatter token expansion (ISS-006); unify locale `ne`/`np` (ISS-005)
-- [ ] Exhaustive (or documented dense) round-trips; first/last supported dates; unsupported-range errors
-- [ ] Optional: prefix-sum day index — **only if** goldens pass; separate approval not required if dataset unchanged, but do not start until goldens exist
+- [ ] Date-only conversion identical under multiple `TZ` values (Step 5)
+- [ ] Preserve legacy `Date` APIs with **local** calendar-field semantics (ADR-002)
+- [ ] Optional: prefix-sum day index — only after Step 5 and goldens remain green
 
 ### Acceptance criteria
 

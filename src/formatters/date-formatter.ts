@@ -1,10 +1,10 @@
-import { 
-  NepaliDate, 
-  NepaliMonth, 
+import {
+  NepaliDate,
+  NepaliMonth,
   NepaliMonthNepali,
   NepaliWeekDay,
   NepaliWeekDayNepali,
-  NepaliPatroOptions 
+  NepaliPatroOptions,
 } from '../types';
 import { convertBSToAD } from '../converters/bs-to-ad';
 import { NEPALI_DIGITS } from '../constants/calendar-data';
@@ -19,75 +19,81 @@ export function toNepaliDigits(num: number | string): string {
 }
 
 /**
- * Formats a Nepali date according to the specified format string
- * @param date The Nepali date to format
- * @param format The format string
- * @param options Formatting options
- * @returns Formatted date string
+ * Format tokens, longest first so one pass never rewrites substituted text.
+ * Bracket groups `[...]` are literals (content emitted as-is).
  */
-export function formatBS(date: NepaliDate, format: string = 'YYYY-MM-DD', options: NepaliPatroOptions = {}): string {
+const FORMAT_TOKEN =
+  /\[([^\]]*)\]|YYYY|YY|MMMM|MMM|MM|M|dddd|ddd|DD|D|d/g;
+
+/**
+ * Formats a Nepali date according to the specified format string.
+ *
+ * Tokens are matched once from the pattern (longest-first). Substituted
+ * month/weekday names are never scanned again, which prevents corruption
+ * such as Mangsir → 8angsir or Budhabar → Bu4habar.
+ *
+ * Use `[text]` to emit literal characters that would otherwise be tokens.
+ */
+export function formatBS(
+  date: NepaliDate,
+  format: string = 'YYYY-MM-DD',
+  options: NepaliPatroOptions = {}
+): string {
   const { language = 'en' } = options;
   const useNepaliDigits = language === 'np';
-  
+
   const adDate = convertBSToAD(date);
   const weekDay = adDate.getDay() + 1;
-  
-  let result = format;
-  
-  // Year formats
-  result = result.replace(/YYYY/g, useNepaliDigits 
-    ? toNepaliDigits(date.year) 
-    : date.year.toString());
-  
-  result = result.replace(/YY/g, useNepaliDigits 
-    ? toNepaliDigits((date.year % 100).toString().padStart(2, '0')) 
-    : (date.year % 100).toString().padStart(2, '0'));
-  
-  // Month formats
-  // Full month name
-  if (language === 'en') {
-    result = result.replace(/MMMM/g, NepaliMonth[date.month]);
-    result = result.replace(/MMM/g, NepaliMonth[date.month].substring(0, 3));
-  } else {
-    result = result.replace(/MMMM/g, NepaliMonthNepali[date.month]);
-    result = result.replace(/MMM/g, NepaliMonthNepali[date.month]);
-  }
-  
-  // Two-digit month
-  result = result.replace(/MM/g, useNepaliDigits 
-    ? toNepaliDigits(date.month.toString().padStart(2, '0')) 
-    : date.month.toString().padStart(2, '0'));
-  
-  // Single-digit month
-  result = result.replace(/M/g, useNepaliDigits 
-    ? toNepaliDigits(date.month) 
-    : date.month.toString());
-  
-  // Day formats
-  // Two-digit day
-  result = result.replace(/DD/g, useNepaliDigits 
-    ? toNepaliDigits(date.day.toString().padStart(2, '0')) 
-    : date.day.toString().padStart(2, '0'));
-  
-  // Single-digit day
-  result = result.replace(/D/g, useNepaliDigits 
-    ? toNepaliDigits(date.day) 
-    : date.day.toString());
-  
-  // Weekday formats
-  // Full weekday name
-  if (language === 'en') {
-    result = result.replace(/dddd/g, NepaliWeekDay[weekDay]);
-    result = result.replace(/ddd/g, NepaliWeekDay[weekDay].substring(0, 3));
-  } else {
-    result = result.replace(/dddd/g, NepaliWeekDayNepali[weekDay]);
-    result = result.replace(/ddd/g, NepaliWeekDayNepali[weekDay]);
-  }
-  
-  // Numeric day of week (1-7)
-  result = result.replace(/d/g, useNepaliDigits 
-    ? toNepaliDigits(weekDay) 
-    : weekDay.toString());
-  
-  return result;
+
+  const digits = (value: number | string): string =>
+    useNepaliDigits ? toNepaliDigits(value) : String(value);
+
+  const pad2 = (n: number): string => n.toString().padStart(2, '0');
+
+  const monthName =
+    language === 'en' ? NepaliMonth[date.month] : NepaliMonthNepali[date.month];
+  const monthShort =
+    language === 'en' ? NepaliMonth[date.month].substring(0, 3) : NepaliMonthNepali[date.month];
+
+  const weekdayName =
+    language === 'en'
+      ? NepaliWeekDay[weekDay]
+      : NepaliWeekDayNepali[weekDay];
+  const weekdayShort =
+    language === 'en'
+      ? NepaliWeekDay[weekDay].substring(0, 3)
+      : NepaliWeekDayNepali[weekDay];
+
+  return format.replace(FORMAT_TOKEN, (match, literal: string | undefined) => {
+    if (literal !== undefined) {
+      return literal;
+    }
+
+    switch (match) {
+      case 'YYYY':
+        return digits(date.year);
+      case 'YY':
+        return digits(pad2(date.year % 100));
+      case 'MMMM':
+        return monthName;
+      case 'MMM':
+        return monthShort;
+      case 'MM':
+        return digits(pad2(date.month));
+      case 'M':
+        return digits(date.month);
+      case 'DD':
+        return digits(pad2(date.day));
+      case 'D':
+        return digits(date.day);
+      case 'dddd':
+        return weekdayName;
+      case 'ddd':
+        return weekdayShort;
+      case 'd':
+        return digits(weekDay);
+      default:
+        return match;
+    }
+  });
 }
