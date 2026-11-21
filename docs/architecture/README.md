@@ -1,0 +1,19 @@
+# Architecture
+
+## Documents
+
+| Doc | Status | Description |
+|-----|--------|-------------|
+| [system-overview.md](system-overview.md) | Phase 0 | Current v1 map + proposed v2 layout |
+| [core-engine.md](core-engine.md) | Phase 0 | Conversion, validation, date-only model |
+| [datepicker-architecture.md](datepicker-architecture.md) | Phase 0 | Modular UI plan |
+| [localization.md](localization.md) | Phase 0 | Locales, digits, formatting |
+| [packaging.md](packaging.md) | Phase 0 | Build, exports, types, CI |
+
+## Guiding decision (Accepted)
+
+**Modular single package** (`nepalipatrojs`) with clear internal modules and optional export path `nepalipatrojs/react`. Defer a multi-package monorepo until multiple independently versioned packages are needed.
+
+Core: date-only APIs, no DOM/React. Legacy `Date` wrappers keep v1 local-field semantics (ADR-002). Dataset preserved (ADR-003).
+
+See [ADR-001](../decisions/ADR-001-core-architecture.md) and [DECISIONS.md](../progress/DECISIONS.md).
