@@ -1,4 +1,5 @@
 import {
+  clearSelected,
   closePicker,
   createInitialState,
   isDestroyed,
@@ -56,6 +57,15 @@ describe('DatePickerState (pure)', () => {
     expect(s.selected).toEqual({ year: 2079, month: 5, day: 10 });
     expect(s.focused).toEqual({ year: 2079, month: 5, day: 10 });
     expect(s.view).toEqual({ year: 2079, month: 5 });
+  });
+
+  it('clearSelected nulls selection without moving view/focus', () => {
+    let s = createInitialState(today);
+    s = setSelected(s, { year: 2080, month: 2, day: 5 });
+    s = clearSelected(s);
+    expect(s.selected).toBeNull();
+    expect(s.focused).toEqual({ year: 2080, month: 2, day: 5 });
+    expect(s.view).toEqual({ year: 2080, month: 2 });
   });
 
   it('destroyed state ignores further transitions', () => {

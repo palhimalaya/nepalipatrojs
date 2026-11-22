@@ -77,7 +77,8 @@ Overall status: **IN PROGRESS** (Phase 0 CLOSED; Phase 1 IN PROGRESS — baselin
 19. ~~Phase 3 Stage 3.2 safe DOM render (ISS-014)~~ **DONE 2026-11-22**
 20. ~~Phase 3 Stage 3.3 Escape / keyboard / focus / ARIA~~ **DONE 2026-11-22**
 21. ~~Phase 3 Stage 3.4 Positioning / z-index (ISS-012)~~ **DONE 2026-11-22**
-22. Phase 3 Stage 3.5 — Today / constraints / disabled dates ← **NEXT** (await authorization)
+22. ~~Phase 3 Stage 3.5 Today / constraints / disabled dates~~ **DONE 2026-11-22**
+23. Phase 3 Stage 3.6 — Dual AD/BS display ← **NEXT** (await authorization)
 
 **Maintainer locks:** packaging → Phase 5; no `nepalipatrojs/core` deep export for now.
 
@@ -172,7 +173,7 @@ Overall status: **IN PROGRESS** (Phase 0 CLOSED; Phase 1 IN PROGRESS — baselin
 
 ## Phase 3 — Datepicker redesign
 
-**Status:** 3.0–3.4 COMPLETED; Stage 3.5 pending authorization  
+**Status:** 3.0–3.5 COMPLETED; Stage 3.6 pending authorization  
 **Depends on:** Phase 2 + ADR-004; assessment review  
 **Objective:** Modular, accessible, modern dual-calendar UI.  
 **Spec:** [phase3-datepicker-assessment.md](../architecture/phase3-datepicker-assessment.md)
@@ -184,7 +185,7 @@ Overall status: **IN PROGRESS** (Phase 0 CLOSED; Phase 1 IN PROGRESS — baselin
 - [x] Stage 3.2 — Replace `innerHTML` with safe DOM construction (ISS-014)
 - [x] Stage 3.3 — Escape, keyboard, focus, ARIA
 - [x] Stage 3.4 — Positioning / z-index (no full-DOM scan) (ISS-012)
-- [ ] Stage 3.5 — Today, min/max, disabled dates
+- [x] Stage 3.5 — Today, min/max, disabled dates
 - [ ] Stage 3.6 — Dual AD/BS display
 - [ ] Stage 3.7 — Visual design / theme tokens
 - [ ] Rename `ui/` → `datepicker/` when appropriate

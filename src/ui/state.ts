@@ -15,8 +15,11 @@ export interface DatePickerState {
   destroyed: boolean;
   /** Currently displayed BS month */
   view: ViewMonth;
-  /** Selected BS date (always set in v1 parity) */
-  selected: NepaliDate;
+  /**
+   * Selected BS date, or `null` after Clear.
+   * Initialized to today for v1 parity when the input is empty.
+   */
+  selected: NepaliDate | null;
   /** Keyboard-focused BS date (distinct from selected) */
   focused: NepaliDate;
   /** Civil "today" snapshot at init (BS) */
@@ -61,6 +64,15 @@ export function setSelected(
     selected: next,
     focused: next,
     view: { year: date.year, month: date.month },
+  };
+}
+
+/** Clear selection without changing view/focused (Stage 3.5 Clear). */
+export function clearSelected(state: DatePickerState): DatePickerState {
+  if (state.destroyed) return state;
+  return {
+    ...state,
+    selected: null,
   };
 }
 

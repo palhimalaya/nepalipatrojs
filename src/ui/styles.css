@@ -205,6 +205,65 @@
   background-color: #3182ce;
 }
 
+/* Disabled dates (Stage 3.5) */
+.nepali-day.nepali-disabled,
+.nepali-day:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  color: #a0aec0;
+  transform: none;
+  background: transparent;
+}
+
+.nepali-day.nepali-disabled:hover,
+.nepali-day:disabled:hover {
+  background: transparent;
+  transform: none;
+}
+
+.nepali-day.nepali-disabled.nepali-selected,
+.nepali-day:disabled.nepali-selected {
+  background-color: #cbd5e0;
+  color: #718096;
+}
+
+/* Today / Clear actions */
+.nepali-datepicker-actions {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 12px;
+  padding-top: 8px;
+  border-top: 1px solid #e1e5e9;
+}
+
+.nepali-action-btn {
+  flex: 1;
+  background: none;
+  border: 1px solid #e1e5e9;
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-size: 13px;
+  font-weight: 600;
+  font-family: inherit;
+  color: #2d3748;
+  cursor: pointer;
+}
+
+.nepali-action-btn:hover:not(:disabled) {
+  background-color: #f7fafc;
+}
+
+.nepali-action-btn:focus-visible {
+  outline: 2px solid #2b6cb0;
+  outline-offset: 2px;
+}
+
+.nepali-action-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
 .nepali-datepicker-dark {
   background: #2d3748;
   border-color: #4a5568;
@@ -243,6 +302,23 @@
 }
 .nepali-datepicker-dark .nepali-today:hover {
   background-color: #285e61;
+}
+.nepali-datepicker-dark .nepali-day.nepali-disabled,
+.nepali-datepicker-dark .nepali-day:disabled {
+  color: #718096;
+}
+.nepali-datepicker-dark .nepali-datepicker-actions {
+  border-top-color: #4a5568;
+}
+.nepali-datepicker-dark .nepali-action-btn {
+  border-color: #4a5568;
+  color: #e2e8f0;
+}
+.nepali-datepicker-dark .nepali-action-btn:hover:not(:disabled) {
+  background-color: #4a5568;
+}
+.nepali-datepicker-dark .nepali-action-btn:focus-visible {
+  outline-color: #90cdf4;
 }
 
 /* Responsive adjustments */

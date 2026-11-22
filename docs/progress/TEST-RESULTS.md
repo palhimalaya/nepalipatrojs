@@ -422,6 +422,22 @@ Public ESM export keys unchanged vs Stage 2.0 inventory.
 
 ---
 
+## 2026-11-22 — Phase 3 Stage 3.5: Today, constraints, disabled dates
+
+### Change
+
+Additive options: `minDate`, `maxDate` (inclusive), `disabledDates`, `isDateDisabled`. Pure `constraints.ts`. Today commits when selectable; Clear empties input + fires `change` + keeps open. Keyboard skips unavailable dates.
+
+### Commands
+
+```bash
+npx jest --runInBand --coverage=false   # PASS 283/283 ~28s
+npx tsc --noEmit                        # PASS
+npm run build                           # PASS
+```
+
+---
+
 ## 2026-11-22 — Phase 3 Stage 3.4: Positioning and z-index (ISS-012)
 
 ### Change

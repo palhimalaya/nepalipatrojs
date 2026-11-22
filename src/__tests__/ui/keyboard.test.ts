@@ -4,6 +4,7 @@ import {
   endOfWeekBs,
   initialFocusedDate,
   navigateFocusedDate,
+  navigateFocusedDateSelectable,
   shiftMonthClamped,
   startOfWeekBs,
 } from '../../ui/keyboard';
@@ -76,5 +77,21 @@ describe('keyboard navigation (pure, Sunday-start week)', () => {
         { year: 2080, month: 3, day: 3 }
       )
     ).toEqual({ year: 2080, month: 2, day: 1 });
+    expect(
+      initialFocusedDate(2080, 2, null, { year: 2080, month: 3, day: 3 })
+    ).toEqual({ year: 2080, month: 2, day: 1 });
+  });
+
+  it('navigateFocusedDateSelectable skips disabled days', () => {
+    const blocked = new Set(['2080-1-16', '2080-1-17']);
+    const ok = (d: { year: number; month: number; day: number }) =>
+      !blocked.has(`${d.year}-${d.month}-${d.day}`);
+    expect(
+      navigateFocusedDateSelectable(
+        { year: 2080, month: 1, day: 15 },
+        'ArrowRight',
+        ok
+      )
+    ).toEqual({ year: 2080, month: 1, day: 18 });
   });
 });

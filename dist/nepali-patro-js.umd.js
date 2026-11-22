@@ -286,7 +286,7 @@
         }
     }
 
-    function compareBs(a, b) {
+    function compareBs$1(a, b) {
         if (a.year !== b.year)
             return a.year - b.year;
         if (a.month !== b.month)
@@ -311,7 +311,7 @@
      * Number of BS calendar days from date1 to date2 (date2 - date1).
      */
     function daysBetweenBS(date1, date2) {
-        if (compareBs(date1, date2) === 0)
+        if (compareBs$1(date1, date2) === 0)
             return 0;
         return daysFromRefBs(date2) - daysFromRefBs(date1);
     }
@@ -711,6 +711,115 @@
     }
 
     /**
+     * Date selection constraints (Phase 3 Stage 3.5).
+     * Pure BS date-only comparisons — no DOM, no timezone APIs.
+     *
+     * Semantics:
+     * - `minDate` / `maxDate` are **inclusive**.
+     * - A date is disabled if outside [min, max], listed in `disabledDates`,
+     *   or `isDateDisabled(date)` returns true.
+     * - Contradictory min > max → both bounds ignored (with warning at normalize time).
+     * - Malformed dates (invalid month/day) → that constraint ignored.
+     */
+    function compareBsDates(a, b) {
+        if (a.year !== b.year)
+            return a.year - b.year;
+        if (a.month !== b.month)
+            return a.month - b.month;
+        return a.day - b.day;
+    }
+    function sameBsDate(a, b) {
+        return compareBsDates(a, b) === 0;
+    }
+    function isValidBsCivilDate(date) {
+        if (!date ||
+            !Number.isFinite(date.year) ||
+            !Number.isFinite(date.month) ||
+            !Number.isFinite(date.day)) {
+            return false;
+        }
+        if (date.month < 1 || date.month > 12 || date.day < 1) {
+            return false;
+        }
+        try {
+            return date.day <= getDaysInMonth(date.year, date.month);
+        }
+        catch (_a) {
+            return false;
+        }
+    }
+    /**
+     * Normalize constructor options into a safe constraint object.
+     * Does not throw — invalid pieces are dropped and optionally warned.
+     */
+    function normalizeConstraints(input = {}, warn = console.warn) {
+        let minDate = null;
+        let maxDate = null;
+        if (input.minDate !== undefined) {
+            if (isValidBsCivilDate(input.minDate)) {
+                minDate = { ...input.minDate };
+            }
+            else {
+                warn('[NepaliDatePicker] Ignoring invalid minDate; expected a valid BS { year, month, day }.');
+            }
+        }
+        if (input.maxDate !== undefined) {
+            if (isValidBsCivilDate(input.maxDate)) {
+                maxDate = { ...input.maxDate };
+            }
+            else {
+                warn('[NepaliDatePicker] Ignoring invalid maxDate; expected a valid BS { year, month, day }.');
+            }
+        }
+        if (minDate && maxDate && compareBsDates(minDate, maxDate) > 0) {
+            warn('[NepaliDatePicker] minDate is after maxDate; ignoring both bounds.');
+            minDate = null;
+            maxDate = null;
+        }
+        const disabledDates = [];
+        if (input.disabledDates) {
+            for (const d of input.disabledDates) {
+                if (isValidBsCivilDate(d)) {
+                    disabledDates.push({ year: d.year, month: d.month, day: d.day });
+                }
+                else {
+                    warn('[NepaliDatePicker] Ignoring invalid entry in disabledDates.');
+                }
+            }
+        }
+        const isDateDisabled = typeof input.isDateDisabled === 'function' ? input.isDateDisabled : null;
+        return { minDate, maxDate, disabledDates, isDateDisabled };
+    }
+    function isDateDisabledByConstraints(date, constraints) {
+        if (!isValidBsCivilDate(date)) {
+            return true;
+        }
+        if (constraints.minDate && compareBsDates(date, constraints.minDate) < 0) {
+            return true;
+        }
+        if (constraints.maxDate && compareBsDates(date, constraints.maxDate) > 0) {
+            return true;
+        }
+        if (constraints.disabledDates.some((d) => sameBsDate(d, date))) {
+            return true;
+        }
+        if (constraints.isDateDisabled) {
+            try {
+                if (constraints.isDateDisabled(date)) {
+                    return true;
+                }
+            }
+            catch (_a) {
+                return true;
+            }
+        }
+        return false;
+    }
+    function isDateSelectable(date, constraints) {
+        return !isDateDisabledByConstraints(date, constraints);
+    }
+
+    /**
      * Pure BS calendar keyboard navigation (Phase 3 Stage 3.3).
      * Week starts on Sunday — matches grid weekday columns (0=Sunday … 6=Saturday).
      */
@@ -830,15 +939,104 @@
                 return focused;
         }
     }
+    function compareBs(a, b) {
+        if (a.year !== b.year)
+            return a.year - b.year;
+        if (a.month !== b.month)
+            return a.month - b.month;
+        return a.day - b.day;
+    }
+    /** First selectable day at or after `start` stepping by `dir` (±1). */
+    function findSelectableAlong(start, dir, isSelectable, maxSteps = 800) {
+        let cur = start;
+        for (let i = 0; i < maxSteps; i++) {
+            if (isSelectable(cur))
+                return cur;
+            cur = addDaysBs(cur, dir);
+        }
+        return null;
+    }
+    /** Nearest selectable day in the same BS month as `anchor`, or null. */
+    function nearestSelectableInMonth(anchor, isSelectable) {
+        const dim = daysInMonthSafe(anchor.year, anchor.month);
+        const clamped = clampDay(anchor.year, anchor.month, anchor.day);
+        if (isSelectable(clamped))
+            return clamped;
+        for (let dist = 1; dist < dim; dist++) {
+            const before = clamped.day - dist;
+            if (before >= 1) {
+                const d = { year: anchor.year, month: anchor.month, day: before };
+                if (isSelectable(d))
+                    return d;
+            }
+            const after = clamped.day + dist;
+            if (after <= dim) {
+                const d = { year: anchor.year, month: anchor.month, day: after };
+                if (isSelectable(d))
+                    return d;
+            }
+        }
+        return null;
+    }
+    /**
+     * Keyboard navigation that skips disabled / out-of-range dates.
+     * If no selectable date is found, returns the original `focused`.
+     */
+    function navigateFocusedDateSelectable(focused, key, isSelectable) {
+        var _a, _b;
+        if (key === 'Home') {
+            const start = startOfWeekBs(focused);
+            const end = endOfWeekBs(focused);
+            let cur = start;
+            while (compareBs(cur, end) <= 0) {
+                if (isSelectable(cur))
+                    return cur;
+                cur = addDaysBs(cur, 1);
+            }
+            return focused;
+        }
+        if (key === 'End') {
+            const start = startOfWeekBs(focused);
+            const end = endOfWeekBs(focused);
+            let cur = end;
+            while (compareBs(cur, start) >= 0) {
+                if (isSelectable(cur))
+                    return cur;
+                cur = addDaysBs(cur, -1);
+            }
+            return focused;
+        }
+        if (key === 'PageUp' || key === 'PageDown') {
+            const shifted = navigateFocusedDate(focused, key);
+            return (_a = nearestSelectableInMonth(shifted, isSelectable)) !== null && _a !== void 0 ? _a : focused;
+        }
+        const candidate = navigateFocusedDate(focused, key);
+        if (isSelectable(candidate))
+            return candidate;
+        const dir = key === 'ArrowLeft' || key === 'ArrowUp' ? -1 : 1;
+        return (_b = findSelectableAlong(candidate, dir, isSelectable)) !== null && _b !== void 0 ? _b : focused;
+    }
     /** Initial grid focus: selected if in view, else today if in view, else day 1. */
     function initialFocusedDate(viewYear, viewMonth, selected, today) {
-        if (selected.year === viewYear && selected.month === viewMonth) {
+        if (selected &&
+            selected.year === viewYear &&
+            selected.month === viewMonth) {
             return { ...selected };
         }
         if (today.year === viewYear && today.month === viewMonth) {
             return { ...today };
         }
         return { year: viewYear, month: viewMonth, day: 1 };
+    }
+    /** Prefer a selectable focus target; fall back to `preferred` if none exist nearby. */
+    function resolveInitialFocus(preferred, isSelectable) {
+        var _a, _b;
+        if (isSelectable(preferred))
+            return preferred;
+        const inMonth = nearestSelectableInMonth(preferred, isSelectable);
+        if (inMonth)
+            return inMonth;
+        return ((_b = (_a = findSelectableAlong(preferred, 1, isSelectable)) !== null && _a !== void 0 ? _a : findSelectableAlong(preferred, -1, isSelectable)) !== null && _b !== void 0 ? _b : preferred);
     }
 
     /**
@@ -980,44 +1178,38 @@
         }
         return { year: y, month: m };
     }
-    function buildBsMonthGrid(viewYear, viewMonth, selected) {
+    function buildBsMonthGrid(viewYear, viewMonth, selected, isDisabled = () => false) {
         const daysInMonth = daysInBsMonth(viewYear, viewMonth);
         const firstWeekday = firstWeekdayOfBsMonth(viewYear, viewMonth);
         const prev = shiftMonth(viewYear, viewMonth, -1);
         const lastDayOfPrevMonth = daysInBsMonth(prev.year, prev.month);
         const next = shiftMonth(viewYear, viewMonth, 1);
         const cells = [];
-        for (let i = 0; i < firstWeekday; i++) {
-            const day = lastDayOfPrevMonth - firstWeekday + i + 1;
-            cells.push({
-                day,
-                year: prev.year,
-                month: prev.month,
-                kind: 'prev',
-                selected: false,
-            });
-        }
-        for (let day = 1; day <= daysInMonth; day++) {
-            const selectedCell = selected.year === viewYear &&
-                selected.month === viewMonth &&
+        const pushCell = (day, year, month, kind) => {
+            const date = { year, month, day };
+            const selectedCell = selected !== null &&
+                selected.year === year &&
+                selected.month === month &&
                 selected.day === day;
             cells.push({
                 day,
-                year: viewYear,
-                month: viewMonth,
-                kind: 'current',
+                year,
+                month,
+                kind,
                 selected: selectedCell,
+                disabled: isDisabled(date),
             });
+        };
+        for (let i = 0; i < firstWeekday; i++) {
+            const day = lastDayOfPrevMonth - firstWeekday + i + 1;
+            pushCell(day, prev.year, prev.month, 'prev');
+        }
+        for (let day = 1; day <= daysInMonth; day++) {
+            pushCell(day, viewYear, viewMonth, 'current');
         }
         let nextDay = 1;
         while (cells.length < TOTAL_CELLS) {
-            cells.push({
-                day: nextDay,
-                year: next.year,
-                month: next.month,
-                kind: 'next',
-                selected: false,
-            });
+            pushCell(nextDay, next.year, next.month, 'next');
             nextDay += 1;
         }
         return {
@@ -1032,6 +1224,7 @@
     /**
      * Safe DOM construction for the datepicker popup (Phase 3 Stage 3.2 / ISS-014).
      * ARIA / grid semantics (Phase 3 Stage 3.3).
+     * Constraints / Today / Clear (Phase 3 Stage 3.5).
      * Dynamic labels use textContent / createTextNode only.
      */
     function el(tag, className) {
@@ -1059,7 +1252,11 @@
         const monthName = localizeMonth(cell.month, language);
         const day = localizeDigits(cell.day, language);
         const year = localizeDigits(cell.year, language);
-        return `${day} ${monthName} ${year}`;
+        const base = `${day} ${monthName} ${year}`;
+        if (cell.disabled) {
+            return language === 'np' ? `${base} (अक्षम)` : `${base} (unavailable)`;
+        }
+        return base;
     }
     function monthYearLabel(year, month, language) {
         return `${localizeMonth(month, language)} ${localizeDigits(year, language)}`;
@@ -1072,6 +1269,9 @@
         if (cell.selected) {
             classes.push('nepali-selected');
         }
+        if (cell.disabled) {
+            classes.push('nepali-disabled');
+        }
         const isToday = sameDate({ year: cell.year, month: cell.month, day: cell.day }, today);
         if (isToday) {
             classes.push('nepali-today');
@@ -1080,6 +1280,9 @@
         const gridcell = el('div', 'nepali-gridcell');
         gridcell.setAttribute('role', 'gridcell');
         gridcell.setAttribute('aria-selected', cell.selected ? 'true' : 'false');
+        if (cell.disabled) {
+            gridcell.setAttribute('aria-disabled', 'true');
+        }
         if (isToday) {
             gridcell.setAttribute('aria-current', 'date');
         }
@@ -1095,17 +1298,36 @@
             day.setAttribute('data-other', 'next');
         }
         day.setAttribute('aria-label', accessibleDateLabel(cell, language));
-        day.tabIndex = isFocused ? 0 : -1;
+        if (cell.disabled) {
+            day.disabled = true;
+            day.setAttribute('aria-disabled', 'true');
+        }
+        day.tabIndex = isFocused && !cell.disabled ? 0 : -1;
         day.appendChild(document.createTextNode(localizeDigits(cell.day, language)));
         gridcell.appendChild(day);
         return gridcell;
+    }
+    function renderActions(language, todayDisabled) {
+        const actions = el('div', 'nepali-datepicker-actions');
+        const todayBtn = el('button', 'nepali-action-btn nepali-today-btn');
+        todayBtn.type = 'button';
+        todayBtn.appendChild(document.createTextNode(language === 'np' ? 'आज' : 'Today'));
+        if (todayDisabled) {
+            todayBtn.disabled = true;
+            todayBtn.setAttribute('aria-disabled', 'true');
+        }
+        const clearBtn = el('button', 'nepali-action-btn nepali-clear-btn');
+        clearBtn.type = 'button';
+        clearBtn.appendChild(document.createTextNode(language === 'np' ? 'खाली' : 'Clear'));
+        actions.append(todayBtn, clearBtn);
+        return actions;
     }
     /**
      * Build the popup root `.nepali-datepicker` tree with createElement / textContent.
      * Does not attach event listeners (orchestrator owns that).
      */
     function buildCalendarElement(options) {
-        const { theme, language, viewYear, viewMonth, selected, focused, today, popupId, minYear = MIN_BS_YEAR, maxYear = MAX_BS_YEAR, } = options;
+        const { theme, language, viewYear, viewMonth, selected, focused, today, popupId, isDateDisabled = () => false, todayDisabled = false, minYear = MIN_BS_YEAR, maxYear = MAX_BS_YEAR, } = options;
         const root = el('div', `nepali-datepicker nepali-datepicker-${theme}`);
         root.id = popupId;
         root.setAttribute('role', 'dialog');
@@ -1160,7 +1382,7 @@
         const body = el('div', 'nepali-calendar-body');
         body.setAttribute('role', 'grid');
         body.setAttribute('aria-labelledby', titleId);
-        const model = buildBsMonthGrid(viewYear, viewMonth, selected);
+        const model = buildBsMonthGrid(viewYear, viewMonth, selected, isDateDisabled);
         for (let row = 0; row < 6; row++) {
             const week = el('div', 'nepali-week');
             week.setAttribute('role', 'row');
@@ -1170,7 +1392,8 @@
             }
             body.appendChild(week);
         }
-        root.append(header, live, weekdays, body);
+        const actions = renderActions(language, todayDisabled);
+        root.append(header, live, weekdays, body, actions);
         return root;
     }
 
@@ -1208,6 +1431,15 @@
             selected: next,
             focused: next,
             view: { year: date.year, month: date.month },
+        };
+    }
+    /** Clear selection without changing view/focused (Stage 3.5 Clear). */
+    function clearSelected(state) {
+        if (state.destroyed)
+            return state;
+        return {
+            ...state,
+            selected: null,
         };
     }
     function setFocused(state, date) {
@@ -1329,6 +1561,14 @@
             this.onCalendarClick = (e) => {
                 this.handleBSDateClick(e);
             };
+            this.onTodayClick = (e) => {
+                e.stopPropagation();
+                this.selectToday();
+            };
+            this.onClearClick = (e) => {
+                e.stopPropagation();
+                this.clearDate();
+            };
             this.onViewportChange = () => {
                 this.scheduleReposition();
             };
@@ -1340,6 +1580,12 @@
             this.popupId = `nepali-datepicker-${++popupIdSeq}`;
             this.constructorZIndex = options.zIndex;
             this.runtimeZIndex = undefined;
+            this.constraints = normalizeConstraints({
+                minDate: options.minDate,
+                maxDate: options.maxDate,
+                disabledDates: options.disabledDates,
+                isDateDisabled: options.isDateDisabled,
+            });
             this.inputAriaBackup = {
                 haspopup: inputElement.getAttribute("aria-haspopup"),
                 expanded: inputElement.getAttribute("aria-expanded"),
@@ -1353,6 +1599,9 @@
                 runtimeOverride: this.runtimeZIndex,
                 constructorOption: this.constructorZIndex,
             }).value;
+        }
+        canSelect(date) {
+            return isDateSelectable(date, this.constraints);
         }
         init() {
             this.inputElement.setAttribute("aria-haspopup", "dialog");
@@ -1404,7 +1653,7 @@
             }
             try {
                 const parsedDate = this.parseDateString(inputValue);
-                if (parsedDate) {
+                if (parsedDate && this.canSelect(parsedDate)) {
                     this.state = setSelected(this.state, parsedDate);
                 }
             }
@@ -1502,7 +1751,8 @@
             // Parse existing value from input field if present
             this.parseAndSetDateFromInput();
             this.state = openPicker(this.state);
-            this.state = setFocused(this.state, initialFocusedDate(this.state.view.year, this.state.view.month, this.state.selected, this.state.today));
+            const preferred = initialFocusedDate(this.state.view.year, this.state.view.month, this.state.selected, this.state.today);
+            this.state = setFocused(this.state, resolveInitialFocus(preferred, (d) => this.canSelect(d)));
             this.setExpanded(true);
             this.renderCalendar(this.state.view.year, this.state.view.month, {
                 moveDomFocus: true,
@@ -1519,6 +1769,8 @@
                 focused: this.state.focused,
                 today: this.state.today,
                 popupId: this.popupId,
+                isDateDisabled: (d) => !this.canSelect(d),
+                todayDisabled: !this.canSelect(this.state.today),
             });
             this.setupCalendarEvents(calendarDiv);
             // Body-attached absolute positioning (document coordinates).
@@ -1550,7 +1802,7 @@
             return null;
         }
         moveFocusByKey(key) {
-            const next = navigateFocusedDate(this.state.focused, key);
+            const next = navigateFocusedDateSelectable(this.state.focused, key, (d) => this.canSelect(d));
             this.state = setFocused(this.state, next);
             const viewChanged = next.year !== this.state.view.year || next.month !== this.state.view.month;
             if (viewChanged) {
@@ -1568,7 +1820,7 @@
                 el.tabIndex = -1;
             });
             const target = this.findDayElement(next);
-            if (target) {
+            if (target && !target.disabled) {
                 target.tabIndex = 0;
                 target.focus();
             }
@@ -1578,10 +1830,14 @@
             const nextButton = calendarDiv.querySelector(".nepali-next-btn");
             const monthSelect = calendarDiv.querySelector(".nepali-month-select");
             const yearSelect = calendarDiv.querySelector(".nepali-year-select");
+            const todayButton = calendarDiv.querySelector(".nepali-today-btn");
+            const clearButton = calendarDiv.querySelector(".nepali-clear-btn");
             prevButton === null || prevButton === void 0 ? void 0 : prevButton.addEventListener("click", this.onPrevMonthClick);
             nextButton === null || nextButton === void 0 ? void 0 : nextButton.addEventListener("click", this.onNextMonthClick);
             monthSelect === null || monthSelect === void 0 ? void 0 : monthSelect.addEventListener("change", this.onMonthSelectChange);
             yearSelect === null || yearSelect === void 0 ? void 0 : yearSelect.addEventListener("change", this.onYearSelectChange);
+            todayButton === null || todayButton === void 0 ? void 0 : todayButton.addEventListener("click", this.onTodayClick);
+            clearButton === null || clearButton === void 0 ? void 0 : clearButton.addEventListener("click", this.onClearClick);
             calendarDiv.addEventListener("click", this.onCalendarClick);
         }
         teardownCalendarDom() {
@@ -1597,10 +1853,14 @@
             const nextButton = calendarDiv.querySelector(".nepali-next-btn");
             const monthSelect = calendarDiv.querySelector(".nepali-month-select");
             const yearSelect = calendarDiv.querySelector(".nepali-year-select");
+            const todayButton = calendarDiv.querySelector(".nepali-today-btn");
+            const clearButton = calendarDiv.querySelector(".nepali-clear-btn");
             prevButton === null || prevButton === void 0 ? void 0 : prevButton.removeEventListener("click", this.onPrevMonthClick);
             nextButton === null || nextButton === void 0 ? void 0 : nextButton.removeEventListener("click", this.onNextMonthClick);
             monthSelect === null || monthSelect === void 0 ? void 0 : monthSelect.removeEventListener("change", this.onMonthSelectChange);
             yearSelect === null || yearSelect === void 0 ? void 0 : yearSelect.removeEventListener("change", this.onYearSelectChange);
+            todayButton === null || todayButton === void 0 ? void 0 : todayButton.removeEventListener("click", this.onTodayClick);
+            clearButton === null || clearButton === void 0 ? void 0 : clearButton.removeEventListener("click", this.onClearClick);
             calendarDiv.removeEventListener("click", this.onCalendarClick);
             if (calendarDiv.parentNode) {
                 calendarDiv.parentNode.removeChild(calendarDiv);
@@ -1646,14 +1906,29 @@
                 return;
             const target = event.target;
             const dayEl = target.closest(".nepali-day");
-            if (!dayEl)
+            if (!dayEl || dayEl.disabled)
                 return;
             event.stopPropagation();
             this.selectBSDate(dayEl);
         }
+        commitDate(date) {
+            if (isDestroyed(this.state) || !this.canSelect(date))
+                return;
+            this.state = setSelected(this.state, date);
+            const formatted = formatBS(date, this.format, {
+                language: this.language,
+            });
+            this.inputElement.value = formatted;
+            this.inputElement.dispatchEvent(new Event("change", { bubbles: true }));
+            this.closeCalendar({ restoreFocus: true });
+        }
         selectBSDate(dayElement) {
             if (isDestroyed(this.state))
                 return;
+            if (dayElement instanceof HTMLButtonElement &&
+                dayElement.disabled) {
+                return;
+            }
             const yearAttr = dayElement.dataset.year;
             const monthAttr = dayElement.dataset.month;
             const dayAttr = dayElement.dataset.day;
@@ -1689,17 +1964,35 @@
                     }
                 }
             }
-            const date = { year, month, day };
-            this.state = setSelected(this.state, date);
-            const formatted = formatBS(date, this.format, {
-                language: this.language,
-            });
-            this.inputElement.value = formatted;
+            this.commitDate({ year, month, day });
+        }
+        selectToday() {
+            if (isDestroyed(this.state))
+                return;
+            if (!this.canSelect(this.state.today)) {
+                return;
+            }
+            this.commitDate({ ...this.state.today });
+        }
+        /**
+         * Clear: empty input, clear selection, fire `change`, keep popup open.
+         * Does not select today or any fallback date.
+         */
+        clearDate() {
+            if (isDestroyed(this.state))
+                return;
+            this.state = clearSelected(this.state);
+            this.inputElement.value = "";
             this.inputElement.dispatchEvent(new Event("change", { bubbles: true }));
-            this.closeCalendar({ restoreFocus: true });
+            this.renderCalendar(this.state.view.year, this.state.view.month, {
+                moveDomFocus: true,
+            });
         }
         syncFocusedToView() {
-            this.state = setFocused(this.state, clampDay(this.state.view.year, this.state.view.month, this.state.focused.day));
+            var _a;
+            const preferred = clampDay(this.state.view.year, this.state.view.month, this.state.focused.day);
+            const next = (_a = nearestSelectableInMonth(preferred, (d) => this.canSelect(d))) !== null && _a !== void 0 ? _a : resolveInitialFocus(preferred, (d) => this.canSelect(d));
+            this.state = setFocused(this.state, next);
         }
         previousBSMonth() {
             if (isDestroyed(this.state))

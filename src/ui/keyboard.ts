@@ -149,18 +149,127 @@ export function navigateFocusedDate(
   }
 }
 
+export type SelectablePredicate = (date: NepaliDate) => boolean;
+
+function compareBs(a: NepaliDate, b: NepaliDate): number {
+  if (a.year !== b.year) return a.year - b.year;
+  if (a.month !== b.month) return a.month - b.month;
+  return a.day - b.day;
+}
+
+/** First selectable day at or after `start` stepping by `dir` (±1). */
+export function findSelectableAlong(
+  start: NepaliDate,
+  dir: 1 | -1,
+  isSelectable: SelectablePredicate,
+  maxSteps = 800
+): NepaliDate | null {
+  let cur = start;
+  for (let i = 0; i < maxSteps; i++) {
+    if (isSelectable(cur)) return cur;
+    cur = addDaysBs(cur, dir);
+  }
+  return null;
+}
+
+/** Nearest selectable day in the same BS month as `anchor`, or null. */
+export function nearestSelectableInMonth(
+  anchor: NepaliDate,
+  isSelectable: SelectablePredicate
+): NepaliDate | null {
+  const dim = daysInMonthSafe(anchor.year, anchor.month);
+  const clamped = clampDay(anchor.year, anchor.month, anchor.day);
+  if (isSelectable(clamped)) return clamped;
+  for (let dist = 1; dist < dim; dist++) {
+    const before = clamped.day - dist;
+    if (before >= 1) {
+      const d = { year: anchor.year, month: anchor.month, day: before };
+      if (isSelectable(d)) return d;
+    }
+    const after = clamped.day + dist;
+    if (after <= dim) {
+      const d = { year: anchor.year, month: anchor.month, day: after };
+      if (isSelectable(d)) return d;
+    }
+  }
+  return null;
+}
+
+/**
+ * Keyboard navigation that skips disabled / out-of-range dates.
+ * If no selectable date is found, returns the original `focused`.
+ */
+export function navigateFocusedDateSelectable(
+  focused: NepaliDate,
+  key: CalendarNavKey,
+  isSelectable: SelectablePredicate
+): NepaliDate {
+  if (key === 'Home') {
+    const start = startOfWeekBs(focused);
+    const end = endOfWeekBs(focused);
+    let cur = start;
+    while (compareBs(cur, end) <= 0) {
+      if (isSelectable(cur)) return cur;
+      cur = addDaysBs(cur, 1);
+    }
+    return focused;
+  }
+
+  if (key === 'End') {
+    const start = startOfWeekBs(focused);
+    const end = endOfWeekBs(focused);
+    let cur = end;
+    while (compareBs(cur, start) >= 0) {
+      if (isSelectable(cur)) return cur;
+      cur = addDaysBs(cur, -1);
+    }
+    return focused;
+  }
+
+  if (key === 'PageUp' || key === 'PageDown') {
+    const shifted = navigateFocusedDate(focused, key);
+    return nearestSelectableInMonth(shifted, isSelectable) ?? focused;
+  }
+
+  const candidate = navigateFocusedDate(focused, key);
+  if (isSelectable(candidate)) return candidate;
+
+  const dir: 1 | -1 =
+    key === 'ArrowLeft' || key === 'ArrowUp' ? -1 : 1;
+  return findSelectableAlong(candidate, dir, isSelectable) ?? focused;
+}
+
 /** Initial grid focus: selected if in view, else today if in view, else day 1. */
 export function initialFocusedDate(
   viewYear: number,
   viewMonth: number,
-  selected: NepaliDate,
+  selected: NepaliDate | null,
   today: NepaliDate
 ): NepaliDate {
-  if (selected.year === viewYear && selected.month === viewMonth) {
+  if (
+    selected &&
+    selected.year === viewYear &&
+    selected.month === viewMonth
+  ) {
     return { ...selected };
   }
   if (today.year === viewYear && today.month === viewMonth) {
     return { ...today };
   }
   return { year: viewYear, month: viewMonth, day: 1 };
+}
+
+/** Prefer a selectable focus target; fall back to `preferred` if none exist nearby. */
+export function resolveInitialFocus(
+  preferred: NepaliDate,
+  isSelectable: SelectablePredicate
+): NepaliDate {
+  if (isSelectable(preferred)) return preferred;
+  const inMonth = nearestSelectableInMonth(preferred, isSelectable);
+  if (inMonth) return inMonth;
+  return (
+    findSelectableAlong(preferred, 1, isSelectable) ??
+    findSelectableAlong(preferred, -1, isSelectable) ??
+    preferred
+  );
 }

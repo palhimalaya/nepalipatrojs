@@ -32,6 +32,16 @@ describe('Calendar grid (pure)', () => {
     expect(current).toHaveLength(31);
     expect(current[0].selected).toBe(true);
     expect(grid.cells.filter((c) => c.selected)).toHaveLength(1);
+    expect(grid.cells.every((c) => c.disabled === false)).toBe(true);
+  });
+
+  it('marks disabled cells via predicate', () => {
+    const grid = buildBsMonthGrid(2080, 1, null, (d) => d.day === 15);
+    const day15 = grid.cells.find(
+      (c) => c.kind === 'current' && c.day === 15
+    );
+    expect(day15?.disabled).toBe(true);
+    expect(grid.cells.filter((c) => c.selected)).toHaveLength(0);
   });
 
   it('pads previous and next months', () => {

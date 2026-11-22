@@ -56,6 +56,7 @@ User-facing npm release notes will also live in the root `CHANGELOG` when 2.0 sh
 - **Phase 3 Stage 3.2 / ISS-014:** Safe DOM render (`ui/render.ts`); no `innerHTML` in datepicker; security regressions for HTML-looking labels.
 - **Phase 3 Stage 3.3:** Keyboard nav (Esc/arrows/Home/End/Page/Enter/Space), roving tabindex, dialog/grid ARIA, live month region, focus restore; `ui/keyboard.ts`.
 - **Phase 3 Stage 3.4 / ISS-012:** Deterministic popup positioning (`ui/position.ts`); no full-DOM z-index scan; sticky `zIndex` / `setZIndex` precedence; scroll/resize reposition.
+- **Phase 3 Stage 3.5:** `minDate` / `maxDate` / `disabledDates` / `isDateDisabled`; Today + Clear; keyboard skips unavailable dates (`ui/constraints.ts`).
 
 ### Changed (process)
 

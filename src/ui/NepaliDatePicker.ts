@@ -9,10 +9,17 @@ import {
   getDateFormatPatterns,
 } from "../i18n/localization";
 import {
+  DateConstraints,
+  isDateSelectable,
+  normalizeConstraints,
+} from "./constraints";
+import {
   clampDay,
   initialFocusedDate,
   isCalendarNavKey,
-  navigateFocusedDate,
+  navigateFocusedDateSelectable,
+  nearestSelectableInMonth,
+  resolveInitialFocus,
 } from "./keyboard";
 import {
   applyPopupPositionStyles,
@@ -22,6 +29,7 @@ import {
 } from "./position";
 import { buildCalendarElement } from "./render";
 import {
+  clearSelected,
   closePicker,
   createInitialState,
   DatePickerState,
@@ -50,6 +58,7 @@ export class NepaliDatePicker {
   private readonly constructorZIndex: number | undefined;
   /** Runtime override from `setZIndex()` (sticky until destroyed). */
   private runtimeZIndex: number | undefined;
+  private readonly constraints: DateConstraints;
   private readonly popupId: string;
   private readonly inputAriaBackup: {
     haspopup: string | null;
@@ -135,6 +144,16 @@ export class NepaliDatePicker {
     this.handleBSDateClick(e);
   };
 
+  private readonly onTodayClick = (e: MouseEvent): void => {
+    e.stopPropagation();
+    this.selectToday();
+  };
+
+  private readonly onClearClick = (e: MouseEvent): void => {
+    e.stopPropagation();
+    this.clearDate();
+  };
+
   private readonly onViewportChange = (): void => {
     this.scheduleReposition();
   };
@@ -151,6 +170,12 @@ export class NepaliDatePicker {
     this.popupId = `nepali-datepicker-${++popupIdSeq}`;
     this.constructorZIndex = options.zIndex;
     this.runtimeZIndex = undefined;
+    this.constraints = normalizeConstraints({
+      minDate: options.minDate,
+      maxDate: options.maxDate,
+      disabledDates: options.disabledDates,
+      isDateDisabled: options.isDateDisabled,
+    });
 
     this.inputAriaBackup = {
       haspopup: inputElement.getAttribute("aria-haspopup"),
@@ -168,6 +193,10 @@ export class NepaliDatePicker {
       runtimeOverride: this.runtimeZIndex,
       constructorOption: this.constructorZIndex,
     }).value;
+  }
+
+  private canSelect(date: NepaliDate): boolean {
+    return isDateSelectable(date, this.constraints);
   }
 
   private init(): void {
@@ -223,7 +252,7 @@ export class NepaliDatePicker {
 
     try {
       const parsedDate = this.parseDateString(inputValue);
-      if (parsedDate) {
+      if (parsedDate && this.canSelect(parsedDate)) {
         this.state = setSelected(this.state, parsedDate);
       }
     } catch (error) {
@@ -337,14 +366,15 @@ export class NepaliDatePicker {
     this.parseAndSetDateFromInput();
 
     this.state = openPicker(this.state);
+    const preferred = initialFocusedDate(
+      this.state.view.year,
+      this.state.view.month,
+      this.state.selected,
+      this.state.today
+    );
     this.state = setFocused(
       this.state,
-      initialFocusedDate(
-        this.state.view.year,
-        this.state.view.month,
-        this.state.selected,
-        this.state.today
-      )
+      resolveInitialFocus(preferred, (d) => this.canSelect(d))
     );
     this.setExpanded(true);
     this.renderCalendar(this.state.view.year, this.state.view.month, {
@@ -368,6 +398,8 @@ export class NepaliDatePicker {
       focused: this.state.focused,
       today: this.state.today,
       popupId: this.popupId,
+      isDateDisabled: (d) => !this.canSelect(d),
+      todayDisabled: !this.canSelect(this.state.today),
     });
 
     this.setupCalendarEvents(calendarDiv);
@@ -391,10 +423,10 @@ export class NepaliDatePicker {
     }
   }
 
-  private findDayElement(date: NepaliDate): HTMLElement | null {
+  private findDayElement(date: NepaliDate): HTMLButtonElement | null {
     if (!this.floatingCalendar) return null;
     const days =
-      this.floatingCalendar.querySelectorAll<HTMLElement>(".nepali-day");
+      this.floatingCalendar.querySelectorAll<HTMLButtonElement>(".nepali-day");
     for (const el of Array.from(days)) {
       if (
         Number(el.dataset.year) === date.year &&
@@ -408,9 +440,13 @@ export class NepaliDatePicker {
   }
 
   private moveFocusByKey(
-    key: Parameters<typeof navigateFocusedDate>[1]
+    key: Parameters<typeof navigateFocusedDateSelectable>[1]
   ): void {
-    const next = navigateFocusedDate(this.state.focused, key);
+    const next = navigateFocusedDateSelectable(
+      this.state.focused,
+      key,
+      (d) => this.canSelect(d)
+    );
     this.state = setFocused(this.state, next);
 
     const viewChanged =
@@ -431,7 +467,7 @@ export class NepaliDatePicker {
       el.tabIndex = -1;
     });
     const target = this.findDayElement(next);
-    if (target) {
+    if (target && !target.disabled) {
       target.tabIndex = 0;
       target.focus();
     }
@@ -448,11 +484,17 @@ export class NepaliDatePicker {
     const yearSelect = calendarDiv.querySelector<HTMLSelectElement>(
       ".nepali-year-select"
     );
+    const todayButton =
+      calendarDiv.querySelector<HTMLButtonElement>(".nepali-today-btn");
+    const clearButton =
+      calendarDiv.querySelector<HTMLButtonElement>(".nepali-clear-btn");
 
     prevButton?.addEventListener("click", this.onPrevMonthClick);
     nextButton?.addEventListener("click", this.onNextMonthClick);
     monthSelect?.addEventListener("change", this.onMonthSelectChange);
     yearSelect?.addEventListener("change", this.onYearSelectChange);
+    todayButton?.addEventListener("click", this.onTodayClick);
+    clearButton?.addEventListener("click", this.onClearClick);
     calendarDiv.addEventListener("click", this.onCalendarClick);
   }
 
@@ -474,10 +516,16 @@ export class NepaliDatePicker {
     const yearSelect = calendarDiv.querySelector<HTMLSelectElement>(
       ".nepali-year-select"
     );
+    const todayButton =
+      calendarDiv.querySelector<HTMLButtonElement>(".nepali-today-btn");
+    const clearButton =
+      calendarDiv.querySelector<HTMLButtonElement>(".nepali-clear-btn");
     prevButton?.removeEventListener("click", this.onPrevMonthClick);
     nextButton?.removeEventListener("click", this.onNextMonthClick);
     monthSelect?.removeEventListener("change", this.onMonthSelectChange);
     yearSelect?.removeEventListener("change", this.onYearSelectChange);
+    todayButton?.removeEventListener("click", this.onTodayClick);
+    clearButton?.removeEventListener("click", this.onClearClick);
     calendarDiv.removeEventListener("click", this.onCalendarClick);
     if (calendarDiv.parentNode) {
       calendarDiv.parentNode.removeChild(calendarDiv);
@@ -521,14 +569,31 @@ export class NepaliDatePicker {
   private handleBSDateClick(event: MouseEvent): void {
     if (isDestroyed(this.state)) return;
     const target = event.target as HTMLElement;
-    const dayEl = target.closest<HTMLElement>(".nepali-day");
-    if (!dayEl) return;
+    const dayEl = target.closest<HTMLButtonElement>(".nepali-day");
+    if (!dayEl || dayEl.disabled) return;
     event.stopPropagation();
     this.selectBSDate(dayEl);
   }
 
+  private commitDate(date: NepaliDate): void {
+    if (isDestroyed(this.state) || !this.canSelect(date)) return;
+    this.state = setSelected(this.state, date);
+    const formatted = formatBSDate(date, this.format, {
+      language: this.language,
+    });
+    this.inputElement.value = formatted;
+    this.inputElement.dispatchEvent(new Event("change", { bubbles: true }));
+    this.closeCalendar({ restoreFocus: true });
+  }
+
   private selectBSDate(dayElement: HTMLElement): void {
     if (isDestroyed(this.state)) return;
+    if (
+      dayElement instanceof HTMLButtonElement &&
+      dayElement.disabled
+    ) {
+      return;
+    }
 
     const yearAttr = dayElement.dataset.year;
     const monthAttr = dayElement.dataset.month;
@@ -573,26 +638,41 @@ export class NepaliDatePicker {
       }
     }
 
-    const date: NepaliDate = { year, month, day };
-    this.state = setSelected(this.state, date);
+    this.commitDate({ year, month, day });
+  }
 
-    const formatted = formatBSDate(date, this.format, {
-      language: this.language,
-    });
-    this.inputElement.value = formatted;
+  private selectToday(): void {
+    if (isDestroyed(this.state)) return;
+    if (!this.canSelect(this.state.today)) {
+      return;
+    }
+    this.commitDate({ ...this.state.today });
+  }
+
+  /**
+   * Clear: empty input, clear selection, fire `change`, keep popup open.
+   * Does not select today or any fallback date.
+   */
+  private clearDate(): void {
+    if (isDestroyed(this.state)) return;
+    this.state = clearSelected(this.state);
+    this.inputElement.value = "";
     this.inputElement.dispatchEvent(new Event("change", { bubbles: true }));
-    this.closeCalendar({ restoreFocus: true });
+    this.renderCalendar(this.state.view.year, this.state.view.month, {
+      moveDomFocus: true,
+    });
   }
 
   private syncFocusedToView(): void {
-    this.state = setFocused(
-      this.state,
-      clampDay(
-        this.state.view.year,
-        this.state.view.month,
-        this.state.focused.day
-      )
+    const preferred = clampDay(
+      this.state.view.year,
+      this.state.view.month,
+      this.state.focused.day
     );
+    const next =
+      nearestSelectableInMonth(preferred, (d) => this.canSelect(d)) ??
+      resolveInitialFocus(preferred, (d) => this.canSelect(d));
+    this.state = setFocused(this.state, next);
   }
 
   private previousBSMonth(): void {

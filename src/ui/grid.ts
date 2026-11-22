@@ -16,6 +16,7 @@ export interface CalendarCell {
   month: number; // 1–12
   kind: CellKind;
   selected: boolean;
+  disabled: boolean;
 }
 
 export interface CalendarGridModel {
@@ -79,10 +80,13 @@ function shiftMonth(
   return { year: y, month: m };
 }
 
+export type CellDisabledPredicate = (date: NepaliDate) => boolean;
+
 export function buildBsMonthGrid(
   viewYear: number,
   viewMonth: number,
-  selected: NepaliDate
+  selected: NepaliDate | null,
+  isDisabled: CellDisabledPredicate = () => false
 ): CalendarGridModel {
   const daysInMonth = daysInBsMonth(viewYear, viewMonth);
   const firstWeekday = firstWeekdayOfBsMonth(viewYear, viewMonth);
@@ -93,40 +97,40 @@ export function buildBsMonthGrid(
 
   const cells: CalendarCell[] = [];
 
-  for (let i = 0; i < firstWeekday; i++) {
-    const day = lastDayOfPrevMonth - firstWeekday + i + 1;
-    cells.push({
-      day,
-      year: prev.year,
-      month: prev.month,
-      kind: 'prev',
-      selected: false,
-    });
-  }
-
-  for (let day = 1; day <= daysInMonth; day++) {
+  const pushCell = (
+    day: number,
+    year: number,
+    month: number,
+    kind: CellKind
+  ): void => {
+    const date = { year, month, day };
     const selectedCell =
-      selected.year === viewYear &&
-      selected.month === viewMonth &&
+      selected !== null &&
+      selected.year === year &&
+      selected.month === month &&
       selected.day === day;
     cells.push({
       day,
-      year: viewYear,
-      month: viewMonth,
-      kind: 'current',
+      year,
+      month,
+      kind,
       selected: selectedCell,
+      disabled: isDisabled(date),
     });
+  };
+
+  for (let i = 0; i < firstWeekday; i++) {
+    const day = lastDayOfPrevMonth - firstWeekday + i + 1;
+    pushCell(day, prev.year, prev.month, 'prev');
+  }
+
+  for (let day = 1; day <= daysInMonth; day++) {
+    pushCell(day, viewYear, viewMonth, 'current');
   }
 
   let nextDay = 1;
   while (cells.length < TOTAL_CELLS) {
-    cells.push({
-      day: nextDay,
-      year: next.year,
-      month: next.month,
-      kind: 'next',
-      selected: false,
-    });
+    pushCell(nextDay, next.year, next.month, 'next');
     nextDay += 1;
   }
 

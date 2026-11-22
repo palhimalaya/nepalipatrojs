@@ -1,28 +1,40 @@
 # Datepicker architecture
 
-## Current (v1 → Stage 3.4)
+## Current (v1 → Stage 3.5)
 
 Orchestrator: `src/ui/NepaliDatePicker.ts`  
-Pure modules: `src/ui/state.ts`, `src/ui/grid.ts`, `src/ui/keyboard.ts`, `src/ui/position.ts`  
+Pure modules: `state`, `grid`, `keyboard`, `position`, `constraints`  
 Safe DOM: `src/ui/render.ts`
 
-**Full Phase 3.0 assessment:** [phase3-datepicker-assessment.md](phase3-datepicker-assessment.md).
+**Full Phase 3.0 assessment:** [phase3-datepicker-assessment.md](phase3-datepicker-assessment.md).  
+**Public options:** [datepicker.md](../api/datepicker.md).
 
 | Concern | How it is handled today |
 |---------|-------------------------|
-| State | Pure `state.ts` (`view`, `selected`, `focused`, `open`, `destroyed`, `today`) |
-| Grid model | Pure `grid.ts` → 42 `CalendarCell`s; `getDaysInMonth` + `getBsWeekdayIndex` |
-| Keyboard math | Pure `keyboard.ts` — day/week/month moves; **week starts Sunday** |
-| Parsing | Still inline in orchestrator (regex + month-name parsers) |
-| Rendering | Safe DOM via `render.ts` (`createElement` / text nodes) — **no `innerHTML`** |
+| State | Pure `state.ts` (`view`, `selected \| null`, `focused`, `open`, `destroyed`, `today`) |
+| Grid model | Pure `grid.ts` → 42 cells with `disabled` flag |
+| Constraints | Pure `constraints.ts` — inclusive min/max + list + predicate |
+| Keyboard math | Pure `keyboard.ts` — skips unavailable dates |
+| Parsing | Inline; out-of-range parsed values are not applied |
+| Rendering | Safe DOM; Today/Clear actions; disabled day buttons |
 | Navigation | Prev/next + `<select>` + PageUp/PageDown / arrows |
-| Positioning | `position.ts` — body-attached `absolute`; flip/clamp via `getBoundingClientRect` |
-| Z-index | Sticky precedence (no DOM scan) — see below |
+| Positioning | `position.ts` — body-attached `absolute` |
+| Z-index | Sticky precedence (no DOM scan) |
 | Theme | CSS class `nepali-datepicker-light/dark` |
 | Locale | `en` / `np` digit and month localization |
-| Events | Sets `input.value`, dispatches `change` |
+| Events | Select/Today/Clear → `change` (Clear keeps popup open) |
 | Cleanup | See listener inventory below |
 | Import | `core/` + `i18n/`; **no barrel**; **no `BS_CALENDAR_DATA`** |
+
+### Constraints (Stage 3.5)
+
+- **Inclusive** `minDate` / `maxDate` (BS `NepaliDate`).
+- `disabledDates: NepaliDate[]` — exact matches.
+- `isDateDisabled?(date): boolean` — `true` means unavailable.
+- Combined with OR (any rule disables).
+- Comparisons use civil Y-M-D order only (timezone-independent).
+- Malformed dates ignored (warn). `minDate > maxDate` → both bounds ignored (warn).
+- Unavailable days: `disabled` + `aria-disabled`; not mouse/keyboard selectable.
 
 ### Positioning strategy (Stage 3.4 / ISS-012)
 
@@ -55,12 +67,12 @@ Grid columns and keyboard Home/End use **Sunday → Saturday** (weekday index 0 
 | ArrowLeft / ArrowRight | ±1 day (crosses month/year) |
 | ArrowUp / ArrowDown | ±7 days |
 | Home / End | First / last day of current week (Sun–Sat) |
-| PageUp / PageDown | Previous / next BS month (day clamped) |
-| Enter | Select focused day (native button activation) |
-| Space | Select focused day (explicit; prevents scroll) |
+| PageUp / PageDown | Previous / next BS month (nearest selectable day) |
+| Enter | Select focused day if selectable (native button activation) |
+| Space | Select focused day if selectable (explicit; prevents scroll) |
 | Tab / Shift+Tab | Not trapped — natural tab order through header controls + one roving day cell |
 
-Navigation keys apply only when a `.nepali-day` has focus (input editing preserved while open). Keys are ignored when closed.
+Navigation keys apply only when a `.nepali-day` has focus (input editing preserved while open). Keys are ignored when closed. Arrow/Home/End/Page skip disabled / out-of-range dates.
 
 ### Focus policy
 
@@ -92,6 +104,7 @@ Navigation keys apply only when a `.nepali-day` has focus (input editing preserv
 | `onDocumentClick` | `document` | `init()` | `destroy()` |
 | `onDocumentKeydown` | `document` | `init()` | `destroy()` |
 | prev/next/month/year/calendar click | popup DOM | `setupCalendarEvents` | `teardownCalendarDom()` |
+| Today / Clear click | popup DOM | `setupCalendarEvents` | `teardownCalendarDom()` |
 | resize / scroll (capture) | `window` | while popup open | `detachPositionListeners()` via teardown/destroy |
 
 No duplicate popup listeners across re-renders: teardown runs before each rebuild.
@@ -100,8 +113,7 @@ No duplicate popup listeners across re-renders: teardown runs before each rebuil
 
 - Not a full screen-reader certification — tests assert roles/names/DOM behavior only.
 - `aria-modal="false"` by design (non-trapping); differs from assessment draft `true`.
-- No disabled-date announcements yet (Stage 3.5).
-- No Today/Clear controls (Stage 3.5).
+- Disabled dates announce via `aria-disabled` + label suffix; not full live “unavailable” coaching.
 - Visual redesign / stronger contrast tokens deferred to Stage 3.7.
 - Input accessible **name** still depends on host page (`<label>` / `aria-label`); picker does not invent one.
 
@@ -114,9 +126,8 @@ No duplicate popup listeners across re-renders: teardown runs before each rebuil
 
 ### Missing product features
 
-- Dual AD/BS calendar modes
-- Today / Clear
-- minDate / maxDate / disabledDates / `isDateDisabled`
+- Dual AD/BS calendar modes (Stage 3.6)
+- Visual redesign / theme tokens (Stage 3.7)
 
 ### Visual (v1)
 

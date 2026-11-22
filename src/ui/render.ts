@@ -1,6 +1,7 @@
 /**
  * Safe DOM construction for the datepicker popup (Phase 3 Stage 3.2 / ISS-014).
  * ARIA / grid semantics (Phase 3 Stage 3.3).
+ * Constraints / Today / Clear (Phase 3 Stage 3.5).
  * Dynamic labels use textContent / createTextNode only.
  */
 
@@ -18,11 +19,15 @@ export interface RenderCalendarOptions {
   viewYear: number;
   /** 1-based BS month */
   viewMonth: number;
-  selected: NepaliDate;
+  selected: NepaliDate | null;
   focused: NepaliDate;
   today: NepaliDate;
   /** Root element id (aria-controls target) */
   popupId: string;
+  /** True when the cell date must not be selectable. */
+  isDateDisabled?: (date: NepaliDate) => boolean;
+  /** Disable the Today action when today is not selectable. */
+  todayDisabled?: boolean;
   minYear?: number;
   maxYear?: number;
 }
@@ -66,7 +71,11 @@ function accessibleDateLabel(
   const monthName = localizeMonth(cell.month, language);
   const day = localizeDigits(cell.day, language);
   const year = localizeDigits(cell.year, language);
-  return `${day} ${monthName} ${year}`;
+  const base = `${day} ${monthName} ${year}`;
+  if (cell.disabled) {
+    return language === 'np' ? `${base} (अक्षम)` : `${base} (unavailable)`;
+  }
+  return base;
 }
 
 function monthYearLabel(
@@ -90,6 +99,9 @@ function renderDayCell(
   if (cell.selected) {
     classes.push('nepali-selected');
   }
+  if (cell.disabled) {
+    classes.push('nepali-disabled');
+  }
   const isToday = sameDate(
     { year: cell.year, month: cell.month, day: cell.day },
     today
@@ -105,6 +117,9 @@ function renderDayCell(
   const gridcell = el('div', 'nepali-gridcell');
   gridcell.setAttribute('role', 'gridcell');
   gridcell.setAttribute('aria-selected', cell.selected ? 'true' : 'false');
+  if (cell.disabled) {
+    gridcell.setAttribute('aria-disabled', 'true');
+  }
   if (isToday) {
     gridcell.setAttribute('aria-current', 'date');
   }
@@ -120,13 +135,43 @@ function renderDayCell(
     day.setAttribute('data-other', 'next');
   }
   day.setAttribute('aria-label', accessibleDateLabel(cell, language));
-  day.tabIndex = isFocused ? 0 : -1;
+  if (cell.disabled) {
+    day.disabled = true;
+    day.setAttribute('aria-disabled', 'true');
+  }
+  day.tabIndex = isFocused && !cell.disabled ? 0 : -1;
   day.appendChild(
     document.createTextNode(localizeDigits(cell.day, language))
   );
 
   gridcell.appendChild(day);
   return gridcell;
+}
+
+function renderActions(
+  language: DatePickerLanguage,
+  todayDisabled: boolean
+): HTMLDivElement {
+  const actions = el('div', 'nepali-datepicker-actions');
+
+  const todayBtn = el('button', 'nepali-action-btn nepali-today-btn');
+  todayBtn.type = 'button';
+  todayBtn.appendChild(
+    document.createTextNode(language === 'np' ? 'आज' : 'Today')
+  );
+  if (todayDisabled) {
+    todayBtn.disabled = true;
+    todayBtn.setAttribute('aria-disabled', 'true');
+  }
+
+  const clearBtn = el('button', 'nepali-action-btn nepali-clear-btn');
+  clearBtn.type = 'button';
+  clearBtn.appendChild(
+    document.createTextNode(language === 'np' ? 'खाली' : 'Clear')
+  );
+
+  actions.append(todayBtn, clearBtn);
+  return actions;
 }
 
 /**
@@ -145,6 +190,8 @@ export function buildCalendarElement(
     focused,
     today,
     popupId,
+    isDateDisabled = () => false,
+    todayDisabled = false,
     minYear = MIN_BS_YEAR,
     maxYear = MAX_BS_YEAR,
   } = options;
@@ -234,7 +281,12 @@ export function buildCalendarElement(
   body.setAttribute('role', 'grid');
   body.setAttribute('aria-labelledby', titleId);
 
-  const model = buildBsMonthGrid(viewYear, viewMonth, selected);
+  const model = buildBsMonthGrid(
+    viewYear,
+    viewMonth,
+    selected,
+    isDateDisabled
+  );
   for (let row = 0; row < 6; row++) {
     const week = el('div', 'nepali-week');
     week.setAttribute('role', 'row');
@@ -245,6 +297,8 @@ export function buildCalendarElement(
     body.appendChild(week);
   }
 
-  root.append(header, live, weekdays, body);
+  const actions = renderActions(language, todayDisabled);
+
+  root.append(header, live, weekdays, body, actions);
   return root;
 }

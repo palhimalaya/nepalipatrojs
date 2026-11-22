@@ -106,9 +106,10 @@ Severity: `critical` | `high` | `medium` | `low`
 
 - **Severity:** medium  
 - **Module:** UI  
-- **Status:** open — partially addressed (Stage 3.3)  
-- **Description:** Remaining: min/max/disabled, dual calendar, today/clear.  
-- **Done in Stage 3.3:** Escape; arrow/Home/End/Page keyboard nav; focus restore; dialog/grid ARIA; live month region; roving tabindex.  
+- **Status:** open — partially addressed (Stages 3.3–3.5)  
+- **Description:** Remaining: dual AD/BS calendar display (Stage 3.6); visual redesign (3.7).  
+- **Done in Stage 3.3:** Escape; keyboard nav; focus restore; dialog/grid ARIA.  
+- **Done in Stage 3.5:** `minDate` / `maxDate` / `disabledDates` / `isDateDisabled`; Today + Clear actions.  
 - **Related:** [phase3-datepicker-assessment.md](../architecture/phase3-datepicker-assessment.md)  
 
 ## ISS-014 — Unsafe / brittle HTML rendering
