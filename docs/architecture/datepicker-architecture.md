@@ -1,9 +1,9 @@
 # Datepicker architecture
 
-## Current (v1 → Stage 3.3)
+## Current (v1 → Stage 3.4)
 
 Orchestrator: `src/ui/NepaliDatePicker.ts`  
-Pure modules: `src/ui/state.ts`, `src/ui/grid.ts`, `src/ui/keyboard.ts`  
+Pure modules: `src/ui/state.ts`, `src/ui/grid.ts`, `src/ui/keyboard.ts`, `src/ui/position.ts`  
 Safe DOM: `src/ui/render.ts`
 
 **Full Phase 3.0 assessment:** [phase3-datepicker-assessment.md](phase3-datepicker-assessment.md).
@@ -16,13 +16,32 @@ Safe DOM: `src/ui/render.ts`
 | Parsing | Still inline in orchestrator (regex + month-name parsers) |
 | Rendering | Safe DOM via `render.ts` (`createElement` / text nodes) — **no `innerHTML`** |
 | Navigation | Prev/next + `<select>` + PageUp/PageDown / arrows |
-| Positioning | Absolute under input; flip if near edges (**Stage 3.4**) |
-| Z-index | Walk ancestors + modal selectors + **`querySelectorAll('*')`** (**Stage 3.4**) |
+| Positioning | `position.ts` — body-attached `absolute`; flip/clamp via `getBoundingClientRect` |
+| Z-index | Sticky precedence (no DOM scan) — see below |
 | Theme | CSS class `nepali-datepicker-light/dark` |
 | Locale | `en` / `np` digit and month localization |
 | Events | Sets `input.value`, dispatches `change` |
 | Cleanup | See listener inventory below |
 | Import | `core/` + `i18n/`; **no barrel**; **no `BS_CALENDAR_DATA`** |
+
+### Positioning strategy (Stage 3.4 / ISS-012)
+
+- Popup is appended to **`document.body`** (document coordinates).
+- Measure input + popup rects once, then write `top` / `left` / `z-index`.
+- Prefer **below** the input (`POPUP_GAP_PX = 4`); flip **above** when space below is insufficient and space above is adequate.
+- Prefer left-aligned to the input; if that overflows the viewport, align to the input’s right edge; clamp into the viewport with a small margin.
+- While open: `window` `resize` + capturing `scroll` recalculate position (rAF-coalesced).
+- Listeners removed on close / re-render teardown / destroy.
+
+### Z-index precedence
+
+| Priority | Source | Behavior |
+|----------|--------|----------|
+| 1 (highest) | `setZIndex(n)` | Sticky runtime override until destroy |
+| 2 | Constructor `options.zIndex` | Sticky for the instance |
+| 3 | `DEFAULT_POPUP_Z_INDEX` (`999999`) | Library default |
+
+Opening the popup does **not** re-resolve or escalate z-index. No ancestor walk, modal selector scan, or `querySelectorAll('*')`.
 
 ### Week-start convention
 
@@ -72,7 +91,8 @@ Navigation keys apply only when a `.nepali-day` has focus (input editing preserv
 | `onInputClick` | input | `init()` | `destroy()` |
 | `onDocumentClick` | `document` | `init()` | `destroy()` |
 | `onDocumentKeydown` | `document` | `init()` | `destroy()` |
-| prev/next/month/year/calendar click | popup DOM | `setupCalendarEvents` | `teardownCalendarDom()` on close/re-render/destroy |
+| prev/next/month/year/calendar click | popup DOM | `setupCalendarEvents` | `teardownCalendarDom()` |
+| resize / scroll (capture) | `window` | while popup open | `detachPositionListeners()` via teardown/destroy |
 
 No duplicate popup listeners across re-renders: teardown runs before each rebuild.
 
@@ -85,12 +105,18 @@ No duplicate popup listeners across re-renders: teardown runs before each rebuil
 - Visual redesign / stronger contrast tokens deferred to Stage 3.7.
 - Input accessible **name** still depends on host page (`<label>` / `aria-label`); picker does not invent one.
 
+### Remaining positioning limitations
+
+- jsdom / mocked-geometry tests ≠ real-browser layout certification.
+- Body attachment may still interact poorly with exotic `transform` / `filter` containing blocks on ancestors (rare); consumers can raise `zIndex` for overlays.
+- Nested scroll containers are handled via capturing `scroll`, but visual subpixel differences vary by browser.
+- No collision detection with unrelated overlays beyond the sticky z-index policy.
+
 ### Missing product features
 
 - Dual AD/BS calendar modes
 - Today / Clear
 - minDate / maxDate / disabledDates / `isDateDisabled`
-- Predictable z-index without full-DOM scan
 
 ### Visual (v1)
 

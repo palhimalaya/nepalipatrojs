@@ -14,6 +14,12 @@ import {
   isCalendarNavKey,
   navigateFocusedDate,
 } from "./keyboard";
+import {
+  applyPopupPositionStyles,
+  computePopupPosition,
+  readViewport,
+  resolveZIndex,
+} from "./position";
 import { buildCalendarElement } from "./render";
 import {
   closePicker,
@@ -40,13 +46,19 @@ export class NepaliDatePicker {
   private format: string;
   private theme: "light" | "dark";
   private language: "en" | "np";
-  private zIndex: number;
+  /** Constructor `options.zIndex` (if provided). */
+  private readonly constructorZIndex: number | undefined;
+  /** Runtime override from `setZIndex()` (sticky until destroyed). */
+  private runtimeZIndex: number | undefined;
   private readonly popupId: string;
   private readonly inputAriaBackup: {
     haspopup: string | null;
     expanded: string | null;
     controls: string | null;
   };
+  private positionListenersAttached = false;
+  private repositionScheduled = false;
+  private repositionRaf: number | null = null;
 
   /** Tracked so destroy() can remove every listener (ISS-022 / Stage 3.3). */
   private readonly onInputClick = (e: MouseEvent): void => {
@@ -123,6 +135,10 @@ export class NepaliDatePicker {
     this.handleBSDateClick(e);
   };
 
+  private readonly onViewportChange = (): void => {
+    this.scheduleReposition();
+  };
+
   constructor(
     inputElement: HTMLInputElement,
     options: NepaliDatePickerOptions = {}
@@ -133,6 +149,8 @@ export class NepaliDatePicker {
     this.language = options.language || "en";
     this.state = createInitialState(getCurrentBSDate());
     this.popupId = `nepali-datepicker-${++popupIdSeq}`;
+    this.constructorZIndex = options.zIndex;
+    this.runtimeZIndex = undefined;
 
     this.inputAriaBackup = {
       haspopup: inputElement.getAttribute("aria-haspopup"),
@@ -140,89 +158,16 @@ export class NepaliDatePicker {
       controls: inputElement.getAttribute("aria-controls"),
     };
 
-    // Calculate appropriate z-index
-    this.zIndex = this.calculateZIndex(options.zIndex);
-
     NepaliDatePicker.instances.add(this);
 
     this.init();
   }
 
-  // Method to calculate the appropriate z-index
-  private calculateZIndex(customZIndex?: number): number {
-    if (customZIndex) {
-      return customZIndex;
-    }
-
-    // Find the highest z-index in the current context
-    const highestZIndex = this.getHighestZIndex();
-
-    // Use a much higher base z-index for modals
-    const baseZIndex = Math.max(highestZIndex + 1000, 999999);
-
-    return baseZIndex;
-  }
-
-  // Method to find the highest z-index in the current document
-  private getHighestZIndex(): number {
-    let highest = 0;
-
-    // Check if input is inside a modal or high z-index container
-    let element: HTMLElement | null = this.inputElement;
-    while (element && element !== document.body) {
-      const zIndex = window.getComputedStyle(element).zIndex;
-      if (zIndex !== 'auto' && zIndex !== '' && !isNaN(parseInt(zIndex))) {
-        const numericZIndex = parseInt(zIndex);
-        if (numericZIndex > highest) {
-          highest = numericZIndex;
-        }
-      }
-      element = element.parentElement;
-    }
-
-    const modalSelectors = [
-      '.modal',
-      '.Modal',
-      '[role="dialog"]',
-      '[data-modal]',
-      '.ant-modal',
-      '.MuiModal-root',
-      '.v-dialog',
-      '.el-dialog',
-      '.ui-dialog',
-      '.swal2-container',
-      '.popup',
-      '.overlay',
-      '.modal-overlay',
-      '.dialog',
-      '.lightbox'
-    ];
-
-    modalSelectors.forEach(selector => {
-      const modals = document.querySelectorAll(selector);
-      modals.forEach(modal => {
-        const zIndex = window.getComputedStyle(modal as HTMLElement).zIndex;
-        if (zIndex !== 'auto' && zIndex !== '' && !isNaN(parseInt(zIndex))) {
-          const numericZIndex = parseInt(zIndex);
-          if (numericZIndex > highest) {
-            highest = numericZIndex;
-          }
-        }
-      });
-    });
-
-    const allElements = document.querySelectorAll('*');
-    allElements.forEach(el => {
-      const zIndex = window.getComputedStyle(el as HTMLElement).zIndex;
-      if (zIndex !== 'auto' && zIndex !== '' && !isNaN(parseInt(zIndex))) {
-        const numericZIndex = parseInt(zIndex);
-        if (numericZIndex > highest) {
-          highest = numericZIndex;
-        }
-      }
-    });
-
-    return highest;
+  private effectiveZIndex(): number {
+    return resolveZIndex({
+      runtimeOverride: this.runtimeZIndex,
+      constructorOption: this.constructorZIndex,
+    }).value;
   }
 
   private init(): void {
@@ -388,9 +333,6 @@ export class NepaliDatePicker {
     // Close all other calendars before opening this one
     this.closeAllOtherCalendars();
 
-    // Recalculate z-index in case the context has changed
-    this.zIndex = this.calculateZIndex();
-
     // Parse existing value from input field if present
     this.parseAndSetDateFromInput();
 
@@ -430,13 +372,12 @@ export class NepaliDatePicker {
 
     this.setupCalendarEvents(calendarDiv);
 
-    const modalContainer = this.findModalContainer();
-    const appendTarget = modalContainer || document.body;
-
-    appendTarget.appendChild(calendarDiv);
+    // Body-attached absolute positioning (document coordinates).
+    document.body.appendChild(calendarDiv);
     this.floatingCalendar = calendarDiv;
 
     this.positionCalendarPopup();
+    this.attachPositionListeners();
 
     if (opts.moveDomFocus) {
       this.focusFocusedDay();
@@ -496,39 +437,6 @@ export class NepaliDatePicker {
     }
   }
 
-  private findModalContainer(): HTMLElement | null {
-    let element: HTMLElement | null = this.inputElement;
-
-    while (element && element !== document.body) {
-      const classList = element.classList;
-      const role = element.getAttribute('role');
-      const tagName = element.tagName.toLowerCase();
-
-      if (tagName === 'dialog') {
-        return element;
-      }
-
-      if (
-        classList.contains('modal') ||
-        classList.contains('Modal') ||
-        classList.contains('popup') ||
-        classList.contains('dialog') ||
-        classList.contains('overlay') ||
-        role === 'dialog' ||
-        element.hasAttribute('data-modal') ||
-        // Check for high z-index that might indicate a modal
-        (window.getComputedStyle(element).zIndex !== 'auto' &&
-         parseInt(window.getComputedStyle(element).zIndex) > 1000)
-      ) {
-        return element;
-      }
-
-      element = element.parentElement;
-    }
-
-    return null;
-  }
-
   private setupCalendarEvents(calendarDiv: HTMLElement): void {
     const prevButton =
       calendarDiv.querySelector<HTMLButtonElement>(".nepali-prev-btn");
@@ -549,6 +457,7 @@ export class NepaliDatePicker {
   }
 
   private teardownCalendarDom(): void {
+    this.detachPositionListeners();
     if (!this.floatingCalendar) return;
     const calendarDiv = this.floatingCalendar;
     const active = document.activeElement as HTMLElement | null;
@@ -574,6 +483,39 @@ export class NepaliDatePicker {
       calendarDiv.parentNode.removeChild(calendarDiv);
     }
     this.floatingCalendar = null;
+  }
+
+  private attachPositionListeners(): void {
+    if (this.positionListenersAttached) return;
+    window.addEventListener("resize", this.onViewportChange, {
+      passive: true,
+    });
+    // Capture phase so nested scroll containers trigger reposition.
+    window.addEventListener("scroll", this.onViewportChange, true);
+    this.positionListenersAttached = true;
+  }
+
+  private detachPositionListeners(): void {
+    if (!this.positionListenersAttached) return;
+    window.removeEventListener("resize", this.onViewportChange);
+    window.removeEventListener("scroll", this.onViewportChange, true);
+    this.positionListenersAttached = false;
+    this.repositionScheduled = false;
+    if (this.repositionRaf !== null) {
+      cancelAnimationFrame(this.repositionRaf);
+      this.repositionRaf = null;
+    }
+  }
+
+  private scheduleReposition(): void {
+    if (!this.floatingCalendar || isDestroyed(this.state)) return;
+    if (this.repositionScheduled) return;
+    this.repositionScheduled = true;
+    this.repositionRaf = requestAnimationFrame(() => {
+      this.repositionScheduled = false;
+      this.repositionRaf = null;
+      this.positionCalendarPopup();
+    });
   }
 
   private handleBSDateClick(event: MouseEvent): void {
@@ -696,28 +638,16 @@ export class NepaliDatePicker {
   private positionCalendarPopup(): void {
     if (!this.floatingCalendar) return;
 
-    this.floatingCalendar.style.position = "absolute";
-    this.floatingCalendar.style.zIndex = this.zIndex.toString();
-
+    // Measure once, then write styles (avoid interleaving reads/writes).
     const inputRect = this.inputElement.getBoundingClientRect();
     const calendarRect = this.floatingCalendar.getBoundingClientRect();
-
-    let top = inputRect.bottom + window.scrollY + 4;
-    let left = inputRect.left + window.scrollX;
-
-    if (
-      window.innerHeight - inputRect.bottom < calendarRect.height &&
-      inputRect.top > calendarRect.height
-    ) {
-      top = inputRect.top + window.scrollY - calendarRect.height - 4;
-    }
-
-    if (window.innerWidth - inputRect.left < calendarRect.width) {
-      left = inputRect.right + window.scrollX - calendarRect.width;
-    }
-
-    this.floatingCalendar.style.top = `${top}px`;
-    this.floatingCalendar.style.left = `${left}px`;
+    const viewport = readViewport(window);
+    const position = computePopupPosition(inputRect, calendarRect, viewport);
+    applyPopupPositionStyles(
+      this.floatingCalendar,
+      position,
+      this.effectiveZIndex()
+    );
   }
 
   private closeCalendar(opts: { restoreFocus: boolean }): void {
@@ -739,9 +669,9 @@ export class NepaliDatePicker {
 
   public setZIndex(zIndex: number): void {
     if (isDestroyed(this.state)) return;
-    this.zIndex = zIndex;
+    this.runtimeZIndex = zIndex;
     if (this.floatingCalendar) {
-      this.floatingCalendar.style.zIndex = zIndex.toString();
+      this.floatingCalendar.style.zIndex = String(this.effectiveZIndex());
     }
   }
 
@@ -750,6 +680,7 @@ export class NepaliDatePicker {
       return;
     }
     this.closeCalendar({ restoreFocus: false });
+    this.detachPositionListeners();
     this.inputElement.removeEventListener("click", this.onInputClick);
     document.removeEventListener("click", this.onDocumentClick);
     document.removeEventListener("keydown", this.onDocumentKeydown);

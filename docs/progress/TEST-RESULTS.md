@@ -422,6 +422,26 @@ Public ESM export keys unchanged vs Stage 2.0 inventory.
 
 ---
 
+## 2026-11-22 — Phase 3 Stage 3.4: Positioning and z-index (ISS-012)
+
+### Change
+
+`src/ui/position.ts` — pure `computePopupPosition` / `resolveZIndex`. Removed full-DOM z-index scan and modal append heuristics. Sticky z-index precedence; scroll/resize (rAF-coalesced) while open; cleanup on close/destroy.
+
+### Commands
+
+```bash
+npx jest --runInBand --coverage=false   # PASS 261/261 ~28s
+npx tsc --noEmit                        # PASS
+npm run build                           # PASS
+```
+
+### Note
+
+Positioning tests use mocked `getBoundingClientRect` / viewport — not a claim of real-browser layout correctness.
+
+---
+
 ## 2026-11-22 — Phase 3 Stage 3.3: Keyboard, focus, ARIA
 
 ### Change

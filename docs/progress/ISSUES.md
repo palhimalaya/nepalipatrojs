@@ -96,10 +96,11 @@ Severity: `critical` | `high` | `medium` | `low`
 ## ISS-012 — Datepicker full-DOM z-index scan
 
 - **Severity:** medium  
-- **Module:** `NepaliDatePicker.getHighestZIndex`  
-- **Status:** open — Phase 3 implementation  
+- **Module:** datepicker positioning  
+- **Status:** **resolved** (Phase 3 Stage 3.4, 2026-11-22)  
 - **Description:** `querySelectorAll('*')` + getComputedStyle on open — expensive and fragile.  
-- **Related:** ADR-004; [phase3-datepicker-assessment.md](../architecture/phase3-datepicker-assessment.md) D2  
+- **Fix:** `src/ui/position.ts` — deterministic `DEFAULT_POPUP_Z_INDEX` / constructor `zIndex` / `setZIndex()` precedence; no document-wide scan; body-attached absolute positioning with scroll/resize recalculation.  
+- **Related:** ADR-004; Stage 3.4  
 
 ## ISS-013 — Datepicker feature gaps
 

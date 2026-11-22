@@ -836,6 +836,99 @@ function initialFocusedDate(viewYear, viewMonth, selected, today) {
 }
 
 /**
+ * Popup positioning and z-index policy (Phase 3 Stage 3.4 / ISS-012).
+ * Pure geometry helpers — no calendar state, no full-DOM scans.
+ */
+/** Library default when neither constructor option nor setZIndex is used. */
+const DEFAULT_POPUP_Z_INDEX = 999999;
+/** Gap between input and popup (px). */
+const POPUP_GAP_PX = 4;
+/** Viewport inset used when clamping to avoid edge overflow (px). */
+const VIEWPORT_MARGIN_PX = 4;
+/**
+ * Precedence (highest wins):
+ * 1. Runtime `setZIndex()` override
+ * 2. Constructor `options.zIndex`
+ * 3. Library default (`DEFAULT_POPUP_Z_INDEX`)
+ *
+ * Values are sticky — opening the popup must not re-resolve or escalate.
+ */
+function resolveZIndex(options) {
+    if (options.runtimeOverride !== undefined &&
+        Number.isFinite(options.runtimeOverride)) {
+        return { value: options.runtimeOverride, source: 'runtime' };
+    }
+    if (options.constructorOption !== undefined &&
+        Number.isFinite(options.constructorOption)) {
+        return { value: options.constructorOption, source: 'constructor' };
+    }
+    const fallback = options.defaultZIndex !== undefined
+        ? options.defaultZIndex
+        : DEFAULT_POPUP_Z_INDEX;
+    return { value: fallback, source: 'default' };
+}
+/**
+ * Compute absolute document coordinates for a popup anchored to an input.
+ *
+ * Strategy:
+ * - Prefer below the input (`POPUP_GAP_PX`).
+ * - Flip above when there is insufficient space below and enough space above.
+ * - Prefer left-aligned to the input; if that overflows the viewport right edge,
+ *   align to the input's right edge.
+ * - Clamp into the viewport with `VIEWPORT_MARGIN_PX` when the popup fits.
+ *
+ * Uses provided rects only — callers supply getBoundingClientRect / viewport.
+ */
+function computePopupPosition(input, popup, viewport, gap = POPUP_GAP_PX) {
+    const spaceBelow = viewport.height - input.bottom;
+    const spaceAbove = input.top;
+    const placeAbove = spaceBelow < popup.height + gap && spaceAbove > popup.height + gap;
+    let top;
+    let placement;
+    if (placeAbove) {
+        placement = 'above';
+        top = input.top + viewport.scrollY - popup.height - gap;
+    }
+    else {
+        placement = 'below';
+        top = input.bottom + viewport.scrollY + gap;
+    }
+    let left = input.left + viewport.scrollX;
+    if (viewport.width - input.left < popup.width) {
+        left = input.right + viewport.scrollX - popup.width;
+    }
+    const minLeft = viewport.scrollX + VIEWPORT_MARGIN_PX;
+    const maxLeft = viewport.scrollX + viewport.width - popup.width - VIEWPORT_MARGIN_PX;
+    if (maxLeft >= minLeft) {
+        left = Math.min(Math.max(left, minLeft), maxLeft);
+    }
+    const minTop = viewport.scrollY + VIEWPORT_MARGIN_PX;
+    const maxTop = viewport.scrollY + viewport.height - popup.height - VIEWPORT_MARGIN_PX;
+    if (maxTop >= minTop) {
+        top = Math.min(Math.max(top, minTop), maxTop);
+    }
+    return { top, left, placement };
+}
+/** Read viewport metrics once (caller may mock in tests). */
+function readViewport(win = window) {
+    return {
+        width: win.innerWidth,
+        height: win.innerHeight,
+        scrollX: win.scrollX,
+        scrollY: win.scrollY,
+    };
+}
+/**
+ * Apply absolute positioning styles. Writes only — measure before calling.
+ */
+function applyPopupPositionStyles(popup, position, zIndex) {
+    popup.style.position = 'absolute';
+    popup.style.zIndex = String(zIndex);
+    popup.style.top = `${position.top}px`;
+    popup.style.left = `${position.left}px`;
+}
+
+/**
  * Pure BS calendar grid model (Phase 3 Stage 3.1).
  * No DOM. Uses core getDaysInMonth + date-only weekday index (not JS Date weekday APIs).
  */
@@ -1164,6 +1257,9 @@ let popupIdSeq = 0;
 class NepaliDatePicker {
     constructor(inputElement, options = {}) {
         this.floatingCalendar = null;
+        this.positionListenersAttached = false;
+        this.repositionScheduled = false;
+        this.repositionRaf = null;
         /** Tracked so destroy() can remove every listener (ISS-022 / Stage 3.3). */
         this.onInputClick = (e) => {
             e.stopPropagation();
@@ -1227,88 +1323,30 @@ class NepaliDatePicker {
         this.onCalendarClick = (e) => {
             this.handleBSDateClick(e);
         };
+        this.onViewportChange = () => {
+            this.scheduleReposition();
+        };
         this.inputElement = inputElement;
         this.format = options.format || "YYYY-MM-DD";
         this.theme = options.theme || "light";
         this.language = options.language || "en";
         this.state = createInitialState(getCurrentBSDate());
         this.popupId = `nepali-datepicker-${++popupIdSeq}`;
+        this.constructorZIndex = options.zIndex;
+        this.runtimeZIndex = undefined;
         this.inputAriaBackup = {
             haspopup: inputElement.getAttribute("aria-haspopup"),
             expanded: inputElement.getAttribute("aria-expanded"),
             controls: inputElement.getAttribute("aria-controls"),
         };
-        // Calculate appropriate z-index
-        this.zIndex = this.calculateZIndex(options.zIndex);
         NepaliDatePicker.instances.add(this);
         this.init();
     }
-    // Method to calculate the appropriate z-index
-    calculateZIndex(customZIndex) {
-        if (customZIndex) {
-            return customZIndex;
-        }
-        // Find the highest z-index in the current context
-        const highestZIndex = this.getHighestZIndex();
-        // Use a much higher base z-index for modals
-        const baseZIndex = Math.max(highestZIndex + 1000, 999999);
-        return baseZIndex;
-    }
-    // Method to find the highest z-index in the current document
-    getHighestZIndex() {
-        let highest = 0;
-        // Check if input is inside a modal or high z-index container
-        let element = this.inputElement;
-        while (element && element !== document.body) {
-            const zIndex = window.getComputedStyle(element).zIndex;
-            if (zIndex !== 'auto' && zIndex !== '' && !isNaN(parseInt(zIndex))) {
-                const numericZIndex = parseInt(zIndex);
-                if (numericZIndex > highest) {
-                    highest = numericZIndex;
-                }
-            }
-            element = element.parentElement;
-        }
-        const modalSelectors = [
-            '.modal',
-            '.Modal',
-            '[role="dialog"]',
-            '[data-modal]',
-            '.ant-modal',
-            '.MuiModal-root',
-            '.v-dialog',
-            '.el-dialog',
-            '.ui-dialog',
-            '.swal2-container',
-            '.popup',
-            '.overlay',
-            '.modal-overlay',
-            '.dialog',
-            '.lightbox'
-        ];
-        modalSelectors.forEach(selector => {
-            const modals = document.querySelectorAll(selector);
-            modals.forEach(modal => {
-                const zIndex = window.getComputedStyle(modal).zIndex;
-                if (zIndex !== 'auto' && zIndex !== '' && !isNaN(parseInt(zIndex))) {
-                    const numericZIndex = parseInt(zIndex);
-                    if (numericZIndex > highest) {
-                        highest = numericZIndex;
-                    }
-                }
-            });
-        });
-        const allElements = document.querySelectorAll('*');
-        allElements.forEach(el => {
-            const zIndex = window.getComputedStyle(el).zIndex;
-            if (zIndex !== 'auto' && zIndex !== '' && !isNaN(parseInt(zIndex))) {
-                const numericZIndex = parseInt(zIndex);
-                if (numericZIndex > highest) {
-                    highest = numericZIndex;
-                }
-            }
-        });
-        return highest;
+    effectiveZIndex() {
+        return resolveZIndex({
+            runtimeOverride: this.runtimeZIndex,
+            constructorOption: this.constructorZIndex,
+        }).value;
     }
     init() {
         this.inputElement.setAttribute("aria-haspopup", "dialog");
@@ -1455,8 +1493,6 @@ class NepaliDatePicker {
             return;
         // Close all other calendars before opening this one
         this.closeAllOtherCalendars();
-        // Recalculate z-index in case the context has changed
-        this.zIndex = this.calculateZIndex();
         // Parse existing value from input field if present
         this.parseAndSetDateFromInput();
         this.state = openPicker(this.state);
@@ -1479,11 +1515,11 @@ class NepaliDatePicker {
             popupId: this.popupId,
         });
         this.setupCalendarEvents(calendarDiv);
-        const modalContainer = this.findModalContainer();
-        const appendTarget = modalContainer || document.body;
-        appendTarget.appendChild(calendarDiv);
+        // Body-attached absolute positioning (document coordinates).
+        document.body.appendChild(calendarDiv);
         this.floatingCalendar = calendarDiv;
         this.positionCalendarPopup();
+        this.attachPositionListeners();
         if (opts.moveDomFocus) {
             this.focusFocusedDay();
         }
@@ -1531,31 +1567,6 @@ class NepaliDatePicker {
             target.focus();
         }
     }
-    findModalContainer() {
-        let element = this.inputElement;
-        while (element && element !== document.body) {
-            const classList = element.classList;
-            const role = element.getAttribute('role');
-            const tagName = element.tagName.toLowerCase();
-            if (tagName === 'dialog') {
-                return element;
-            }
-            if (classList.contains('modal') ||
-                classList.contains('Modal') ||
-                classList.contains('popup') ||
-                classList.contains('dialog') ||
-                classList.contains('overlay') ||
-                role === 'dialog' ||
-                element.hasAttribute('data-modal') ||
-                // Check for high z-index that might indicate a modal
-                (window.getComputedStyle(element).zIndex !== 'auto' &&
-                    parseInt(window.getComputedStyle(element).zIndex) > 1000)) {
-                return element;
-            }
-            element = element.parentElement;
-        }
-        return null;
-    }
     setupCalendarEvents(calendarDiv) {
         const prevButton = calendarDiv.querySelector(".nepali-prev-btn");
         const nextButton = calendarDiv.querySelector(".nepali-next-btn");
@@ -1568,6 +1579,7 @@ class NepaliDatePicker {
         calendarDiv.addEventListener("click", this.onCalendarClick);
     }
     teardownCalendarDom() {
+        this.detachPositionListeners();
         if (!this.floatingCalendar)
             return;
         const calendarDiv = this.floatingCalendar;
@@ -1588,6 +1600,40 @@ class NepaliDatePicker {
             calendarDiv.parentNode.removeChild(calendarDiv);
         }
         this.floatingCalendar = null;
+    }
+    attachPositionListeners() {
+        if (this.positionListenersAttached)
+            return;
+        window.addEventListener("resize", this.onViewportChange, {
+            passive: true,
+        });
+        // Capture phase so nested scroll containers trigger reposition.
+        window.addEventListener("scroll", this.onViewportChange, true);
+        this.positionListenersAttached = true;
+    }
+    detachPositionListeners() {
+        if (!this.positionListenersAttached)
+            return;
+        window.removeEventListener("resize", this.onViewportChange);
+        window.removeEventListener("scroll", this.onViewportChange, true);
+        this.positionListenersAttached = false;
+        this.repositionScheduled = false;
+        if (this.repositionRaf !== null) {
+            cancelAnimationFrame(this.repositionRaf);
+            this.repositionRaf = null;
+        }
+    }
+    scheduleReposition() {
+        if (!this.floatingCalendar || isDestroyed(this.state))
+            return;
+        if (this.repositionScheduled)
+            return;
+        this.repositionScheduled = true;
+        this.repositionRaf = requestAnimationFrame(() => {
+            this.repositionScheduled = false;
+            this.repositionRaf = null;
+            this.positionCalendarPopup();
+        });
     }
     handleBSDateClick(event) {
         if (isDestroyed(this.state))
@@ -1692,21 +1738,12 @@ class NepaliDatePicker {
     positionCalendarPopup() {
         if (!this.floatingCalendar)
             return;
-        this.floatingCalendar.style.position = "absolute";
-        this.floatingCalendar.style.zIndex = this.zIndex.toString();
+        // Measure once, then write styles (avoid interleaving reads/writes).
         const inputRect = this.inputElement.getBoundingClientRect();
         const calendarRect = this.floatingCalendar.getBoundingClientRect();
-        let top = inputRect.bottom + window.scrollY + 4;
-        let left = inputRect.left + window.scrollX;
-        if (window.innerHeight - inputRect.bottom < calendarRect.height &&
-            inputRect.top > calendarRect.height) {
-            top = inputRect.top + window.scrollY - calendarRect.height - 4;
-        }
-        if (window.innerWidth - inputRect.left < calendarRect.width) {
-            left = inputRect.right + window.scrollX - calendarRect.width;
-        }
-        this.floatingCalendar.style.top = `${top}px`;
-        this.floatingCalendar.style.left = `${left}px`;
+        const viewport = readViewport(window);
+        const position = computePopupPosition(inputRect, calendarRect, viewport);
+        applyPopupPositionStyles(this.floatingCalendar, position, this.effectiveZIndex());
     }
     closeCalendar(opts) {
         this.state = closePicker(this.state);
@@ -1726,9 +1763,9 @@ class NepaliDatePicker {
     setZIndex(zIndex) {
         if (isDestroyed(this.state))
             return;
-        this.zIndex = zIndex;
+        this.runtimeZIndex = zIndex;
         if (this.floatingCalendar) {
-            this.floatingCalendar.style.zIndex = zIndex.toString();
+            this.floatingCalendar.style.zIndex = String(this.effectiveZIndex());
         }
     }
     destroy() {
@@ -1736,6 +1773,7 @@ class NepaliDatePicker {
             return;
         }
         this.closeCalendar({ restoreFocus: false });
+        this.detachPositionListeners();
         this.inputElement.removeEventListener("click", this.onInputClick);
         document.removeEventListener("click", this.onDocumentClick);
         document.removeEventListener("keydown", this.onDocumentKeydown);
