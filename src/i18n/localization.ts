@@ -1,14 +1,11 @@
 /**
- * Localization / presentation utilities (Stage 2.3).
+ * Localization / presentation utilities.
  * No DOM dependencies. Does not import calendar conversion logic.
  */
 
-import { NEPALI_DIGITS } from '../core/calendar-data';
-import {
-  DateFormatPattern,
-  NepaliMonth,
-  NepaliMonthNepali,
-} from '../core/types';
+import { NEPALI_DIGITS } from './digits';
+import { NepaliMonth, NepaliMonthNepali } from './names';
+import { DateFormatPattern } from './types';
 
 /**
  * Localize number to Nepali digits based on language

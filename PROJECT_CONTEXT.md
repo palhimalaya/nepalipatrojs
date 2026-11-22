@@ -38,17 +38,17 @@ Do **not** replace calendar data or the reference epoch without proving accuracy
 ```
 src/
   index.ts                 # public compatibility facade + window global
-  core/                    # no i18n, no DOM
-    calendar-data.ts       # BS month lengths + refs (+ NEPALI_DIGITS co-located)
-    types.ts               # CalendarDate, enums, options
-    calendar.ts            # getDaysInMonth, parseDateInput
-    gregorian.ts / validations.ts
-    converters/            # date-only + legacy wrappers + prefix/day-index
+  core/                    # no i18n, no DOM; date domain only
+    calendar-data.ts       # BS month lengths + refs (no digit glyphs)
+    types.ts               # CalendarDate / NepaliDate / AdDate / BsDate
+    calendar.ts, gregorian.ts, validations.ts
+    converters/
   i18n/                    # no DOM
-    localization.ts        # digits, months, parse patterns
-    format.ts              # formatBS, toNepaliDigits
-  ui/NepaliDatePicker.ts   # vanilla DOM datepicker
-  ui/styles.css
+    digits.ts, names.ts, types.ts
+    localization.ts, format.ts
+  ui/
+    types.ts               # NepaliDatePickerOptions
+    NepaliDatePicker.ts, styles.css
 ```
 
 ## Design principles for v2 (Accepted ADRs)
@@ -83,14 +83,13 @@ npm run build
 
 **Phase 1 — CLOSED.** Correctness, timezone, ISS-003 prefix AD→BS approved.
 
-**Phase 2 — Stages 2.0–2.5 COMPLETED** (architecture sequence done).
+**Phase 2 — Stages 2.0–2.6 COMPLETED** (architecture + ownership complete).
 
-- Physical `src/core/` + `src/i18n/`; public barrel unchanged
-- ISS-018 resolved: automated boundary tests (`docs/architecture/boundary-rules.md`)
-- Ownership exceptions (digits/enums/options in core) documented — moves need approval
+- Physical `src/core/` + `src/i18n/` + ownership separation; public barrel unchanged
+- ISS-018 resolved; Stage 2.6 ownership moves applied and enforced
 - ISS-020 / ISS-021 resolved; ISS-017 remains resolved (inventory freeze)
 - Locks: barrel-only entry (no `nepalipatrojs/core`); packaging → Phase 5; ISS-016 provenance open
-- **Next:** Phase 3 datepicker redesign (await authorization).
+- **Next:** Phase 3 datepicker redesign — start with design/behavior assessment (await authorization).
 
 ## Known limitations (v1)
 

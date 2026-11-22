@@ -2,7 +2,8 @@ import { MAX_BS_YEAR, MIN_BS_YEAR } from "../core/calendar-data";
 import { getCurrentBSDate } from "../core/converters/ad-to-bs";
 import { convertBSToAD } from "../core/converters/bs-to-ad";
 import { getDaysInMonth } from "../core/calendar";
-import { NepaliDate, NepaliDatePickerOptions } from "../core/types";
+import { NepaliDate } from "../core/types";
+import { NepaliDatePickerOptions } from "./types";
 import { formatBS as formatBSDate } from "../i18n/format";
 import {
   localizeDigits,

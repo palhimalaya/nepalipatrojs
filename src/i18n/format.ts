@@ -1,13 +1,13 @@
+import { NepaliDate } from '../core/types';
+import { getBsWeekdayIndex } from '../core/converters/date-only';
+import { NEPALI_DIGITS } from './digits';
 import {
-  NepaliDate,
   NepaliMonth,
   NepaliMonthNepali,
   NepaliWeekDay,
   NepaliWeekDayNepali,
-  NepaliPatroOptions,
-} from '../core/types';
-import { getBsWeekdayIndex } from '../core/converters/date-only';
-import { NEPALI_DIGITS } from '../core/calendar-data';
+} from './names';
+import { NepaliPatroOptions } from './types';
 
 /**
  * Converts English digits to Nepali digits

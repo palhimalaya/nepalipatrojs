@@ -160,8 +160,14 @@ Severity: `critical` | `high` | `medium` | `low`
 - **Status:** **resolved** (Stage 2.5, 2026-11-22)
 - **Description:** ADR-001 requires automated checks so `core` cannot import DOM/React/datepicker/i18n, etc.
 - **Fix:** Jest enforcement module `src/__tests__/architecture/boundary-enforcement.ts` + `boundaries.test.ts` — scans static/`import()`/`require` edges, DOM globals, cycles, facade dataset privacy, package `./core` ban. Includes **negative** fixtures proving violations are detected. Docs: [boundary-rules.md](../architecture/boundary-rules.md).
-- **Follow-up (ownership, not import edges):** Digits/enums/options co-located in core — evaluated in [exceptions-stage25.md](../architecture/exceptions-stage25.md); moves require separate approval.
-- **Related:** ADR-001; Stage 2.5
+- **Follow-up:** Ownership moves completed in Stage 2.6 ([exceptions-stage25.md](../architecture/exceptions-stage25.md)).
+- **Related:** ADR-001; Stage 2.5–2.6
+
+## Stage 2.6 note — ownership cleanup (no new ISS)
+
+- **Status:** completed 2026-11-22
+- **Change:** `NEPALI_DIGITS` → `i18n/digits.ts`; locale enums → `i18n/names.ts`; `DateFormatPattern` / `NepaliPatroOptions` → `i18n/types.ts`; `NepaliDatePickerOptions` → `ui/types.ts`. Facade re-exports preserve public names.
+- **Related:** Stage 2.5 exceptions; ADR-001
 
 ## ISS-020 — Circular dependency `index` ↔ `NepaliDatePicker`
 

@@ -1,5 +1,5 @@
 /**
- * Stage 2.5 / ISS-018 — architecture boundary enforcement.
+ * Stage 2.5–2.6 / ISS-018 — architecture boundary + ownership enforcement.
  * Positive: current tree must satisfy rules.
  * Negative: synthetic fixtures must be detected as violations.
  */
@@ -10,6 +10,8 @@ import {
   buildImportGraph,
   checkFacadeDatasetPrivacy,
   checkFileSource,
+  checkCoreSourceOwnership,
+  checkOwnershipSeparation,
   checkPackageExports,
   classifyPath,
   extractImportSpecifiers,
@@ -56,6 +58,26 @@ describe('Stage 2.5 architecture rules (positive — current tree)', () => {
   it('package.json has no deep ./core export', () => {
     const pkg = JSON.parse(readFileSync(PKG, 'utf8'));
     expect(checkPackageExports(pkg)).toEqual([]);
+  });
+
+  it('core does not own localization-only or UI-only definitions (Stage 2.6)', () => {
+    expect(checkOwnershipSeparation(SRC)).toEqual([]);
+    const coreTypes = readFileSync(join(SRC, 'core/types.ts'), 'utf8');
+    expect(coreTypes).toMatch(/CalendarDate/);
+    expect(coreTypes).not.toMatch(/NepaliMonth|NepaliDatePickerOptions|DateFormatPattern/);
+    const calendarData = readFileSync(join(SRC, 'core/calendar-data.ts'), 'utf8');
+    expect(calendarData).not.toMatch(/NEPALI_DIGITS/);
+  });
+
+  it('public facade still re-exports moved types and enums by name', () => {
+    const index = readFileSync(join(SRC, 'index.ts'), 'utf8');
+    expect(index).toMatch(/NepaliMonth/);
+    expect(index).toMatch(/NepaliDatePickerOptions/);
+    expect(index).toMatch(/DateFormatPattern/);
+    expect(index).toMatch(/NepaliPatroOptions/);
+    expect(index).toMatch(/from\s+['"]\.\/i18n\/names['"]/);
+    expect(index).toMatch(/from\s+['"]\.\/i18n\/types['"]/);
+    expect(index).toMatch(/from\s+['"]\.\/ui\/types['"]/);
   });
 });
 
@@ -129,5 +151,29 @@ describe('Stage 2.5 architecture rules (negative — must detect violations)', (
     const src = `// document and window are forbidden in core\nexport const x = 1;\n`;
     const v = checkFileSource(fakeCore, src, SRC, 'core');
     expect(v.filter((x) => x.rule === 'core-no-dom')).toEqual([]);
+  });
+
+  it('detects localization digits defined inside core (ownership)', () => {
+    const v = checkCoreSourceOwnership(
+      'core/calendar-data.ts',
+      "export const NEPALI_DIGITS = ['0'];\n"
+    );
+    expect(v.some((x) => x.rule === 'core-no-i18n-digits')).toBe(true);
+  });
+
+  it('detects locale enums defined inside core (ownership)', () => {
+    const v = checkCoreSourceOwnership(
+      'core/types.ts',
+      'export enum NepaliMonth { Baisakh = 1 }\n'
+    );
+    expect(v.some((x) => x.rule === 'core-no-locale-enums')).toBe(true);
+  });
+
+  it('detects UI options defined inside core (ownership)', () => {
+    const v = checkCoreSourceOwnership(
+      'core/types.ts',
+      "export interface NepaliDatePickerOptions { theme?: 'light' }\n"
+    );
+    expect(v.some((x) => x.rule === 'core-no-ui-options')).toBe(true);
   });
 });

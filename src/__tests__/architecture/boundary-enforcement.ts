@@ -316,6 +316,80 @@ export function checkPackageExports(packageJson: {
   return violations;
 }
 
+const FORBIDDEN_IN_CORE: Array<{ re: RegExp; rule: string; detail: string }> = [
+  { re: /\bNEPALI_DIGITS\b/, rule: 'core-no-i18n-digits', detail: 'NEPALI_DIGITS belongs in i18n/digits.ts' },
+  { re: /\benum\s+NepaliMonth\b/, rule: 'core-no-locale-enums', detail: 'NepaliMonth belongs in i18n/names.ts' },
+  { re: /\benum\s+NepaliMonthNepali\b/, rule: 'core-no-locale-enums', detail: 'NepaliMonthNepali belongs in i18n/names.ts' },
+  { re: /\benum\s+NepaliWeekDay\b/, rule: 'core-no-locale-enums', detail: 'NepaliWeekDay belongs in i18n/names.ts' },
+  { re: /\benum\s+NepaliWeekDayNepali\b/, rule: 'core-no-locale-enums', detail: 'NepaliWeekDayNepali belongs in i18n/names.ts' },
+  {
+    re: /\binterface\s+NepaliDatePickerOptions\b/,
+    rule: 'core-no-ui-options',
+    detail: 'NepaliDatePickerOptions belongs in ui/types.ts',
+  },
+  {
+    re: /\binterface\s+DateFormatPattern\b/,
+    rule: 'core-no-i18n-types',
+    detail: 'DateFormatPattern belongs in i18n/types.ts',
+  },
+  {
+    re: /\binterface\s+NepaliPatroOptions\b/,
+    rule: 'core-no-i18n-types',
+    detail: 'NepaliPatroOptions belongs in i18n/types.ts (facade re-exports)',
+  },
+];
+
+/** Check a single core file's source for ownership violations (used by negatives). */
+export function checkCoreSourceOwnership(
+  relFile: string,
+  source: string
+): Violation[] {
+  const violations: Violation[] = [];
+  const code = stripComments(source);
+  for (const { re, rule, detail } of FORBIDDEN_IN_CORE) {
+    if (re.test(code)) {
+      violations.push({ file: relFile, rule, detail });
+    }
+  }
+  return violations;
+}
+
+/**
+ * Stage 2.6 ownership: core must not define localization-only or UI-only symbols.
+ */
+export function checkOwnershipSeparation(srcRoot: string): Violation[] {
+  const violations: Violation[] = [];
+  const coreFiles = walkProductionTs(join(srcRoot, 'core'));
+
+  for (const file of coreFiles) {
+    const rel = relative(srcRoot, file).split(sep).join('/');
+    violations.push(
+      ...checkCoreSourceOwnership(rel, readFileSync(file, 'utf8'))
+    );
+  }
+
+  // Positive ownership anchors (fail if files missing after cleanup)
+  const required = [
+    'i18n/digits.ts',
+    'i18n/names.ts',
+    'i18n/types.ts',
+    'ui/types.ts',
+  ];
+  for (const rel of required) {
+    try {
+      statSync(join(srcRoot, rel));
+    } catch {
+      violations.push({
+        file: rel,
+        rule: 'ownership-file-missing',
+        detail: `Expected ownership file ${rel}`,
+      });
+    }
+  }
+
+  return violations;
+}
+
 export function scanRepository(srcRoot: string, packageJsonPath: string): Violation[] {
   const { violations } = buildImportGraph(srcRoot);
   const indexPath = join(srcRoot, 'index.ts');
@@ -324,5 +398,6 @@ export function scanRepository(srcRoot: string, packageJsonPath: string): Violat
   );
   const pkg = JSON.parse(readFileSync(packageJsonPath, 'utf8'));
   violations.push(...checkPackageExports(pkg));
+  violations.push(...checkOwnershipSeparation(srcRoot));
   return violations;
 }

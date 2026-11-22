@@ -22,7 +22,7 @@ import { formatBS } from '../../i18n/format';
 import { parseDateInput } from '../../core/calendar';
 import { MAX_BS_YEAR, MIN_BS_YEAR, REF_AD_YMD, REF_BS } from '../../core/calendar-data';
 import { getDaysInMonth } from '../../core/calendar';
-import { NepaliWeekDay } from '../../core/types';
+import { NepaliWeekDay } from '../../i18n/names';
 
 const HOST_TZ = process.env.TZ ?? '(unset — host default)';
 

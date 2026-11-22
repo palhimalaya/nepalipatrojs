@@ -50,6 +50,7 @@ User-facing npm release notes will also live in the root `CHANGELOG` when 2.0 sh
 - **Stage 2.3:** Split helpers into `utils/calendar.ts` (core) and `utils/localization.ts` (i18n); `helpers.ts` kept as re-export shim. No public API change.
 - **Stage 2.4:** Physical `src/core/` + `src/i18n/` layout; `helpers.ts` removed; `ui/` retained. No public API / algorithm / dataset change.
 - **Stage 2.5 / ISS-018:** Automated architecture boundary enforcement (Jest; negative fixtures). Ownership exceptions documented, not moved.
+- **Stage 2.6:** Ownership cleanup — digits/names/i18n+ui types moved; public re-exports unchanged; ownership rules enforced.
 
 ### Changed (process)
 

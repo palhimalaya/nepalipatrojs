@@ -16,6 +16,10 @@ Enforced by Jest via `src/__tests__/architecture/boundary-enforcement.ts` and
 | `no-cycles` | Production import graph must be acyclic |
 | `dataset-unpublished` | `BS_CALENDAR_DATA` must not appear in the public facade |
 | `no-deep-core-export` | `package.json` exports must not expose `./core` |
+| `core-no-i18n-digits` | `core/` must not define `NEPALI_DIGITS` |
+| `core-no-locale-enums` | `core/` must not define locale name enums |
+| `core-no-ui-options` | `core/` must not define `NepaliDatePickerOptions` |
+| `core-no-i18n-types` | `core/` must not define `DateFormatPattern` / `NepaliPatroOptions` |
 
 Allowed:
 

@@ -422,6 +422,22 @@ Public ESM export keys unchanged vs Stage 2.0 inventory.
 
 ---
 
+## 2026-11-22 — Phase 2 Stage 2.6: Ownership cleanup
+
+### Change
+
+Moved `NEPALI_DIGITS` → `i18n/digits.ts`; locale enums → `i18n/names.ts`; `DateFormatPattern` + `NepaliPatroOptions` → `i18n/types.ts`; `NepaliDatePickerOptions` → `ui/types.ts`. Public names re-exported from `index.ts`. Ownership rules added to architecture tests.
+
+### Commands
+
+```bash
+npx jest --runInBand --coverage=false   # PASS 196/196 ~28s
+npx tsc --noEmit                        # PASS
+npm run build                           # PASS
+```
+
+---
+
 ## 2026-11-22 — Phase 2 Stage 2.5: Architecture boundary enforcement (ISS-018)
 
 ### Change

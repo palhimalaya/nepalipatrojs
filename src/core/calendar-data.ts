@@ -134,5 +134,3 @@ export const BS_CALENDAR_DATA: Record<number, [number[], number]> = {
   2099: [[31, 31, 32, 32, 31, 30, 30, 29, 30, 29, 30, 30], 365],
 };
 
-
-export const NEPALI_DIGITS = ['०', '१', '२', '३', '४', '५', '६', '७', '८', '९'];

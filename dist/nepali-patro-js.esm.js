@@ -1,66 +1,3 @@
-/**
- * Month names in Nepali language (Devanagari script)
- */
-var NepaliMonth;
-(function (NepaliMonth) {
-    NepaliMonth[NepaliMonth["Baisakh"] = 1] = "Baisakh";
-    NepaliMonth[NepaliMonth["Jestha"] = 2] = "Jestha";
-    NepaliMonth[NepaliMonth["Ashadh"] = 3] = "Ashadh";
-    NepaliMonth[NepaliMonth["Shrawan"] = 4] = "Shrawan";
-    NepaliMonth[NepaliMonth["Bhadra"] = 5] = "Bhadra";
-    NepaliMonth[NepaliMonth["Ashwin"] = 6] = "Ashwin";
-    NepaliMonth[NepaliMonth["Kartik"] = 7] = "Kartik";
-    NepaliMonth[NepaliMonth["Mangsir"] = 8] = "Mangsir";
-    NepaliMonth[NepaliMonth["Poush"] = 9] = "Poush";
-    NepaliMonth[NepaliMonth["Magh"] = 10] = "Magh";
-    NepaliMonth[NepaliMonth["Falgun"] = 11] = "Falgun";
-    NepaliMonth[NepaliMonth["Chaitra"] = 12] = "Chaitra";
-})(NepaliMonth || (NepaliMonth = {}));
-/**
- * Month names in Nepali language (Devanagari script)
- */
-var NepaliMonthNepali;
-(function (NepaliMonthNepali) {
-    NepaliMonthNepali[NepaliMonthNepali["\u092C\u0948\u0936\u093E\u0916"] = 1] = "\u092C\u0948\u0936\u093E\u0916";
-    NepaliMonthNepali[NepaliMonthNepali["\u091C\u0947\u0937\u094D\u0920"] = 2] = "\u091C\u0947\u0937\u094D\u0920";
-    NepaliMonthNepali[NepaliMonthNepali["\u0906\u0937\u093E\u0922"] = 3] = "\u0906\u0937\u093E\u0922";
-    NepaliMonthNepali[NepaliMonthNepali["\u0936\u094D\u0930\u093E\u0935\u0923"] = 4] = "\u0936\u094D\u0930\u093E\u0935\u0923";
-    NepaliMonthNepali[NepaliMonthNepali["\u092D\u093E\u0926\u094D\u0930"] = 5] = "\u092D\u093E\u0926\u094D\u0930";
-    NepaliMonthNepali[NepaliMonthNepali["\u0906\u0936\u094D\u0935\u093F\u0928"] = 6] = "\u0906\u0936\u094D\u0935\u093F\u0928";
-    NepaliMonthNepali[NepaliMonthNepali["\u0915\u093E\u0930\u094D\u0924\u093F\u0915"] = 7] = "\u0915\u093E\u0930\u094D\u0924\u093F\u0915";
-    NepaliMonthNepali[NepaliMonthNepali["\u092E\u0902\u0938\u093F\u0930"] = 8] = "\u092E\u0902\u0938\u093F\u0930";
-    NepaliMonthNepali[NepaliMonthNepali["\u092A\u094C\u0937"] = 9] = "\u092A\u094C\u0937";
-    NepaliMonthNepali[NepaliMonthNepali["\u092E\u093E\u0918"] = 10] = "\u092E\u093E\u0918";
-    NepaliMonthNepali[NepaliMonthNepali["\u092B\u093E\u0932\u094D\u0917\u0941\u0928"] = 11] = "\u092B\u093E\u0932\u094D\u0917\u0941\u0928";
-    NepaliMonthNepali[NepaliMonthNepali["\u091A\u0948\u0924\u094D\u0930"] = 12] = "\u091A\u0948\u0924\u094D\u0930";
-})(NepaliMonthNepali || (NepaliMonthNepali = {}));
-/**
- * Days of the week in Nepali language (English transliteration)
- */
-var NepaliWeekDay;
-(function (NepaliWeekDay) {
-    NepaliWeekDay[NepaliWeekDay["Aitabar"] = 1] = "Aitabar";
-    NepaliWeekDay[NepaliWeekDay["Sombar"] = 2] = "Sombar";
-    NepaliWeekDay[NepaliWeekDay["Mangalbar"] = 3] = "Mangalbar";
-    NepaliWeekDay[NepaliWeekDay["Budhabar"] = 4] = "Budhabar";
-    NepaliWeekDay[NepaliWeekDay["Bihibar"] = 5] = "Bihibar";
-    NepaliWeekDay[NepaliWeekDay["Sukrabar"] = 6] = "Sukrabar";
-    NepaliWeekDay[NepaliWeekDay["Sanibar"] = 7] = "Sanibar";
-})(NepaliWeekDay || (NepaliWeekDay = {}));
-/**
- * Days of the week in Nepali language (Devanagari script)
- */
-var NepaliWeekDayNepali;
-(function (NepaliWeekDayNepali) {
-    NepaliWeekDayNepali[NepaliWeekDayNepali["\u0906\u0907\u0924\u092C\u093E\u0930"] = 1] = "\u0906\u0907\u0924\u092C\u093E\u0930";
-    NepaliWeekDayNepali[NepaliWeekDayNepali["\u0938\u094B\u092E\u092C\u093E\u0930"] = 2] = "\u0938\u094B\u092E\u092C\u093E\u0930";
-    NepaliWeekDayNepali[NepaliWeekDayNepali["\u092E\u0902\u0917\u0932\u092C\u093E\u0930"] = 3] = "\u092E\u0902\u0917\u0932\u092C\u093E\u0930";
-    NepaliWeekDayNepali[NepaliWeekDayNepali["\u092C\u0941\u0927\u092C\u093E\u0930"] = 4] = "\u092C\u0941\u0927\u092C\u093E\u0930";
-    NepaliWeekDayNepali[NepaliWeekDayNepali["\u092C\u093F\u0939\u093F\u092C\u093E\u0930"] = 5] = "\u092C\u093F\u0939\u093F\u092C\u093E\u0930";
-    NepaliWeekDayNepali[NepaliWeekDayNepali["\u0936\u0941\u0915\u094D\u0930\u092C\u093E\u0930"] = 6] = "\u0936\u0941\u0915\u094D\u0930\u092C\u093E\u0930";
-    NepaliWeekDayNepali[NepaliWeekDayNepali["\u0936\u0928\u093F\u092C\u093E\u0930"] = 7] = "\u0936\u0928\u093F\u092C\u093E\u0930";
-})(NepaliWeekDayNepali || (NepaliWeekDayNepali = {}));
-
 const MIN_BS_YEAR = 2000;
 const MAX_BS_YEAR = 2099;
 const MIN_AD_YEAR = 1943;
@@ -189,7 +126,6 @@ const BS_CALENDAR_DATA = {
     2098: [[31, 31, 32, 31, 31, 31, 30, 29, 30, 29, 30, 30], 365],
     2099: [[31, 31, 32, 32, 31, 30, 30, 29, 30, 29, 30, 30], 365],
 };
-const NEPALI_DIGITS = ['०', '१', '२', '३', '४', '५', '६', '७', '८', '९'];
 
 /**
  * Pure Gregorian (proleptic) civil-date helpers.
@@ -528,7 +464,79 @@ function convertBSToAD(bsDate) {
 }
 
 /**
- * Localization / presentation utilities (Stage 2.3).
+ * Localized month and weekday display names (Stage 2.6).
+ * Numeric month/day values remain domain concepts in core date types.
+ */
+/**
+ * Month names (English transliteration)
+ */
+var NepaliMonth;
+(function (NepaliMonth) {
+    NepaliMonth[NepaliMonth["Baisakh"] = 1] = "Baisakh";
+    NepaliMonth[NepaliMonth["Jestha"] = 2] = "Jestha";
+    NepaliMonth[NepaliMonth["Ashadh"] = 3] = "Ashadh";
+    NepaliMonth[NepaliMonth["Shrawan"] = 4] = "Shrawan";
+    NepaliMonth[NepaliMonth["Bhadra"] = 5] = "Bhadra";
+    NepaliMonth[NepaliMonth["Ashwin"] = 6] = "Ashwin";
+    NepaliMonth[NepaliMonth["Kartik"] = 7] = "Kartik";
+    NepaliMonth[NepaliMonth["Mangsir"] = 8] = "Mangsir";
+    NepaliMonth[NepaliMonth["Poush"] = 9] = "Poush";
+    NepaliMonth[NepaliMonth["Magh"] = 10] = "Magh";
+    NepaliMonth[NepaliMonth["Falgun"] = 11] = "Falgun";
+    NepaliMonth[NepaliMonth["Chaitra"] = 12] = "Chaitra";
+})(NepaliMonth || (NepaliMonth = {}));
+/**
+ * Month names (Devanagari script)
+ */
+var NepaliMonthNepali;
+(function (NepaliMonthNepali) {
+    NepaliMonthNepali[NepaliMonthNepali["\u092C\u0948\u0936\u093E\u0916"] = 1] = "\u092C\u0948\u0936\u093E\u0916";
+    NepaliMonthNepali[NepaliMonthNepali["\u091C\u0947\u0937\u094D\u0920"] = 2] = "\u091C\u0947\u0937\u094D\u0920";
+    NepaliMonthNepali[NepaliMonthNepali["\u0906\u0937\u093E\u0922"] = 3] = "\u0906\u0937\u093E\u0922";
+    NepaliMonthNepali[NepaliMonthNepali["\u0936\u094D\u0930\u093E\u0935\u0923"] = 4] = "\u0936\u094D\u0930\u093E\u0935\u0923";
+    NepaliMonthNepali[NepaliMonthNepali["\u092D\u093E\u0926\u094D\u0930"] = 5] = "\u092D\u093E\u0926\u094D\u0930";
+    NepaliMonthNepali[NepaliMonthNepali["\u0906\u0936\u094D\u0935\u093F\u0928"] = 6] = "\u0906\u0936\u094D\u0935\u093F\u0928";
+    NepaliMonthNepali[NepaliMonthNepali["\u0915\u093E\u0930\u094D\u0924\u093F\u0915"] = 7] = "\u0915\u093E\u0930\u094D\u0924\u093F\u0915";
+    NepaliMonthNepali[NepaliMonthNepali["\u092E\u0902\u0938\u093F\u0930"] = 8] = "\u092E\u0902\u0938\u093F\u0930";
+    NepaliMonthNepali[NepaliMonthNepali["\u092A\u094C\u0937"] = 9] = "\u092A\u094C\u0937";
+    NepaliMonthNepali[NepaliMonthNepali["\u092E\u093E\u0918"] = 10] = "\u092E\u093E\u0918";
+    NepaliMonthNepali[NepaliMonthNepali["\u092B\u093E\u0932\u094D\u0917\u0941\u0928"] = 11] = "\u092B\u093E\u0932\u094D\u0917\u0941\u0928";
+    NepaliMonthNepali[NepaliMonthNepali["\u091A\u0948\u0924\u094D\u0930"] = 12] = "\u091A\u0948\u0924\u094D\u0930";
+})(NepaliMonthNepali || (NepaliMonthNepali = {}));
+/**
+ * Weekday names (English transliteration)
+ */
+var NepaliWeekDay;
+(function (NepaliWeekDay) {
+    NepaliWeekDay[NepaliWeekDay["Aitabar"] = 1] = "Aitabar";
+    NepaliWeekDay[NepaliWeekDay["Sombar"] = 2] = "Sombar";
+    NepaliWeekDay[NepaliWeekDay["Mangalbar"] = 3] = "Mangalbar";
+    NepaliWeekDay[NepaliWeekDay["Budhabar"] = 4] = "Budhabar";
+    NepaliWeekDay[NepaliWeekDay["Bihibar"] = 5] = "Bihibar";
+    NepaliWeekDay[NepaliWeekDay["Sukrabar"] = 6] = "Sukrabar";
+    NepaliWeekDay[NepaliWeekDay["Sanibar"] = 7] = "Sanibar";
+})(NepaliWeekDay || (NepaliWeekDay = {}));
+/**
+ * Weekday names (Devanagari script)
+ */
+var NepaliWeekDayNepali;
+(function (NepaliWeekDayNepali) {
+    NepaliWeekDayNepali[NepaliWeekDayNepali["\u0906\u0907\u0924\u092C\u093E\u0930"] = 1] = "\u0906\u0907\u0924\u092C\u093E\u0930";
+    NepaliWeekDayNepali[NepaliWeekDayNepali["\u0938\u094B\u092E\u092C\u093E\u0930"] = 2] = "\u0938\u094B\u092E\u092C\u093E\u0930";
+    NepaliWeekDayNepali[NepaliWeekDayNepali["\u092E\u0902\u0917\u0932\u092C\u093E\u0930"] = 3] = "\u092E\u0902\u0917\u0932\u092C\u093E\u0930";
+    NepaliWeekDayNepali[NepaliWeekDayNepali["\u092C\u0941\u0927\u092C\u093E\u0930"] = 4] = "\u092C\u0941\u0927\u092C\u093E\u0930";
+    NepaliWeekDayNepali[NepaliWeekDayNepali["\u092C\u093F\u0939\u093F\u092C\u093E\u0930"] = 5] = "\u092C\u093F\u0939\u093F\u092C\u093E\u0930";
+    NepaliWeekDayNepali[NepaliWeekDayNepali["\u0936\u0941\u0915\u094D\u0930\u092C\u093E\u0930"] = 6] = "\u0936\u0941\u0915\u094D\u0930\u092C\u093E\u0930";
+    NepaliWeekDayNepali[NepaliWeekDayNepali["\u0936\u0928\u093F\u092C\u093E\u0930"] = 7] = "\u0936\u0928\u093F\u092C\u093E\u0930";
+})(NepaliWeekDayNepali || (NepaliWeekDayNepali = {}));
+
+/**
+ * Devanagari digit glyphs (Stage 2.6 — owned by i18n, not core calendar data).
+ */
+const NEPALI_DIGITS = ['०', '१', '२', '३', '४', '५', '६', '७', '८', '९'];
+
+/**
+ * Localization / presentation utilities.
  * No DOM dependencies. Does not import calendar conversion logic.
  */
 /**

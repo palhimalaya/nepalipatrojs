@@ -3,13 +3,6 @@ import {
   AdDate,
   BsDate,
   NepaliDate,
-  NepaliMonth,
-  NepaliMonthNepali,
-  NepaliWeekDay,
-  NepaliWeekDayNepali,
-  NepaliPatroOptions,
-  NepaliDatePickerOptions,
-  DateFormatPattern
 } from "./core/types";
 import {
   MIN_BS_YEAR,
@@ -27,6 +20,13 @@ import {
 } from "./core/converters/date-only";
 import { getDaysInMonth } from "./core/calendar";
 import {
+  NepaliMonth,
+  NepaliMonthNepali,
+  NepaliWeekDay,
+  NepaliWeekDayNepali,
+} from "./i18n/names";
+import { NepaliPatroOptions, DateFormatPattern } from "./i18n/types";
+import {
   nepaliDigitsToEnglish,
   getDateFormatPatterns,
 } from "./i18n/localization";
@@ -34,7 +34,9 @@ import {
   formatBS as formatBSDate,
   toNepaliDigits,
 } from "./i18n/format";
+import { NepaliDatePickerOptions } from "./ui/types";
 import { NepaliDatePicker } from "./ui/NepaliDatePicker";
+
 class NepaliPatro {
   static readonly MIN_YEAR = MIN_BS_YEAR;
   static readonly MAX_YEAR = MAX_BS_YEAR;
@@ -140,7 +142,7 @@ class NepaliPatro {
   }
 }
 
-// Named exports
+// Named exports — public names unchanged (Stage 2.6 ownership moves)
 export {
   CalendarDate,
   AdDate,

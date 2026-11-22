@@ -102,16 +102,15 @@ Round-trips ≠ historical proof (ADR-003). ISS-016 remains open.
 
 | Concern | Module |
 |---------|--------|
-| Dataset + REF + digits | `src/core/calendar-data.ts` |
-| Date types / enums / options | `src/core/types.ts` |
+| Dataset + REF (no digits) | `src/core/calendar-data.ts` |
+| Civil date types only | `src/core/types.ts` |
 | `getDaysInMonth`, `parseDateInput` | `src/core/calendar.ts` |
-| Gregorian arithmetic | `src/core/gregorian.ts` |
-| Validation | `src/core/validations.ts` |
-| Converters | `src/core/converters/*` |
-| Digits / months / patterns | `src/i18n/localization.ts` |
-| `formatBS`, `toNepaliDigits` | `src/i18n/format.ts` |
+| Gregorian / validation / converters | `src/core/*` |
+| Digits / names / i18n types | `src/i18n/digits.ts`, `names.ts`, `types.ts` |
+| Localization helpers / format | `src/i18n/localization.ts`, `format.ts` |
+| Picker options | `src/ui/types.ts` |
 
-`core/` must not import `i18n/` or `ui/` or use DOM.
+`core/` must not import `i18n/` or `ui/`, use DOM, or define localization/UI-only symbols.
 
 ## Non-negotiables
 

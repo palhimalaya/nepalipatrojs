@@ -13,7 +13,7 @@ index.ts (public facade)
       (no barrel import; no BS_CALENDAR_DATA)
 
 core/ ──✕──► i18n/, ui/, document, window
-i18n/ ──► core/ (types, weekday index, NEPALI_DIGITS)
+i18n/ ──► core/ (date types, weekday index only)
 i18n/ ──✕──► ui/, document, window
 ```
 
@@ -26,11 +26,12 @@ i18n/ ──✕──► ui/, document, window
 5. Legacy `Date` APIs remain local-field (intentional); date-only path is TZ-safe.
 6. UI still monolithic (~645 lines) — Phase 3 (`datepicker/` modularization).
 
-**Known co-location exceptions** (evaluated Stage 2.5; moves need approval — [exceptions-stage25.md](exceptions-stage25.md))
+**Ownership (Stage 2.6)** — see [exceptions-stage25.md](exceptions-stage25.md)
 
-- `NEPALI_DIGITS` lives in `core/calendar-data.ts` (i18n data next to calendar table).
-- Locale name enums + picker options live in `core/types.ts` (mixed types file).
-- Datepicker remains under `ui/` (not renamed to `datepicker/` — Phase 3).
+- Digits / locale enums / format types → `i18n/`
+- Picker options → `ui/types.ts`
+- Core keeps civil date types + calendar data only
+- Datepicker remains under `ui/` (Phase 3 may rename to `datepicker/`)
 
 Full assessment: [phase2-assessment.md](phase2-assessment.md).
 

@@ -248,3 +248,13 @@ Add (when 2.1 authorized) — not implemented now:
 - `../i18n/localization` (`localizeDigits`, `localizeMonth`, `nepaliDigitsToEnglish`, `getDateFormatPatterns`)
 
 Public barrel still imports and re-exports the picker; UMD/`window.NepaliDatePicker` unchanged. **Export list unchanged.** No public deep export `nepalipatrojs/core`.
+
+## 12. Stage 2.6 ownership map (internal paths; public names unchanged)
+
+| Public symbol | Internal owner | Facade import |
+|---------------|----------------|---------------|
+| `CalendarDate`, `NepaliDate`, `AdDate`, `BsDate` | `core/types.ts` | yes |
+| `NEPALI_DIGITS` | `i18n/digits.ts` (not public constant) | via digit helpers |
+| `NepaliMonth*` / `NepaliWeekDay*` | `i18n/names.ts` | yes |
+| `NepaliPatroOptions`, `DateFormatPattern` | `i18n/types.ts` | yes |
+| `NepaliDatePickerOptions` | `ui/types.ts` | yes |

@@ -6,14 +6,13 @@
 |---------|----------------|
 | Locale option type | `'en' \| 'np'` in `NepaliPatroOptions` / picker options |
 | README / Quick Start | Often show `'ne'` for `formatBS` |
-| Digits → Nepali | `toNepaliDigits` in `i18n/format.ts`; `localizeDigits` in `i18n/localization.ts` |
+| Digits → Nepali | `NEPALI_DIGITS` in `i18n/digits.ts`; `toNepaliDigits` / `localizeDigits` |
 | Digits → English | `nepaliDigitsToEnglish` in `i18n/localization.ts` |
-| Month names (picker) | `localizeMonth` in `i18n/localization.ts` |
-| Month / weekday enums | Still in `core/types.ts` (co-location exception; Stage 2.4) |
-| Parse patterns | `getDateFormatPatterns` in `i18n/localization.ts` |
+| Month / weekday enums | `i18n/names.ts` |
+| Options / patterns | `NepaliPatroOptions`, `DateFormatPattern` in `i18n/types.ts` |
 | Format tokens | `formatBS` in `i18n/format.ts` (longest-first tokenization) |
 
-**Stage 2.4:** physical `src/i18n/` — no DOM; may import `core/` (types, weekday index, `NEPALI_DIGITS`); must not import `ui/`.
+**Stage 2.6:** i18n owns localization data/types; may import `core/` date types + weekday index; must not import `ui/`.
 
 ## Verified bugs
 
