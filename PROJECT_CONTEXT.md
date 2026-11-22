@@ -85,12 +85,14 @@ npm run build
 
 **Phase 2 — COMPLETED** (architecture + ownership).
 
-**Phase 3 — Stages 3.0–3.7 COMPLETED (await close-out review).**
+**Phase 3 — Datepicker redesign CLOSED** (maintainer approved 2026-11-22).
 
-- Modular datepicker: a11y, positioning, constraints, AD equivalents, `--np-*` theme tokens
-- Deferred: full AD grid / mode switch; `ui/` rename
-- Locks: barrel-only entry; packaging → Phase 5; ISS-016 provenance open
-- **Next:** Await maintainer Phase 3 close-out / next-phase authorization.
+- Modular datepicker: state/grid, safe DOM, keyboard/ARIA, positioning, constraints, AD equivalents, `--np-*` theme tokens
+- Deferred: full AD grid / mode switch; `ui/` rename; real-browser / AT certification
+- Carry-forward: ISS-013 (AT), ISS-016 (provenance), ISS-024 (footer = focus)
+- Locks: barrel-only entry; no packaging/React without auth
+- Sizing decision (2026-11-22): no CSS follow-up; mobile hit-target / Nepali density checks → Phase 4 assessment
+- **Next:** Await Phase 4 assessment prompt (assessment only; no CSS/packaging/React).
 
 ## Known limitations (v1)
 
@@ -99,7 +101,8 @@ npm run build
 - No generated `.d.ts` in `dist/` despite `package.json` `types` field
 - CSS export path `./styles` → missing `only-styles.css`
 - CI can “pass” with failed build/test (`continue-on-error: true`)
-- Datepicker: no min/max, weak a11y, scans entire DOM for z-index
+- Datepicker: Jest-covered a11y/keyboard only — not AT-certified (ISS-013); no real-browser smoke yet
+- AD footer tracks focus, not hover (ISS-024 accepted)
 - BS range ends at 2099
 - (ISS-003 resolved — AD→BS uses prefix tables)
 

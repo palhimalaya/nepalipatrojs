@@ -59,6 +59,7 @@ User-facing npm release notes will also live in the root `CHANGELOG` when 2.0 sh
 - **Phase 3 Stage 3.5:** `minDate` / `maxDate` / `disabledDates` / `isDateDisabled`; Today + Clear; keyboard skips unavailable dates (`ui/constraints.ts`).
 - **Phase 3 Stage 3.6:** Dual AD equivalent display (`ui/ad-display.ts`) — per-cell AD day + focused AD footer; BS remains authoritative for selection.
 - **Phase 3 Stage 3.7:** Datepicker CSS theme tokens (`--np-*`); light/dark via existing `theme` option; no new runtime theme API.
+- **Phase 3 CLOSED (2026-11-22):** Maintainer approved stages 3.1–3.7. Next recommended work is a Phase 4 quality-hardening **assessment** (not yet authorized); React and packaging remain deferred.
 
 ### Changed (process)
 

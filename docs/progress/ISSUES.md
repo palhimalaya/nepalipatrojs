@@ -102,13 +102,14 @@ Severity: `critical` | `high` | `medium` | `low`
 - **Fix:** `src/ui/position.ts` — deterministic `DEFAULT_POPUP_Z_INDEX` / constructor `zIndex` / `setZIndex()` precedence; no document-wide scan; body-attached absolute positioning with scroll/resize recalculation.  
 - **Related:** ADR-004; Stage 3.4  
 
-## ISS-013 — Datepicker feature gaps
+## ISS-013 — Datepicker accessibility / feature gaps
 
 - **Severity:** medium  
 - **Module:** UI  
-- **Status:** open — largely addressed (Stages 3.3–3.7); deferred items remain  
-- **Description:** Remaining deferred: full AD calendar grid / mode switch (post–3.6). Visual tokens done in 3.7.  
-- **Done in Stage 3.3–3.7:** a11y, constraints, Today/Clear, AD equivalents, CSS theme tokens.  
+- **Status:** **partial / open** — Phase 3 closed; keep open until real assistive-technology testing  
+- **Description:** Phase 3 delivered keyboard/ARIA/focus/constraints/dual display/theme tokens under jsdom. Remaining: real AT verification; deferred full AD calendar grid / mode switch.  
+- **Done in Stage 3.3–3.7:** keyboard nav, ARIA, constraints, Today/Clear, AD equivalents, CSS theme tokens.  
+- **Phase 3 close-out note:** Passing Jest does not equal screen-reader certification.  
 - **Related:** [phase3-datepicker-assessment.md](../architecture/phase3-datepicker-assessment.md)  
 
 ## ISS-024 — AD footer tracks focus, not mouse hover

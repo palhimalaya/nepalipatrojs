@@ -1,6 +1,6 @@
 # Master plan — NepaliPatroJS 2.0
 
-Overall status: **IN PROGRESS** (Phase 0 CLOSED; Phase 1 IN PROGRESS — baseline done)
+Overall status: **IN PROGRESS** (Phases 0–3 CLOSED; Phase 4 assessment recommended, not authorized)
 
 ## Phase overview
 
@@ -8,12 +8,13 @@ Overall status: **IN PROGRESS** (Phase 0 CLOSED; Phase 1 IN PROGRESS — baselin
 |-------|------|--------|
 | 0 | Repository audit & documentation bootstrap | **COMPLETED** / CLOSED |
 | 1 | Core correctness | **COMPLETED** / CLOSED |
-| 2 | Architecture / module boundaries | **IN PROGRESS** (assessment DONE; impl not started) |
-| 3 | Datepicker redesign | NOT STARTED |
-| 4 | Framework integration (React) | NOT STARTED |
-| 5 | Build, packaging, CI | NOT STARTED |
+| 2 | Architecture / module boundaries | **COMPLETED** / CLOSED |
+| 3 | Datepicker redesign | **COMPLETED** / CLOSED (2026-11-22) |
+| 4 | Integration & quality hardening (assessment first) | **NOT AUTHORIZED** |
+| 5 | Build, packaging, CI | NOT STARTED (deferred until Phase 4 assessment) |
 | 6 | Documentation site & playground | NOT STARTED |
 | 7 | Final verification | NOT STARTED |
+| — | Framework integration (React) | Deferred — was prior “Phase 4”; revisit after hardening assessment |
 
 ---
 
@@ -80,9 +81,10 @@ Overall status: **IN PROGRESS** (Phase 0 CLOSED; Phase 1 IN PROGRESS — baselin
 22. ~~Phase 3 Stage 3.5 Today / constraints / disabled dates~~ **DONE 2026-11-22**
 23. ~~Phase 3 Stage 3.6 Dual AD/BS display~~ **DONE 2026-11-22**
 24. ~~Phase 3 Stage 3.7 Visual redesign / theme tokens~~ **DONE 2026-11-22**
-25. Phase 3 close-out / next project phase ← **await maintainer**
+25. ~~Phase 3 close-out~~ **CLOSED 2026-11-22** (maintainer approved)
+26. Phase 4 — Integration & quality hardening **assessment** ← **await authorization**
 
-**Maintainer locks:** packaging → Phase 5; no `nepalipatrojs/core` deep export for now.
+**Maintainer locks:** packaging changes → after Phase 4 assessment / Phase 5; no `nepalipatrojs/core` deep export for now; no React without separate auth.
 
 ---
 
@@ -175,7 +177,7 @@ Overall status: **IN PROGRESS** (Phase 0 CLOSED; Phase 1 IN PROGRESS — baselin
 
 ## Phase 3 — Datepicker redesign
 
-**Status:** 3.0–3.7 COMPLETED (await Phase 3 close-out review)  
+**Status:** **COMPLETED / CLOSED** (maintainer approved 2026-11-22)  
 **Depends on:** Phase 2 + ADR-004; assessment review  
 **Objective:** Modular, accessible, modern dual-calendar UI.  
 **Spec:** [phase3-datepicker-assessment.md](../architecture/phase3-datepicker-assessment.md)
@@ -190,34 +192,74 @@ Overall status: **IN PROGRESS** (Phase 0 CLOSED; Phase 1 IN PROGRESS — baselin
 - [x] Stage 3.5 — Today, min/max, disabled dates
 - [x] Stage 3.6 — Dual AD/BS display (equivalent AD; no AD grid)
 - [x] Stage 3.7 — Visual design / theme tokens (`--np-*`)
-- [ ] Rename `ui/` → `datepicker/` when appropriate
+- [x] Maintainer close-out review — all stages approved
+- [ ] Rename `ui/` → `datepicker/` when appropriate (**deferred** — structural cleanup)
 
 ### Acceptance criteria
 
-- Feature checklist in ADR-004 / Phase 3.0 spec met
-- Datepicker tests cover selection, constraints, keyboard, cleanup
-- Visual review signed off by maintainer
-- Public ctor / options / `destroy` / `setZIndex` compatibility preserved
+- [x] Feature checklist in ADR-004 / Phase 3.0 spec met (within agreed scope)
+- [x] Datepicker tests cover selection, constraints, keyboard, cleanup
+- [x] Visual review signed off by maintainer (Stage 3.7)
+- [x] Public ctor / options / `destroy` / `setZIndex` compatibility preserved
+
+### Carry-forward (not Phase 3 blockers)
+
+- ISS-013 — keep open until real AT testing
+- ISS-016 — dataset provenance before historical-accuracy claims
+- ISS-024 — accepted (footer = focus, not hover)
+- Real-browser visual / smoke verification — later testing stage
+- Full AD grid / mode switch — explicitly out of Phase 3 scope
 
 ---
 
-## Phase 4 — React integration
+## Phase 4 — Integration and quality hardening
 
-**Status:** NOT STARTED  
-**Depends on:** Phase 3 APIs stable  
-**Objective:** First-class React component without coupling core to React.
+**Status:** **NOT AUTHORIZED** (assessment recommended by maintainer 2026-11-22)  
+**Depends on:** Phase 3 CLOSED  
+**Objective:** Assess quality gaps after the datepicker redesign and choose the next implementation priority. **Assessment only until separately authorized.**
 
-### Acceptance criteria
+### Recommended assessment scope (no implementation yet)
 
-- Controlled/uncontrolled, onChange, locale, theme, calendar system, min/max, disabled
-- Core remains React-free
-- Basic React tests (Testing Library) pass
+1. Real-browser testing strategy (keyboard, positioning, responsive layout, themes)
+2. Accessibility verification plan with actual assistive technology
+3. Public API and documentation consistency after the redesign
+4. Calendar dataset provenance and accuracy risks (ISS-016)
+5. Build artifacts and package compatibility — **inspect only; do not change packaging yet**
+
+### Responsive / hit-target checks (added 2026-11-22)
+
+Maintainer reviewed screenshots + CSS token comparison. **No CSS follow-up authorized yet** — desktop `--np-day-size: 42px` is acceptable; gaps are mainly mobile and localization density. Fold into browser/responsive assessment:
+
+- [ ] Verify **actual clickable** day-cell dimensions (hit area), not CSS box alone
+- [ ] Evaluate **44 × 44px** mobile touch targets (current mobile token: `38px`)
+- [ ] Weekday-label readability EN + NE (current `--np-font-size-xs: 10px`; consider ~12px)
+- [ ] Nepali numerals + dual BS/AD labels at narrow widths (density / clipping)
+- [ ] Popup fit on small screens — no horizontal overflow (mobile `--np-popup-width: 292px`)
+
+After assessment findings: decide whether mobile sizing belongs in Phase 4 hardening or a separate small UI task.
+
+### Outcomes expected from the assessment
+
+- Priority recommendation among: browser testing, API/docs stabilization, packaging/distribution, React, or other
+- Explicit list of what remains deferred (React, `ui/` rename, AD grid, packaging code changes, optional mobile sizing CSS)
+
+### Explicit non-goals until authorized
+
+- No React integration
+- No packaging / export / CI code changes
+- No new datepicker interaction model
+- No dataset replacement
+- **No CSS sizing follow-up** until assessment review decides
+
+### Deferred: React integration
+
+Previously labeled “Phase 4 — React.” Revisit only after Phase 4 hardening assessment chooses priorities. Core must remain React-free when that work starts.
 
 ---
 
 ## Phase 5 — Build, packaging, CI
 
-**Status:** NOT STARTED  
+**Status:** NOT STARTED (priority subject to Phase 4 assessment)  
 **Objective:** Correct exports, real `.d.ts`, failing CI on errors, pack smoke test.
 
 ### Acceptance criteria
