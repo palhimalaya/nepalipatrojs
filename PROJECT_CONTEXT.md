@@ -77,13 +77,14 @@ npm run build
 
 **Phase 0 — CLOSED** (ADRs Accepted).
 
-**Phase 1 — IN PROGRESS.**
+**Phase 1 — CLOSED.** Correctness, timezone, ISS-003 prefix AD→BS approved.
 
-- Steps 1–6 assessment COMPLETED (correctness + timezone approved; algorithm assessed).
-- Date-only APIs TZ-independent; legacy `Date` local-field semantics preserved.
-- **ISS-003 assessed:** AD→BS day-walk is O(days) (~1.3 ms late; ~23 s for 36,525). Recommend prefix sums when authorized — **not implemented**.
-- Dataset provenance still **unknown** (ISS-016).
-- **Next:** Await decision on ISS-003 implementation, or next authorized phase item. Do not optimize without authorization.
+**Phase 2 — Stages 2.0–2.2 COMPLETED; Stage 2.3 not started.**
+
+- Assessment / API inventory under `docs/architecture/` and `docs/api/`
+- ISS-020 / ISS-021 resolved: no barrel cycle; no raw `BS_CALENDAR_DATA` in datepicker
+- Locks: barrel-only entry; packaging → Phase 5; ISS-016 provenance open
+- **Next:** Stage 2.3 split core / i18n helpers (await authorization).
 
 ## Known limitations (v1)
 
@@ -94,7 +95,7 @@ npm run build
 - CI can “pass” with failed build/test (`continue-on-error: true`)
 - Datepicker: no min/max, weak a11y, scans entire DOM for z-index
 - BS range ends at 2099
-- AD→BS still O(days) walk (ISS-003 assessed; impl pending auth) — see `docs/progress/algorithm-assessment-step6.md`
+- (ISS-003 resolved — AD→BS uses prefix tables)
 
 ## Where to go next
 

@@ -468,59 +468,91 @@
     }
 
     /**
+     * Internal BS day-index prefix tables derived from BS_CALENDAR_DATA (ISS-003).
+     * Not part of the public API.
+     *
+     * yearStart[i]  = cumulative days from REF_BS to the start of year (MIN_BS_YEAR + i)
+     * monthStart[i*12 + m] = day offset of month m+1 within that year (0-based m)
+     * monthLength[i*12 + m] = days in that month
+     */
+    const YEAR_COUNT = MAX_BS_YEAR - MIN_BS_YEAR + 1;
+    /** Cumulative days at the start of each BS year; final entry = total supported span. */
+    const yearStart = new Int32Array(YEAR_COUNT + 1);
+    const monthStart = new Int16Array(YEAR_COUNT * 12);
+    const monthLength = new Int16Array(YEAR_COUNT * 12);
+    (function buildPrefixTables() {
+        let cumulative = 0;
+        for (let y = MIN_BS_YEAR; y <= MAX_BS_YEAR; y++) {
+            const yi = y - MIN_BS_YEAR;
+            yearStart[yi] = cumulative;
+            const lengths = BS_CALENDAR_DATA[y][0];
+            let withinYear = 0;
+            for (let m = 0; m < 12; m++) {
+                monthStart[yi * 12 + m] = withinYear;
+                monthLength[yi * 12 + m] = lengths[m];
+                withinYear += lengths[m];
+            }
+            cumulative += BS_CALENDAR_DATA[y][1];
+        }
+        yearStart[YEAR_COUNT] = cumulative;
+    })();
+    /** Total civil days in the supported BS span (2000-01-01 .. last day of 2099). */
+    const BS_SUPPORTED_DAY_COUNT = yearStart[YEAR_COUNT];
+    /**
+     * Map a non-negative day index from REF_BS (0 = 2000-01-01) to a BS civil date.
+     * @throws if index is outside the supported span
+     */
+    function bsDateFromDayIndex(dayIndex) {
+        if (dayIndex < 0 || dayIndex >= BS_SUPPORTED_DAY_COUNT) {
+            throw new Error(`Year out of range. Supported BS years: ${MIN_BS_YEAR} to ${MAX_BS_YEAR}`);
+        }
+        // Largest yi such that yearStart[yi] <= dayIndex
+        let lo = 0;
+        let hi = YEAR_COUNT - 1;
+        while (lo < hi) {
+            const mid = (lo + hi + 1) >> 1;
+            if (yearStart[mid] <= dayIndex) {
+                lo = mid;
+            }
+            else {
+                hi = mid - 1;
+            }
+        }
+        const yi = lo;
+        const rem = dayIndex - yearStart[yi];
+        const base = yi * 12;
+        for (let m = 0; m < 12; m++) {
+            const start = monthStart[base + m];
+            const dim = monthLength[base + m];
+            if (rem < start + dim) {
+                return {
+                    year: MIN_BS_YEAR + yi,
+                    month: m + 1,
+                    day: rem - start + 1,
+                };
+            }
+        }
+        // Unreachable if tables are consistent with BS_CALENDAR_DATA
+        throw new Error(`Year out of range. Supported BS years: ${MIN_BS_YEAR} to ${MAX_BS_YEAR}`);
+    }
+
+    /**
      * Date-only AD ↔ BS conversion (ADR-002).
      * Operates solely on CalendarDate values — host timezone independent.
      */
     /**
      * Convert Gregorian (AD) civil date → Bikram Sambat.
+     *
+     * Uses BS year/month prefix tables (ISS-003) — O(log years + months), not O(days).
      */
     function convertAdToBs(ad) {
         validateAdDate(ad.year, ad.month, ad.day);
         const daysDiff = daysBetweenGregorian(REF_AD_YMD, ad);
-        let bsYear = REF_BS.year;
-        let bsMonth = REF_BS.month;
-        let bsDay = REF_BS.day;
-        let daysLeft = daysDiff;
-        while (daysLeft > 0) {
-            const dim = getDaysInMonth(bsYear, bsMonth);
-            if (bsDay < dim) {
-                bsDay++;
-            }
-            else {
-                bsDay = 1;
-                if (bsMonth < 12) {
-                    bsMonth++;
-                }
-                else {
-                    bsMonth = 1;
-                    bsYear++;
-                    if (!BS_CALENDAR_DATA[bsYear]) {
-                        throw new Error(`Year out of range. Supported BS years: ${MIN_BS_YEAR} to ${MAX_BS_YEAR}`);
-                    }
-                }
-            }
-            daysLeft--;
+        // Dates before REF or past the last supported BS day: same error as the old walk.
+        if (daysDiff < 0) {
+            throw new Error(`Year out of range. Supported BS years: ${MIN_BS_YEAR} to ${MAX_BS_YEAR}`);
         }
-        while (daysLeft < 0) {
-            if (bsDay > 1) {
-                bsDay--;
-            }
-            else {
-                if (bsMonth > 1) {
-                    bsMonth--;
-                }
-                else {
-                    bsYear--;
-                    if (!BS_CALENDAR_DATA[bsYear]) {
-                        throw new Error(`Year out of range. Supported BS years: ${MIN_BS_YEAR} to ${MAX_BS_YEAR}`);
-                    }
-                    bsMonth = 12;
-                }
-                bsDay = getDaysInMonth(bsYear, bsMonth);
-            }
-            daysLeft++;
-        }
-        return { year: bsYear, month: bsMonth, day: bsDay };
+        return bsDateFromDayIndex(daysDiff);
     }
     /**
      * Convert Bikram Sambat civil date → Gregorian (AD) date-only.
@@ -854,16 +886,25 @@
             return null;
         }
         isValidBSDate(year, month, day) {
-            if (!BS_CALENDAR_DATA[year]) {
-                return false;
-            }
             if (month < 1 || month > 12) {
                 return false;
             }
-            // Check if day is valid for the given month and year
-            const monthData = BS_CALENDAR_DATA[year][0][month - 1];
-            const daysInMonth = Array.isArray(monthData) ? monthData[0] : monthData;
-            return day >= 1 && day <= daysInMonth;
+            try {
+                const daysInMonth = getDaysInMonth(year, month);
+                return day >= 1 && day <= daysInMonth;
+            }
+            catch (_a) {
+                return false;
+            }
+        }
+        /** Days in BS month via core API; fallback when year is outside supported range. */
+        daysInBsMonth(year, month1Based, fallback = 30) {
+            try {
+                return getDaysInMonth(year, month1Based);
+            }
+            catch (_a) {
+                return fallback;
+            }
         }
         openCalendar() {
             // Close all other calendars before opening this one
@@ -915,26 +956,17 @@
             return null;
         }
         generateCalendarHtml(bsYear, bsMonth) {
-            var _a, _b;
-            // Get available years from BS_CALENDAR_DATA
-            const bsYears = Object.keys(BS_CALENDAR_DATA)
-                .map(Number)
-                .sort((a, b) => a - b);
+            // Supported years via range constants (not raw dataset keys)
             let yearOptions = "";
-            for (const y of bsYears) {
+            for (let y = MIN_BS_YEAR; y <= MAX_BS_YEAR; y++) {
                 yearOptions += `<option value="${y}"${y === bsYear ? " selected" : ""}>${localizeDigits(y, this.language)}</option>`;
             }
             let monthOptions = "";
             for (let i = 0; i < 12; i++) {
                 monthOptions += `<option value="${i}"${i === bsMonth ? " selected" : ""}>${localizeMonth(i + 1, this.language)}</option>`;
             }
-            // Get days in this BS month
-            const rawDaysInMonth = (_a = BS_CALENDAR_DATA[bsYear]) === null || _a === void 0 ? void 0 : _a[0][bsMonth];
-            const daysInMonth = Array.isArray(rawDaysInMonth)
-                ? rawDaysInMonth[0]
-                : typeof rawDaysInMonth === "number"
-                    ? rawDaysInMonth
-                    : 30;
+            // bsMonth is 0-based in the picker; getDaysInMonth expects 1-based
+            const daysInMonth = this.daysInBsMonth(bsYear, bsMonth + 1);
             // Calculate the weekday of the 1st day of this BS month
             const firstDayOfWeek = this.getBSFirstDayOfWeek(bsYear, bsMonth);
             // Get days in previous month
@@ -944,12 +976,7 @@
                 prevMonth = 11;
                 prevYear--;
             }
-            const rawLastDayOfPrevMonth = (_b = BS_CALENDAR_DATA[prevYear]) === null || _b === void 0 ? void 0 : _b[0][prevMonth];
-            const lastDayOfPrevMonth = Array.isArray(rawLastDayOfPrevMonth)
-                ? rawLastDayOfPrevMonth[0]
-                : typeof rawLastDayOfPrevMonth === "number"
-                    ? rawLastDayOfPrevMonth
-                    : 30;
+            const lastDayOfPrevMonth = this.daysInBsMonth(prevYear, prevMonth + 1);
             const weekdays = this.language === "np"
                 ? ["आ", "सो", "मं", "बु", "बि", "शु", "श"]
                 : ["S", "M", "T", "W", "T", "F", "S"];

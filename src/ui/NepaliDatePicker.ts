@@ -1,12 +1,15 @@
-import { BS_CALENDAR_DATA } from "../constants/calendar-data";
+import { MAX_BS_YEAR, MIN_BS_YEAR } from "../constants/calendar-data";
+import { getCurrentBSDate } from "../converters/ad-to-bs";
+import { convertBSToAD } from "../converters/bs-to-ad";
+import { formatBS as formatBSDate } from "../formatters/date-formatter";
+import { NepaliDate, NepaliDatePickerOptions } from "../types";
 import {
-  getCurrentBSDate,
-  convertBSToAD,
-  formatBSDate,
-  NepaliDate,
-  NepaliDatePickerOptions
-} from "../index";
-import { localizeDigits, localizeMonth, nepaliDigitsToEnglish, getDateFormatPatterns } from "../utils/helpers";
+  getDaysInMonth,
+  localizeDigits,
+  localizeMonth,
+  nepaliDigitsToEnglish,
+  getDateFormatPatterns,
+} from "../utils/helpers";
 
 export class NepaliDatePicker {
   private static instances: Set<NepaliDatePicker> = new Set();
@@ -249,19 +252,24 @@ export class NepaliDatePicker {
   }
 
   private isValidBSDate(year: number, month: number, day: number): boolean {
-    if (!BS_CALENDAR_DATA[year]) {
-      return false;
-    }
-    
     if (month < 1 || month > 12) {
       return false;
     }
-    
-    // Check if day is valid for the given month and year
-    const monthData = BS_CALENDAR_DATA[year][0][month - 1];
-    const daysInMonth = Array.isArray(monthData) ? monthData[0] : monthData;
-    
-    return day >= 1 && day <= daysInMonth;
+    try {
+      const daysInMonth = getDaysInMonth(year, month);
+      return day >= 1 && day <= daysInMonth;
+    } catch {
+      return false;
+    }
+  }
+
+  /** Days in BS month via core API; fallback when year is outside supported range. */
+  private daysInBsMonth(year: number, month1Based: number, fallback = 30): number {
+    try {
+      return getDaysInMonth(year, month1Based);
+    } catch {
+      return fallback;
+    }
   }
 
   private openCalendar(): void {
@@ -333,12 +341,9 @@ export class NepaliDatePicker {
   }
 
   private generateCalendarHtml(bsYear: number, bsMonth: number): string {
-    // Get available years from BS_CALENDAR_DATA
-    const bsYears = Object.keys(BS_CALENDAR_DATA)
-      .map(Number)
-      .sort((a, b) => a - b);
+    // Supported years via range constants (not raw dataset keys)
     let yearOptions = "";
-    for (const y of bsYears) {
+    for (let y = MIN_BS_YEAR; y <= MAX_BS_YEAR; y++) {
       yearOptions += `<option value="${y}"${
         y === bsYear ? " selected" : ""
       }>${localizeDigits(y, this.language)}</option>`;
@@ -349,13 +354,8 @@ export class NepaliDatePicker {
         i === bsMonth ? " selected" : ""
       }>${localizeMonth(i + 1, this.language)}</option>`;
     }
-    // Get days in this BS month
-    const rawDaysInMonth = BS_CALENDAR_DATA[bsYear]?.[0][bsMonth];
-    const daysInMonth = Array.isArray(rawDaysInMonth)
-      ? rawDaysInMonth[0]
-      : typeof rawDaysInMonth === "number"
-      ? rawDaysInMonth
-      : 30;
+    // bsMonth is 0-based in the picker; getDaysInMonth expects 1-based
+    const daysInMonth = this.daysInBsMonth(bsYear, bsMonth + 1);
     // Calculate the weekday of the 1st day of this BS month
     const firstDayOfWeek = this.getBSFirstDayOfWeek(bsYear, bsMonth);
     // Get days in previous month
@@ -365,12 +365,7 @@ export class NepaliDatePicker {
       prevMonth = 11;
       prevYear--;
     }
-    const rawLastDayOfPrevMonth = BS_CALENDAR_DATA[prevYear]?.[0][prevMonth];
-    const lastDayOfPrevMonth = Array.isArray(rawLastDayOfPrevMonth)
-      ? rawLastDayOfPrevMonth[0]
-      : typeof rawLastDayOfPrevMonth === "number"
-      ? rawLastDayOfPrevMonth
-      : 30;
+    const lastDayOfPrevMonth = this.daysInBsMonth(prevYear, prevMonth + 1);
     const weekdays = this.language === "np"
     ? ["आ", "सो", "मं", "बु", "बि", "शु", "श"]
     : ["S", "M", "T", "W", "T", "F", "S"];

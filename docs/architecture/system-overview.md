@@ -3,21 +3,24 @@
 ## Current (v1) dependency map
 
 ```
-NepaliPatro (index.ts)
-├── converters/ad-to-bs ──► validations, helpers.getDaysInMonth, calendar-data
-├── converters/bs-to-ad ──► validations, helpers.parseDateInput, calendar-data
-├── formatters/date-formatter ──► bs-to-ad (for weekday), calendar-data digits, types enums
-├── utils/helpers ──► calendar-data, types
-├── utils/validations ──► calendar-data
-└── ui/NepaliDatePicker ──► index (CIRCULAR), helpers, calendar-data, styles.css
+NepaliPatro (index.ts) ──exports──► ui/NepaliDatePicker
+├── converters/ad-to-bs, bs-to-ad, date-only, …
+├── formatters/date-formatter
+├── utils/helpers, validations, gregorian
+├── constants/calendar-data, types
+└── ui/NepaliDatePicker ──► converters, formatters, types, helpers,
+       MIN/MAX_BS_YEAR (range only — not BS_CALENDAR_DATA)
+       (no barrel import — Stage 2.1; no raw dataset — Stage 2.2)
 ```
 
-**Critical problems**
+**Remaining structural issues**
 
-1. `NepaliDatePicker` imports from `../index` while `index` exports the picker → **circular dependency**.
-2. Business logic for month lengths is duplicated across helpers, validations (incorrectly), and the datepicker.
-3. Core conversion uses local `Date` constructors/getters → **timezone-sensitive**.
-4. UI owns parsing, rendering, positioning, and z-index scanning in one ~645-line class.
+1. ~~Circular `index` ↔ datepicker~~ **Resolved Stage 2.1.**
+2. ~~Datepicker raw `BS_CALENDAR_DATA`~~ **Resolved Stage 2.2** (uses `getDaysInMonth`).
+3. Legacy `Date` APIs remain local-field (intentional); date-only path is TZ-safe.
+4. UI still monolithic (~645 lines) — Phase 3; `helpers.ts` still mixes core/i18n — Stage 2.3.
+
+Full assessment: [phase2-assessment.md](phase2-assessment.md).
 
 ## Public API inventory (v1)
 

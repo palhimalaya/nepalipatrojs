@@ -1,16 +1,15 @@
 import { AdDate, BsDate, CalendarDate } from '../types';
 import { validateAdDate, validateBsDate } from '../utils/validations';
 import {
-  BS_CALENDAR_DATA,
-  MAX_BS_YEAR,
   MIN_BS_YEAR,
+  MAX_BS_YEAR,
   REF_AD_JS_WEEKDAY,
   REF_AD_YMD,
   REF_BS,
 } from '../constants/calendar-data';
-import { getDaysInMonth } from '../utils/helpers';
 import { addGregorianDays, daysBetweenGregorian } from '../utils/gregorian';
 import { daysBetweenBS, daysFromRefBs } from './bs-day-index';
+import { bsDateFromDayIndex } from './bs-prefix';
 
 /**
  * Date-only AD ↔ BS conversion (ADR-002).
@@ -19,59 +18,22 @@ import { daysBetweenBS, daysFromRefBs } from './bs-day-index';
 
 /**
  * Convert Gregorian (AD) civil date → Bikram Sambat.
+ *
+ * Uses BS year/month prefix tables (ISS-003) — O(log years + months), not O(days).
  */
 export function convertAdToBs(ad: CalendarDate): BsDate {
   validateAdDate(ad.year, ad.month, ad.day);
 
   const daysDiff = daysBetweenGregorian(REF_AD_YMD, ad);
 
-  let bsYear = REF_BS.year;
-  let bsMonth = REF_BS.month;
-  let bsDay = REF_BS.day;
-  let daysLeft = daysDiff;
-
-  while (daysLeft > 0) {
-    const dim = getDaysInMonth(bsYear, bsMonth);
-    if (bsDay < dim) {
-      bsDay++;
-    } else {
-      bsDay = 1;
-      if (bsMonth < 12) {
-        bsMonth++;
-      } else {
-        bsMonth = 1;
-        bsYear++;
-        if (!BS_CALENDAR_DATA[bsYear]) {
-          throw new Error(
-            `Year out of range. Supported BS years: ${MIN_BS_YEAR} to ${MAX_BS_YEAR}`
-          );
-        }
-      }
-    }
-    daysLeft--;
+  // Dates before REF or past the last supported BS day: same error as the old walk.
+  if (daysDiff < 0) {
+    throw new Error(
+      `Year out of range. Supported BS years: ${MIN_BS_YEAR} to ${MAX_BS_YEAR}`
+    );
   }
 
-  while (daysLeft < 0) {
-    if (bsDay > 1) {
-      bsDay--;
-    } else {
-      if (bsMonth > 1) {
-        bsMonth--;
-      } else {
-        bsYear--;
-        if (!BS_CALENDAR_DATA[bsYear]) {
-          throw new Error(
-            `Year out of range. Supported BS years: ${MIN_BS_YEAR} to ${MAX_BS_YEAR}`
-          );
-        }
-        bsMonth = 12;
-      }
-      bsDay = getDaysInMonth(bsYear, bsMonth);
-    }
-    daysLeft++;
-  }
-
-  return { year: bsYear, month: bsMonth, day: bsDay };
+  return bsDateFromDayIndex(daysDiff);
 }
 
 /**

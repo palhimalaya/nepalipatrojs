@@ -27,11 +27,12 @@ Severity: `critical` | `high` | `medium` | `low`
 ## ISS-003 — AD→BS O(days) walk
 
 - **Severity:** medium  
-- **Module:** `converters/date-only.ts` (`convertAdToBs`)  
-- **Status:** **assessed** (Phase 1 Step 6, 2026-11-21) — optimization recommended, **not implemented**  
-- **Description:** Day-by-day iteration from REF; O(|daysFromRef|). Benchmarks: late date ~1.3 ms median; full 36,525 Ad→Bs ~23 s; latency linear in days from REF.  
-- **Assessment:** See [algorithm-assessment-step6.md](./algorithm-assessment-step6.md). Recommend Option B/C prefix tables (~6 KiB, ~10⁴× faster on late/bulk). BS→AD already adequate (~1–2 µs).  
-- **Proposed next:** Authorize prefix-sum implementation separately; gate on goldens + 36525 round-trips + TZ matrix.  
+- **Module:** `converters/date-only.ts` (`convertAdToBs`), `converters/bs-prefix.ts`  
+- **Status:** **resolved** (Phase 1 Step 7, 2026-11-21)  
+- **Description:** Day-by-day iteration from REF was O(|daysFromRef|) (~1.3 ms late; ~23 s for 36,525).  
+- **Fix:** Internal year/month prefix tables from `BS_CALENDAR_DATA` + binary year search (`bsDateFromDayIndex`). BS→AD / `daysBetweenBS` unchanged.  
+- **Verification:** Exhaustive parity vs day-walk oracle 36525/36525; goldens; round-trips; TZ matrix UTC/Kathmandu/LA 157/157; bulk Ad→Bs ~9 ms (was ~22.9 s).  
+- **Related:** [algorithm-assessment-step6.md](./algorithm-assessment-step6.md); Step 7 benches `benchmarks-step7-raw.txt`  
 
 ## ISS-004 — No explicit max AD bound tied to BS 2099 end
 
@@ -89,8 +90,8 @@ Severity: `critical` | `high` | `medium` | `low`
 
 - **Severity:** high  
 - **Module:** `src/index.ts`, `src/ui/NepaliDatePicker.ts`  
-- **Status:** open  
-- **Proposed:** Datepicker imports core/i18n directly (Phase 2).  
+- **Status:** **duplicate of ISS-020** — track Stage 2.1 under ISS-020  
+- **Proposed:** Datepicker imports core/i18n directly (never barrel).  
 
 ## ISS-012 — Datepicker full-DOM z-index scan
 
@@ -145,14 +146,36 @@ Severity: `critical` | `high` | `medium` | `low`
 
 - **Severity:** medium (process / compatibility)  
 - **Module:** public exports, migration guide  
-- **Status:** open  
-- **Description:** ADR-005 requires a frozen, documented inventory of the v1 public API before any export is removed. Partial inventory exists in architecture/system-overview.md; needs completion and migration-guide linkage.  
-- **Related:** ADR-005  
+- **Status:** **resolved** (inventory frozen for Stage 2.1 planning — 2026-11-21)  
+- **Description:** ADR-005 requires a frozen, documented inventory of the v1 public API before any export is removed.  
+- **Deliverable:** [docs/api/public-api-inventory.md](../api/public-api-inventory.md) — entry points, exports, facade, picker, CSS, UMD, compatibility classes, Stage 2.1 test plan, open ambiguities.  
+- **Note:** Inventory does not authorize removals; ambiguities (e.g. `returnType`, docs `ne` vs runtime `np`) need separate decisions.  
+- **Related:** ADR-005; Stage 2.0  
 
 ## ISS-018 — Module boundary enforcement not yet automated
 
 - **Severity:** medium  
 - **Module:** tooling / Phase 2  
-- **Status:** open  
+- **Status:** open — tracked in Phase 2 assessment Stage 2.5  
 - **Description:** ADR-001 requires lint or architecture tests so `core` cannot import DOM/React/datepicker. Not implemented.  
-- **Related:** ADR-001  
+- **Related:** ADR-001; [phase2-assessment.md](../architecture/phase2-assessment.md)  
+
+## ISS-020 — Circular dependency `index` ↔ `NepaliDatePicker`
+
+- **Severity:** high  
+- **Module:** `src/index.ts`, `src/ui/NepaliDatePicker.ts`  
+- **Status:** **resolved** (Phase 2 Stage 2.1, 2026-11-21)  
+- **Description:** Datepicker imported conversion/format/types from `../index` while `index` imported and exported the picker.  
+- **Fix:** `NepaliDatePicker.ts` now imports from `converters/*`, `formatters/date-formatter`, and `types` directly. Barrel still re-exports picker for public API. No export list changes.  
+- **Verification:** Compat tests + full Jest 164/164; tsc; build; cycle regression asserts no `from '../index'`.  
+- **Related:** ADR-001; Stage 2.1; ISS-011 kept separate  
+
+## ISS-021 — Datepicker reads `BS_CALENDAR_DATA` directly
+
+- **Severity:** high  
+- **Module:** `src/ui/NepaliDatePicker.ts`  
+- **Status:** **resolved** (Phase 2 Stage 2.2, 2026-11-22)  
+- **Description:** UI bypassed `getDaysInMonth` / validation and duplicated month-length lookup from the dataset.  
+- **Fix:** Uses `getDaysInMonth` + `MIN_BS_YEAR`/`MAX_BS_YEAR` only. No `BS_CALENDAR_DATA` import/reference. Private `daysInBsMonth` wraps core API with safe fallback for padding outside range.  
+- **Verification:** Regression asserts no `BS_CALENDAR_DATA` in datepicker source; month-length UI tests; full Jest; tsc; build.  
+- **Related:** ADR-001/004; Stage 2.2  

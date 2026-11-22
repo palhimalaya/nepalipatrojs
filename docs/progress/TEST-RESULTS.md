@@ -333,6 +333,113 @@ Optimize AD→BS with prefix sums when authorized; keep BS→AD; **no src algori
 
 ---
 
+## 2026-11-21 — Phase 1 Step 7: ISS-003 prefix AD→BS implemented
+
+### Correctness
+
+```bash
+npx jest src/__tests__/conversion/ad-to-bs-prefix.test.ts --runInBand --coverage=false
+# PASS 7 — includes exhaustive day-walk oracle parity 36525/36525 (~27s)
+```
+
+| TZ | Full suite |
+|----|------------|
+| UTC | **157/157** ~28s |
+| Asia/Kathmandu | **157/157** ~27s |
+| America/Los_Angeles | **157/157** ~27s |
+
+`tsc --noEmit` PASS · `npm run build` PASS
+
+### Performance (same harness as Step 6)
+
+```bash
+npm run build && node scripts/bench-conversion.mjs
+```
+
+| Workload | Step 6 (before) | Step 7 (after) |
+|----------|-----------------|----------------|
+| Ad→Bs late median | ~1,262 µs | **~0.15 µs** |
+| Ad→Bs × 36,525 | ~22,908 ms | **~9.0 ms** |
+| Ad→Bs late × 50k | ~63,169 ms | **~3.6 ms** |
+| Ad→Bs distance sensitivity | linear in days | **flat** |
+| Bs→Ad × 36,525 | ~45 ms | ~45 ms (unchanged) |
+| Prefix table memory | — | **~5.6 KiB** (module init) |
+
+Raw: `docs/progress/benchmarks-step7-raw.txt`
+
+### Benchmark caveat (post-approval scrutiny)
+
+`performance.now()` empty-delta median on the benchmark host ≈ **60–80 ns**. Sub-µs single-call medians are therefore **resolution-limited**. Re-check with result sink: late Ad→Bs batch ≈ **0.09–0.20 µs/op**; individually timed calls ≈ **~0.8 µs** median (timer overhead). **Bulk wall-clock** (~23 s → ~9 ms for 36,525) remains the reliable magnitude evidence. Do not over-claim precise sub-µs figures in user-facing docs.
+
+---
+
+## 2026-11-21 — Phase 2 architecture assessment (no code changes)
+
+Inspection only. Deliverable: `docs/architecture/phase2-assessment.md`.
+
+Verified: `NepaliDatePicker` imports from `../index` (cycle); UI reads `BS_CALENDAR_DATA` directly; core converters/utils/formatters have no DOM/React imports.
+
+No Jest/build re-run required for assessment-only (Phase 1 suite remains the last green baseline: 157/157 × 3 TZ).
+
+---
+
+## 2026-11-21 — Phase 2 Stage 2.0: Public API inventory (ISS-017)
+
+Assessment/documentation only — no production changes.
+
+### Verification performed
+
+- Inspected `src/index.ts` exports + `NepaliPatro` facade + `window.NepaliDatePicker` side effect
+- Inspected `package.json` `main`/`module`/`types`/`exports`
+- Confirmed built ESM keys via `import('./dist/nepali-patro-js.esm.js')`
+- Confirmed `dist/nepali-patro-js.css` exists; `dist/only-styles.css` **missing**
+- Confirmed UMD global name `NepaliPatro`; picker window assignment present
+- Cross-checked README / QUICK_START import examples vs runtime (`formatBS` facade vs `formatBSDate` named; docs `ne` vs runtime `np`)
+
+### Deliverable
+
+`docs/api/public-api-inventory.md`
+
+---
+
+## 2026-11-21 — Phase 2 Stage 2.1: Break circular import (ISS-020)
+
+### Change
+
+`NepaliDatePicker.ts` no longer imports `../index`. Uses `converters/ad-to-bs`, `converters/bs-to-ad`, `formatters/date-formatter`, `types`.
+
+### Commands
+
+```bash
+npm test -- --runInBand --coverage=false   # PASS 164/164 ~27s
+npx tsc --noEmit                           # PASS
+npm run build                              # PASS
+```
+
+Compat suite: `src/__tests__/public-api-compat.test.ts` (default/named facade, conversions, picker destroy, UMD globals, CSS path, cycle regression).
+
+Public ESM export keys unchanged vs Stage 2.0 inventory.
+
+---
+
+## 2026-11-22 — Phase 2 Stage 2.2: Remove raw calendar data from datepicker (ISS-021)
+
+### Change
+
+`NepaliDatePicker` uses `getDaysInMonth` + `MIN_BS_YEAR`/`MAX_BS_YEAR`. No `BS_CALENDAR_DATA` reference.
+
+### Commands
+
+```bash
+npm test -- --runInBand --coverage=false   # PASS 172/172 ~29s
+npx tsc --noEmit                           # PASS
+npm run build                              # PASS
+```
+
+Added UI tests: month lengths (2080-01=31, 2080-02=32), year-select span, Chaitra→Baisakh nav, out-of-range input, source ban on `BS_CALENDAR_DATA`.
+
+---
+
 ## Prior: 2026-11-21 Phase 0 static checks
 
 See earlier session notes: dataset 2000–2099 contiguous; packaging mismatches; no `node_modules` at that time.

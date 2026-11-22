@@ -7,8 +7,8 @@ Overall status: **IN PROGRESS** (Phase 0 CLOSED; Phase 1 IN PROGRESS — baselin
 | Phase | Name | Status |
 |-------|------|--------|
 | 0 | Repository audit & documentation bootstrap | **COMPLETED** / CLOSED |
-| 1 | Core correctness | **IN PROGRESS** (Steps 1–6 assessment COMPLETED; ISS-003 impl pending auth) |
-| 2 | Architecture / module boundaries | NOT STARTED |
+| 1 | Core correctness | **COMPLETED** / CLOSED |
+| 2 | Architecture / module boundaries | **IN PROGRESS** (assessment DONE; impl not started) |
 | 3 | Datepicker redesign | NOT STARTED |
 | 4 | Framework integration (React) | NOT STARTED |
 | 5 | Build, packaging, CI | NOT STARTED |
@@ -62,8 +62,39 @@ Overall status: **IN PROGRESS** (Phase 0 CLOSED; Phase 1 IN PROGRESS — baselin
 4. ~~Golden fixtures, integrity, round-trips~~ **DONE 2026-11-21** (discovered ISS-019; converters not rewritten)
 5. ~~Fix ISS-019 `daysBetweenBS`~~ **DONE 2026-11-21** (absolute day index; 36525/36525 round-trips)
 6. ~~Timezone verification~~ **DONE 2026-11-21** (date-only TZ matrix + legacy local semantics)
-7. ~~Algorithm assessment~~ **DONE 2026-11-21** — recommend prefix Ad→Bs; **not implemented**
-8. ISS-003 prefix implementation ← **NEXT** only if authorized; else Phase 2
+7. ~~Algorithm assessment~~ **DONE 2026-11-21**
+8. ~~ISS-003 prefix AD→BS~~ **DONE 2026-11-21** (approved; benchmark caveat documented)
+9. ~~Phase 2 architecture assessment~~ **DONE 2026-11-21**
+10. ~~Phase 2 Stage 2.0 API inventory~~ **DONE 2026-11-21** (ISS-017)
+11. ~~Phase 2 Stage 2.1 break cycle~~ **DONE 2026-11-21** (ISS-020)
+12. ~~Phase 2 Stage 2.2 datepicker core APIs only~~ **DONE 2026-11-22** (ISS-021)
+13. Phase 2 Stage 2.3 — split core / i18n helpers ← **NEXT** (await authorization)
+
+**Maintainer locks:** packaging → Phase 5; no `nepalipatrojs/core` deep export for now.
+
+---
+
+## Phase 2 — Architecture / module boundaries
+
+**Status:** Assessment + Stage 2.0 COMPLETED; implementation from 2.1 NOT STARTED  
+**Docs:** [phase2-assessment.md](../architecture/phase2-assessment.md), [public-api-inventory.md](../api/public-api-inventory.md)
+
+### Assessment / inventory
+
+- [x] Module inventory and responsibilities
+- [x] Import/dependency map + cycles
+- [x] ADR-001–005 gap analysis
+- [x] Violations, target structure, mapping, sequence, risks
+- [x] Public API inventory frozen (ISS-017 / Stage 2.0)
+
+### Implementation sequence
+
+- [x] Stage 2.1 Break `index` ↔ `NepaliDatePicker` cycle (no public API change)
+- [x] Stage 2.2 Datepicker uses core APIs only (no raw calendar-data)
+- [ ] Stage 2.3 Split helpers (core vs i18n)
+- [ ] Stage 2.4 Physical `core/` + `i18n/` folders + barrel
+- [ ] Stage 2.5 Boundary lint/architecture tests (ISS-018)
+- [ ] Packaging/CI → **Phase 5** (not Stage 2.6 in Phase 2)
 
 ### Tasks
 
@@ -78,7 +109,7 @@ Overall status: **IN PROGRESS** (Phase 0 CLOSED; Phase 1 IN PROGRESS — baselin
 - [x] Date-only conversion identical under `UTC`, `Asia/Kathmandu`, `America/Los_Angeles`
 - [x] Preserve legacy `Date` APIs with **local** calendar-field semantics (ADR-002)
 - [x] Algorithm assessment + benches (`scripts/bench-conversion.mjs`); recommend Option B/C for Ad→Bs
-- [ ] **Optional (auth required):** implement prefix-sum AD→BS (ISS-003) — no silent rewrite
+- [x] **ISS-003:** prefix-sum AD→BS (`bs-prefix.ts`); exhaustive oracle parity 36525; BS→AD untouched
 - [ ] Unify locale `ne`/`np` (ISS-005) — deferred
 - [ ] Document complete v1 public API inventory (ISS-017)
 

@@ -36,6 +36,18 @@ User-facing npm release notes will also live in the root `CHANGELOG` when 2.0 sh
 - `CalendarDate` / `AdDate` / `BsDate` types; `REF_AD_YMD`; `src/utils/gregorian.ts`; timezone + legacy Date semantics tests.
 - Step 6 assessment: `scripts/bench-conversion.mjs` + `docs/progress/algorithm-assessment-step6.md` (ISS-003 measured; no production algorithm change).
 
+### Fixed
+
+- **ISS-003:** `convertAdToBs` uses internal year/month prefix tables (`bs-prefix.ts`) instead of day-by-day walk. BS→AD unchanged. Bulk 36,525 Ad→Bs ~9 ms (was ~23 s). Sub-µs single-call figures are timer-resolution limited; prefer bulk comparisons.
+
+### Changed (process)
+
+- Phase 1 CLOSED after Step 7 approval.
+- Phase 2 architecture assessment published (`docs/architecture/phase2-assessment.md`); no production refactor yet.
+- Stage 2.0 public API inventory frozen (`docs/api/public-api-inventory.md`).
+- **ISS-020 / Stage 2.1:** `NepaliDatePicker` no longer imports the public barrel; cycle removed without API changes.
+- **ISS-021 / Stage 2.2:** Datepicker uses `getDaysInMonth` instead of raw `BS_CALENDAR_DATA`.
+
 ### Changed (process)
 
 - Phase 0 formally CLOSED; Phase 1 AUTHORIZED and started

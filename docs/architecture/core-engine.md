@@ -43,15 +43,20 @@ Documented: **2000-01-01 BS == 1943-04-14 AD**.
 
 ### Algorithms
 
-**Date-only AD → BS** (`converters/date-only.ts` → `convertAdToBs`)
+**Date-only AD → BS** (`convertAdToBs` + `bs-prefix.ts`, ISS-003)
 
 1. Validate AD YMD (pure Gregorian month lengths).
 2. `daysDiff = gregorianDayNumber(ad) − gregorianDayNumber(REF_AD_YMD)`.
-3. Walk BS day-by-day from `REF_BS` — **O(daysFromRef)** (ISS-003).
+3. If `daysDiff < 0` or past supported span → same `Year out of range` error as before.
+4. Else `bsDateFromDayIndex(daysDiff)`:
+   - **yearStart[101]** — cumulative days at each BS year start (+ total span)
+   - **monthStart / monthLength** — 100×12 tables from `BS_CALENDAR_DATA`
+   - Binary search year, then scan ≤12 months for day
 
-**Performance (Step 6 assessment):** late dates ~1.3 ms; full 36,525 Ad→Bs ~23 s. Prefix-sum alternative ~3 ms for full range (~6 KiB). See `docs/progress/algorithm-assessment-step6.md`. **No rewrite until authorized.**
+**Complexity:** O(log years + months). **Memory:** ~5–6 KiB typed arrays (module init).  
+**Perf (Step 7):** bulk 36,525 Ad→Bs ~9 ms (was ~22.9 s); late median ~0.15 µs (was ~1.26 ms). Distance sensitivity flat.
 
-**Date-only BS → AD** (`convertBsToAd`)
+**Date-only BS → AD** (`convertBsToAd`) — **unchanged** (Step 7 scope)
 
 1. Validate BS YMD.
 2. `daysDiff = daysBetweenBS(REF_BS, bs)` (absolute BS day index — ISS-019).
@@ -79,7 +84,7 @@ Round-trips ≠ historical proof (ADR-003). ISS-016 remains open.
 |----|-------|--------|
 | ISS-001 | Wrong validation index into calendar tuple | **Resolved** |
 | ISS-002 | Local `Date` / timezone sensitivity | **Resolved** (date-only path; legacy local by design) |
-| ISS-003 | AD→BS O(days) walk | **Assessed** — prefix recommended; not implemented (Step 6) |
+| ISS-003 | AD→BS O(days) walk | **Resolved** — prefix tables (Step 7) |
 | ISS-004 | No max AD bound tied to BS 2099 | Open |
 | ISS-016 | Dataset provenance unknown | Open (investigated) |
 | ISS-019 | `daysBetweenBS` over-count | **Resolved** |
