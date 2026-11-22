@@ -1,0 +1,788 @@
+# Test results
+
+Never record a pass unless the command was executed successfully in this environment.
+
+---
+
+## 2026-11-22 — Stage 4.4 mobile sizing + contrast (CSS-only)
+
+### Commands
+
+```bash
+npm run build                 # PASS
+npx tsc --noEmit              # PASS
+npx jest --runInBand --coverage=false   # 312/312
+```
+
+### Browser re-measure (IDE Chromium, CDP Emulation 390×844 @ DPR 2)
+
+| Metric | Before (4.2) | After (4.4) |
+|--------|--------------|-------------|
+| Desktop day | 42×42 | **42×42** |
+| Mobile day | 38×38 | **44×44** |
+| Mobile popup | 292 | **344** (fits; right 377 / vw 390; no overflowX) |
+| Weekday font | 10px | **12px** |
+| AD font (mobile) | 9px | **11px** |
+| AD contrast light | ~2.26:1 | **~7.53:1** (current month) |
+| Selected contrast | ~3.05:1 | **~5.42:1** |
+
+---
+
+## 2026-11-22 — Stage 4.3 manual accessibility (no production fixes)
+
+| Item | Result |
+|------|--------|
+| Keyboard + focus (IDE Chromium) | PASS (open/Esc/arrows/select restore/destroy) |
+| ARIA/DOM | PASS (dialog/grid/live/disabled/today/selected attrs; EN+NP labels) |
+| NVDA / VoiceOver / Orca speech | **NOT TESTED** |
+| Contrast approx. | AD ~2.26:1 (ISS-026); selected ~3.05:1 (ISS-027) |
+| Report | [phase4-accessibility-results.md](../architecture/phase4-accessibility-results.md) |
+
+---
+
+## 2026-11-22 — Stage 4.2 real-browser smoke (no production fixes)
+
+| Item | Result |
+|------|--------|
+| Primary browser | Cursor IDE Chromium/Electron 150 |
+| Mobile viewport | CDP Emulation **390×844 @ DPR 2** (`matchMobileMq: true`) |
+| Day button desktop | **42×42** |
+| Day button mobile | **38×38** (shortfall vs 44) |
+| Popup mobile | **292px** wide; fits; no overflowX |
+| B1–B8 | Mostly PASS; nested scroll **FAIL** → ISS-025 |
+| Production tree | Unchanged |
+| Report | [phase4-browser-smoke-results.md](../architecture/phase4-browser-smoke-results.md) |
+
+---
+
+## 2026-11-22 — Phase 5.2–5.6 packaging (ISS-008/009/028)
+
+| Check | Result |
+|-------|--------|
+| `npm run build` | **PASS** (ESM + CJS + UMD + CSS + `index.d.ts`) |
+| `npm run typecheck` | **PASS** |
+| Full Jest | **325/325 PASS** |
+| `npm run pack:smoke` | **PASS** (CJS require, ESM import, css≡styles, consumer tsc, clean tarball) |
+| Local CJS `require('./dist/…cjs')` | APIs present; `convertAdToBs` → 2080-09-16 |
+| npm publish | **Not run** (await auth) |
+
+---
+
+## 2026-11-22 — Phase 5.1 CI honesty (ISS-010)
+
+| Check | Result |
+|-------|--------|
+| `ci.yml` Build/Test `continue-on-error` | **Removed** |
+| Jest `workflow-honesty` | **6/6 PASS** |
+| `node scripts/verify-ci-honesty.mjs` | **PASS** (controlled fail build skips Test; fail test exits non-zero) |
+| Full Jest | **323/323 PASS** |
+| `tsc --noEmit` | **PASS** |
+| `npm run build` | **PASS** |
+| Packaging / exports / deps | **Unchanged** |
+
+Not claimed: live GitHub Actions run on `main` (local YAML + simulation only).
+
+---
+
+## 2026-11-22 — Phase 5 packaging/CI assessment (no code changes)
+
+| Check | Result |
+|-------|--------|
+| Config / CI / Rollup inspection | Documented in [phase5-packaging-assessment.md](../architecture/phase5-packaging-assessment.md) |
+| `npm pack` → ESM import | **PASS** (`convertAdToBs` / `NepaliDatePicker`) |
+| `npm pack` → CJS `require` | **FAIL** — empty module (ISS-028) |
+| `nepalipatrojs/css` resolve | **PASS** |
+| `nepalipatrojs/styles` | **FAIL** — missing `only-styles.css` (ISS-009) |
+| npm `1.0.5` tarball | 27 files; broken `./styles`; incomplete/stale `.d.ts` set vs current tree |
+| Implementation | **None** (assessment only) |
+
+---
+
+## 2026-11-22 — ISS-025 nested-scroll reposition
+
+### Checks
+
+| Check | Result |
+|-------|--------|
+| Jest full suite | **317/317 PASS** |
+| `tsc --noEmit` | **PASS** |
+| `npm run build` | **PASS** |
+| Architecture/boundary | **22/22 PASS** |
+| Unit/integration | `position.test.ts` + `positioning-integration.test.ts` ISS-025 cases |
+| Browser (IDE Chromium) | Nested `#nested-scroll` scroll → popup `style.top` changed (`55.0781` → `415.812`); ancestor detected; flip/clamp still via existing `computePopupPosition` |
+
+### Not claimed
+
+Physical device / Safari / Firefox; full B1–B8 re-suite beyond nested-scroll spot-check.
+
+---
+
+## 2026-11-22 — Stage 4.1 documentation sync (no production code)
+
+### Checks (non-mutating)
+
+```bash
+# Read-only verification of documented examples against existing dist ESM:
+node --input-type=module -e "import { convertAdToBs, convertBsToAd, getDaysInMonth, formatBSDate, NepaliPatro } from './dist/nepali-patro-js.esm.js'; …"
+```
+
+| Claim | Result |
+|-------|--------|
+| `convertAdToBs({2022,1,1})` | `{2078,9,17}` |
+| `convertAdToBs({2024,1,1})` | `{2080,9,16}` |
+| `getDaysInMonth(2078, 2)` | `31` |
+| `formatBS(…, {language:'np'})` | Nepali digits + names |
+| `formatBS(…, {language:'ne'})` | Names may change; **digits stay Latin** — unsupported |
+| Jest / `npm run build` | **Not run** (docs-only stage) |
+| `src/`, `package.json`, CI, CSS | **Unchanged** |
+
+---
+
+## 2026-11-22 — Phase 4 assessment (no production code)
+
+### Commands
+
+```bash
+npx jest --runInBand --coverage=false   # 310/310 (~28s)
+npm pack --dry-run                      # 87 files; styles export target absent
+```
+
+### Inspect-only findings
+
+- `dist/index.d.ts` present after prior build; `dist/only-styles.css` **missing** (ISS-009)
+- CI: `continue-on-error: true` on build + test (ISS-010)
+- Responsive tokens: desktop day 42px; mobile day 38px; weekday 10px; popup 328/292
+
+Full report: [phase4-hardening-assessment.md](../architecture/phase4-hardening-assessment.md)
+
+---
+
+## 2026-11-21 — Phase 1 Step 1: Environment & baseline
+
+### Environment
+
+| Item | Value |
+|------|--------|
+| OS | Linux (Fedora kernel host) |
+| Node | **v24.15.0** (CI matrix is 18.x / 20.x — local newer) |
+| npm | **11.12.1** |
+| Lockfile | `package-lock.json` present |
+| `npm ci` | **PASS** (455 packages added, ~11s) |
+| npm audit (informational) | 15 vulnerabilities reported (1 low, 3 moderate, 11 high) — **not fixed** this phase |
+| npm warn | `Unknown env config "devdir"` (environment noise) |
+
+### Commands executed
+
+```bash
+node -v                    # v24.15.0
+npm -v                     # 11.12.1
+npm ci                     # exit 0
+npm test                   # exit 0
+npm run build              # exit 0
+npx tsc --noEmit           # exit 0
+```
+
+### Unit tests — `npm test`
+
+| Metric | Result |
+|--------|--------|
+| Suites | 5 passed, 5 total |
+| Tests | **53 passed, 53 total** |
+| Exit code | **0** |
+| Coverage (stmts) | ~80% overall |
+
+**Critical caveat:** A green suite does **not** mean the library is correct. Existing tests share incorrect assumptions with the buggy code (especially validation indexing and formatter tokens using Baisakh-only fixtures).
+
+### Manual defect probes (source via `tsx`, not part of Jest suite)
+
+| Probe | Result |
+|-------|--------|
+| `validateBsDate(2080, 2, 33)` Jestha max 32 | **NO THROW** (bug ISS-001) |
+| `validateBsDate(2080, 9, 30)` Poush max 29 | **NO THROW** (bug ISS-001) |
+| `validateBsDate(2080, 1, 32)` Baisakh max 31 | **NO THROW** (bug ISS-001) |
+| `validateBsDate(2080, 1, 15)` valid | NO THROW (expected) |
+| `formatBS(Mangsir…, 'MMMM D, YYYY')` | **`8angsir 5, 2080`** (ISS-006) |
+| `formatBS(Magh…, 'MMMM D, YYYY')` | **`10agh 5, 2080`** (ISS-006) |
+| `formatBS(…, 'dddd')` on Budhabar | **`Bu4habar`** (ISS-006) |
+
+### Build — `npm run build`
+
+| Metric | Result |
+|--------|--------|
+| Exit code | **0** |
+| Outputs | `dist/nepali-patro-js.umd.js`, `.esm.js`, `.css`, plus sourcemaps |
+| Declarations | `dist/index.d.ts` (+ nested `.d.ts`) **present after build** (Rollup TS plugin) |
+| `dist/only-styles.css` | **MISSING** (ISS-009) |
+| `dist/only-css.js` | Generated empty chunk warning |
+
+**Build warnings (non-fatal):**
+
+1. Circular dependency: `src/index.ts → src/ui/NepaliDatePicker.ts → src/index.ts` (ISS-011)
+2. Mixing named and default exports
+3. Empty chunk `"only-css"`
+4. Browserslist data stale notice
+
+### Typecheck — `npx tsc --noEmit`
+
+| Metric | Result |
+|--------|--------|
+| Exit code | **0** |
+| Dedicated npm script | **None** (`typecheck` not in package.json) |
+
+### Baseline failure / risk register (pre-fix)
+
+| ID | Observable at baseline? | Jest catches it? |
+|----|-------------------------|------------------|
+| ISS-001 BS validation | Yes (manual probe) | **No** |
+| ISS-006 formatter corruption | Yes (manual probe) | **No** |
+| ISS-008 missing types | Partially mitigated after build emits `.d.ts`; still not in committed gitignore allowlist | N/A |
+| ISS-009 `./styles` export | Yes — file missing | N/A |
+| ISS-010 CI continue-on-error | Not re-run | N/A |
+| ISS-011 circular dependency | Yes — Rollup warning | N/A |
+
+### Honest summary
+
+- Install, Jest, build, and `tsc --noEmit` are **green** on Node 24.
+- Known critical correctness bugs **remain** and are **not** detected by the current test suite.
+- Next work must add independent regression tests before/with fixes — do not trust the green baseline as proof of correctness.
+
+---
+
+## 2026-11-21 — Phase 1 Step 2: ISS-001 fixed
+
+### Commands
+
+```bash
+npx jest src/__tests__/utils/validations.test.ts   # PASS — 27 tests in file
+npm test                                           # PASS — 63/63 (baseline was 53)
+npx tsc --noEmit                                   # PASS
+npm run build                                      # PASS (same warnings as baseline)
+```
+
+### Manual probes (post-fix)
+
+| Call | Result |
+|------|--------|
+| `validateBsDate(2080, 2, 33)` | THROWS (was NO THROW) |
+| `validateBsDate(2080, 9, 30)` | THROWS (was NO THROW) |
+| `validateBsDate(2080, 1, 32)` | THROWS (was NO THROW) |
+
+### Coverage of new regressions
+
+- All 12 months × years `{2000, 2078, 2080, 2081, 2099}`: first day, last day, last+1
+- Expected lengths from `BS_CALENDAR_DATA[year][0][month-1]` / `getDaysInMonth` — not from `validateBsDate`
+
+### Compared to baseline
+
+| Metric | Baseline | After ISS-001 |
+|--------|----------|---------------|
+| Jest | 53 pass | **63 pass** |
+| ISS-001 probes | fail (accept invalid) | **pass (reject)** |
+| ISS-006 probes | still fail | unchanged (out of scope) |
+| Build warnings | circular dep, etc. | unchanged |
+
+---
+
+## 2026-11-21 — Phase 1 Step 3: ISS-006 fixed
+
+### Strategy
+
+Longest-first single-pass token regex:
+
+`/[([^\]]*)\]|YYYY|YY|MMMM|MMM|MM|M|dddd|ddd|DD|D|d/g`
+
+Bracket groups emit literals. Token values are never rescanned.
+
+### Commands
+
+```bash
+npx jest src/__tests__/formatters/date-formatter.test.ts   # PASS — 41 tests
+npm test                                                   # PASS — 96/96
+npx tsc --noEmit                                           # PASS
+npm run build                                              # PASS
+```
+
+### Before → after
+
+| Input | Before | After |
+|-------|--------|-------|
+| Mangsir `MMMM D, YYYY` | `8angsir 5, 2080` | `Mangsir 5, 2080` |
+| Magh `MMMM D, YYYY` | `10agh 5, 2080` | `Magh 5, 2080` |
+| Budhabar `dddd` | `Bu4habar` | `Budhabar` |
+
+### Compared to prior step
+
+| Metric | After ISS-001 | After ISS-006 |
+|--------|---------------|---------------|
+| Jest | 63 pass | **96 pass** |
+| ISS-006 probes | fail | **pass** |
+
+---
+
+## 2026-11-21 — Phase 1 Step 4: Conversion correctness baseline
+
+### Three correctness layers
+
+| Layer | Result |
+|-------|--------|
+| Structural integrity | **PASS** — contiguous 2000–2099, 12 months, totals match, SHA-256 `f9c4b277…b29f` |
+| Golden accuracy | **AD→BS PASS** for sourced fixtures; **BS→AD** mostly wrong (ISS-019); `it.failing` gates for broken cases |
+| Round-trip consistency | Exhaustive 36525 dates: **~3090 failures**, ~22–32s; REF ok; `it.failing` for zero-failure gate |
+
+### Commands
+
+```bash
+npx jest src/__tests__/conversion --runInBand   # PASS (27) ~35s incl. exhaustive
+npm test -- --runInBand                         # PASS 124/124
+npx tsc --noEmit                                # PASS
+npm run build                                   # PASS
+```
+
+### Provenance (ISS-016)
+
+No source in git/docs. One-day conflicts with some public New Year tables for 2078/2079 noted in fixtures.
+
+### Compared to prior step
+
+| Metric | After ISS-006 | After Step 4 |
+|--------|---------------|--------------|
+| Jest | 96 pass | **124 pass** |
+| ISS-019 | unknown | **documented** |
+
+---
+
+## 2026-11-21 — ISS-019: BS→AD arithmetic fix
+
+### Root cause / correction
+
+Old `daysBetweenBS` month-cursor loop over-counted same-month spans and added a full next Baisakh on year rollover. Replaced with absolute day indices from `REF_BS` (year totals + month lengths + day offset). Dataset and REF unchanged.
+
+### Three correctness layers
+
+| Layer | Result |
+|-------|--------|
+| Structural integrity | **PASS** — unchanged SHA-256 `f9c4b277…b29f` |
+| Golden accuracy | **PASS** — AD→BS and BS→AD (including 2080-01-01 → 2023-04-14) |
+| Round-trip consistency | Exhaustive **36525 / 36525**, **0 failures** (~25–31s; prior baseline ~22–32s with ~3090 fails) |
+
+### Commands
+
+```bash
+npx jest src/__tests__/conversion --runInBand   # PASS 34 ~33s
+npm test -- --runInBand --coverage=false        # PASS 131/131 ~24s
+npm test -- --runInBand                         # PASS 131/131 ~33s (coverage)
+npx tsc --noEmit                                # PASS
+npm run build                                   # PASS
+```
+
+### Notes
+
+- Temporary `it.failing` gates removed; none remain.
+- Formatter weekday expectations for 2080-01-01..07 corrected to Fri–Thu from 2023-04-14 (were encoded against buggy 2023-05-15).
+- ISS-016 provenance still unresolved; external one-day New Year disagreements stay documented.
+
+### Compared to prior step
+
+| Metric | After Step 4 | After ISS-019 |
+|--------|--------------|---------------|
+| Jest | 124 (with `.failing`) | **131 pass** |
+| Round-trip failures | ~3090 | **0** |
+| ISS-019 | open | **resolved** |
+
+---
+
+## 2026-11-21 — Phase 1 Step 5: Timezone verification
+
+### Node
+
+`v24.15.0`
+
+### Date-only matrix (focused)
+
+```bash
+TZ=UTC npx jest src/__tests__/conversion/timezone-date-semantics.test.ts --runInBand --coverage=false
+TZ=Asia/Kathmandu npx jest src/__tests__/conversion/timezone-date-semantics.test.ts --runInBand --coverage=false
+TZ=America/Los_Angeles npx jest src/__tests__/conversion/timezone-date-semantics.test.ts --runInBand --coverage=false
+```
+
+| TZ | Result | Tests | Time |
+|----|--------|-------|------|
+| UTC | PASS | 16/16 | ~1.2s |
+| Asia/Kathmandu | PASS | 16/16 | ~1.2s |
+| America/Los_Angeles | PASS | 16/16 | ~1.3s |
+
+### Full suite under each TZ
+
+```bash
+TZ=UTC npm test -- --runInBand --coverage=false
+TZ=Asia/Kathmandu npm test -- --runInBand --coverage=false
+TZ=America/Los_Angeles npm test -- --runInBand --coverage=false
+```
+
+| TZ | Result | Tests | Time |
+|----|--------|-------|------|
+| UTC | PASS | **150/150** | ~24.8s |
+| Asia/Kathmandu | PASS | **150/150** | ~23.5s |
+| America/Los_Angeles | PASS | **150/150** | ~23.7s |
+
+Exhaustive round-trips remain **36525/36525** (included in conversion suite).
+
+### Other
+
+```bash
+npx tsc --noEmit   # PASS
+npm run build      # PASS
+```
+
+### Findings recorded
+
+- Date-only civil results identical across three TZs.
+- Legacy `Date.UTC(2023,3,14)` → local Apr 13 under `America/Los_Angeles` → different BS than Apr 14 (intentional local-field behavior).
+- No ISO date-string parsing in core converters (rejects string inputs).
+- Formatter weekdays stable (Sukrabar for 2080-01-01) without `Date.getDay()`.
+
+### Compared to prior step
+
+| Metric | After ISS-019 | After Step 5 |
+|--------|---------------|--------------|
+| Jest | 131 | **150** |
+| ISS-002 | open | **resolved** (date-only + documented legacy) |
+
+---
+
+## 2026-11-21 — Phase 1 Step 6: Algorithm assessment (no production changes)
+
+### Command / environment
+
+```bash
+npm run build
+node scripts/bench-conversion.mjs
+```
+
+Node **v24.15.0**, linux x64. Raw: `docs/progress/benchmarks-step6-raw.txt`. Report: `docs/progress/algorithm-assessment-step6.md`.
+
+### Headline measurements (production)
+
+| Workload | Result |
+|----------|--------|
+| Ad→Bs late (2099-end) median | **~1.26 ms** |
+| Ad→Bs full range 36525 | **~22.9 s** (627 µs/op) |
+| Bs→Ad full range 36525 | **~45 ms** (1.23 µs/op) |
+| Ad→Bs latency vs daysFromRef | linear (0 → 18k → 36k days ≈ 0.1 → 631 → 1263 µs) |
+
+### Prototype (script-only) vs prod
+
+| Ad→Bs bulk 36525 | Time |
+|------------------|------|
+| prod day-walk | 22.9 s |
+| prefix tables | 3.1 ms |
+| full lookup | 2.9 ms |
+
+Prefix init ~0.13 ms / ~5.6 KiB. Lookup ~4.3 ms / ~143 KiB. Prototypes matched prod on 500 random dates (0 failures).
+
+### Recommendation recorded
+
+Optimize AD→BS with prefix sums when authorized; keep BS→AD; **no src algorithm change in Step 6**.
+
+---
+
+## 2026-11-21 — Phase 1 Step 7: ISS-003 prefix AD→BS implemented
+
+### Correctness
+
+```bash
+npx jest src/__tests__/conversion/ad-to-bs-prefix.test.ts --runInBand --coverage=false
+# PASS 7 — includes exhaustive day-walk oracle parity 36525/36525 (~27s)
+```
+
+| TZ | Full suite |
+|----|------------|
+| UTC | **157/157** ~28s |
+| Asia/Kathmandu | **157/157** ~27s |
+| America/Los_Angeles | **157/157** ~27s |
+
+`tsc --noEmit` PASS · `npm run build` PASS
+
+### Performance (same harness as Step 6)
+
+```bash
+npm run build && node scripts/bench-conversion.mjs
+```
+
+| Workload | Step 6 (before) | Step 7 (after) |
+|----------|-----------------|----------------|
+| Ad→Bs late median | ~1,262 µs | **~0.15 µs** |
+| Ad→Bs × 36,525 | ~22,908 ms | **~9.0 ms** |
+| Ad→Bs late × 50k | ~63,169 ms | **~3.6 ms** |
+| Ad→Bs distance sensitivity | linear in days | **flat** |
+| Bs→Ad × 36,525 | ~45 ms | ~45 ms (unchanged) |
+| Prefix table memory | — | **~5.6 KiB** (module init) |
+
+Raw: `docs/progress/benchmarks-step7-raw.txt`
+
+### Benchmark caveat (post-approval scrutiny)
+
+`performance.now()` empty-delta median on the benchmark host ≈ **60–80 ns**. Sub-µs single-call medians are therefore **resolution-limited**. Re-check with result sink: late Ad→Bs batch ≈ **0.09–0.20 µs/op**; individually timed calls ≈ **~0.8 µs** median (timer overhead). **Bulk wall-clock** (~23 s → ~9 ms for 36,525) remains the reliable magnitude evidence. Do not over-claim precise sub-µs figures in user-facing docs.
+
+---
+
+## 2026-11-21 — Phase 2 architecture assessment (no code changes)
+
+Inspection only. Deliverable: `docs/architecture/phase2-assessment.md`.
+
+Verified: `NepaliDatePicker` imports from `../index` (cycle); UI reads `BS_CALENDAR_DATA` directly; core converters/utils/formatters have no DOM/React imports.
+
+No Jest/build re-run required for assessment-only (Phase 1 suite remains the last green baseline: 157/157 × 3 TZ).
+
+---
+
+## 2026-11-21 — Phase 2 Stage 2.0: Public API inventory (ISS-017)
+
+Assessment/documentation only — no production changes.
+
+### Verification performed
+
+- Inspected `src/index.ts` exports + `NepaliPatro` facade + `window.NepaliDatePicker` side effect
+- Inspected `package.json` `main`/`module`/`types`/`exports`
+- Confirmed built ESM keys via `import('./dist/nepali-patro-js.esm.js')`
+- Confirmed `dist/nepali-patro-js.css` exists; `dist/only-styles.css` **missing**
+- Confirmed UMD global name `NepaliPatro`; picker window assignment present
+- Cross-checked README / QUICK_START import examples vs runtime (`formatBS` facade vs `formatBSDate` named; docs `ne` vs runtime `np`)
+
+### Deliverable
+
+`docs/api/public-api-inventory.md`
+
+---
+
+## 2026-11-21 — Phase 2 Stage 2.1: Break circular import (ISS-020)
+
+### Change
+
+`NepaliDatePicker.ts` no longer imports `../index`. Uses `converters/ad-to-bs`, `converters/bs-to-ad`, `formatters/date-formatter`, `types`.
+
+### Commands
+
+```bash
+npm test -- --runInBand --coverage=false   # PASS 164/164 ~27s
+npx tsc --noEmit                           # PASS
+npm run build                              # PASS
+```
+
+Compat suite: `src/__tests__/public-api-compat.test.ts` (default/named facade, conversions, picker destroy, UMD globals, CSS path, cycle regression).
+
+Public ESM export keys unchanged vs Stage 2.0 inventory.
+
+---
+
+## 2026-11-22 — Phase 3 Stage 3.7: Visual redesign / theme tokens
+
+### Change
+
+CSS custom properties `--np-*` on `.nepali-datepicker`; dark theme re-tokens on `.nepali-datepicker-dark`. Footer sync preflight recorded (ISS-024: focus not hover).
+
+### Commands
+
+```bash
+npx jest --runInBand --coverage=false   # PASS 310/310 ~28s
+npx tsc --noEmit                        # PASS
+npm run build                           # PASS
+```
+
+---
+
+## 2026-11-22 — Phase 3 Stage 3.6: Dual AD/BS display
+
+### Change
+
+BS remains the selection calendar. Each day shows a secondary AD day-of-month; footer shows full AD for the focused BS date (`convertBsToAd`). No AD grid / mode switch.
+
+### Commands
+
+```bash
+npx jest --runInBand --coverage=false   # PASS 299/299 ~29s
+npx tsc --noEmit                        # PASS
+npm run build                           # PASS
+```
+
+---
+
+## 2026-11-22 — Phase 3 Stage 3.5: Today, constraints, disabled dates
+
+### Change
+
+Additive options: `minDate`, `maxDate` (inclusive), `disabledDates`, `isDateDisabled`. Pure `constraints.ts`. Today commits when selectable; Clear empties input + fires `change` + keeps open. Keyboard skips unavailable dates.
+
+### Commands
+
+```bash
+npx jest --runInBand --coverage=false   # PASS 283/283 ~28s
+npx tsc --noEmit                        # PASS
+npm run build                           # PASS
+```
+
+---
+
+## 2026-11-22 — Phase 3 Stage 3.4: Positioning and z-index (ISS-012)
+
+### Change
+
+`src/ui/position.ts` — pure `computePopupPosition` / `resolveZIndex`. Removed full-DOM z-index scan and modal append heuristics. Sticky z-index precedence; scroll/resize (rAF-coalesced) while open; cleanup on close/destroy.
+
+### Commands
+
+```bash
+npx jest --runInBand --coverage=false   # PASS 261/261 ~28s
+npx tsc --noEmit                        # PASS
+npm run build                           # PASS
+```
+
+### Note
+
+Positioning tests use mocked `getBoundingClientRect` / viewport — not a claim of real-browser layout correctness.
+
+---
+
+## 2026-11-22 — Phase 3 Stage 3.3: Keyboard, focus, ARIA
+
+### Change
+
+`src/ui/keyboard.ts` (pure nav); state `focused`; render dialog/grid/ARIA/live region; orchestrator Escape + arrows + focus restore; minimal `:focus-visible` ring. Week starts **Sunday** (matches grid).
+
+### Commands
+
+```bash
+npx jest --runInBand --coverage=false   # PASS 243/243 ~29s
+npx tsc --noEmit                        # PASS
+npm run build                           # PASS
+```
+
+### Note on `dist/`
+
+Build refreshed tracked `dist/nepali-patro-js.{umd,esm}.js` (+ css pipeline). Source of truth remains `src/`; do not edit dist by hand.
+
+---
+
+## 2026-11-22 — Phase 3 Stage 3.2: Safe DOM rendering (ISS-014)
+
+### Change
+
+`src/ui/render.ts` builds the popup with `createElement` / text nodes. No `innerHTML` in datepicker. Security tests mock malicious localization strings and assert no executable elements.
+
+### Commands
+
+```bash
+npx jest --runInBand --coverage=false   # PASS 220/220 ~29s
+npx tsc --noEmit                        # PASS
+npm run build                           # PASS
+```
+
+---
+
+## 2026-11-22 — Phase 3 Stage 3.1: State/grid extraction + destroy fix
+
+### Change
+
+- Added pure `src/ui/state.ts` and `src/ui/grid.ts` (date-only weekday via `getBsWeekdayIndex`)
+- Wired `NepaliDatePicker` to state/grid; appearance/`innerHTML` unchanged
+- Fixed ISS-022 destroy listener leak
+
+### Commands
+
+```bash
+npx jest --runInBand --coverage=false   # PASS 213/213 ~28s
+npx tsc --noEmit                        # PASS
+npm run build                           # PASS
+```
+
+---
+
+## 2026-11-22 — Phase 2 Stage 2.6: Ownership cleanup
+
+### Change
+
+Moved `NEPALI_DIGITS` → `i18n/digits.ts`; locale enums → `i18n/names.ts`; `DateFormatPattern` + `NepaliPatroOptions` → `i18n/types.ts`; `NepaliDatePickerOptions` → `ui/types.ts`. Public names re-exported from `index.ts`. Ownership rules added to architecture tests.
+
+### Commands
+
+```bash
+npx jest --runInBand --coverage=false   # PASS 196/196 ~28s
+npx tsc --noEmit                        # PASS
+npm run build                           # PASS
+```
+
+---
+
+## 2026-11-22 — Phase 2 Stage 2.5: Architecture boundary enforcement (ISS-018)
+
+### Change
+
+Automated boundary checker (no new deps) with positive scan of production `src/` and negative synthetic fixtures. Rules documented in `docs/architecture/boundary-rules.md`. Exceptions evaluated (not moved) in `docs/architecture/exceptions-stage25.md`.
+
+### Commands
+
+```bash
+npx jest --runInBand --coverage=false   # PASS 191/191 ~29s
+npx tsc --noEmit                        # PASS
+npm run build                           # PASS
+```
+
+---
+
+## 2026-11-22 — Phase 2 Stage 2.4: Physical core / i18n restructuring
+
+### Change
+
+Moved calendar/conversion/validation into `src/core/`; localization/formatting into `src/i18n/`; removed `utils/helpers.ts` shim. Public barrel and package exports unchanged.
+
+### Commands
+
+```bash
+npx jest --runInBand --coverage=false   # PASS 178/178 ~29s
+npx tsc --noEmit                        # PASS
+npm run build                           # PASS
+```
+
+Boundary tests updated for physical folders; UMD smoke + public API compat PASS after rebuild.
+
+---
+
+## 2026-11-22 — Phase 2 Stage 2.3: Separate core and i18n helpers
+
+### Change
+
+Split `helpers.ts` into `calendar.ts` (core) and `localization.ts` (i18n). `helpers.ts` retained as re-export compatibility shim. Internal production imports updated; public barrel unchanged.
+
+### Commands
+
+```bash
+npx jest --runInBand --coverage=false   # PASS 176/176 ~33s
+npx tsc --noEmit                        # PASS
+npm run build                           # PASS
+```
+
+Added `module-boundaries.test.ts` (4 tests): calendar ↛ localization/DOM; localization ↛ calendar helpers/DOM; helpers re-export-only; converters ↛ localization.
+
+---
+
+## 2026-11-22 — Phase 2 Stage 2.2: Remove raw calendar data from datepicker (ISS-021)
+
+### Change
+
+`NepaliDatePicker` uses `getDaysInMonth` + `MIN_BS_YEAR`/`MAX_BS_YEAR`. No `BS_CALENDAR_DATA` reference.
+
+### Commands
+
+```bash
+npm test -- --runInBand --coverage=false   # PASS 172/172 ~29s
+npx tsc --noEmit                           # PASS
+npm run build                              # PASS
+```
+
+Added UI tests: month lengths (2080-01=31, 2080-02=32), year-select span, Chaitra→Baisakh nav, out-of-range input, source ban on `BS_CALENDAR_DATA`.
+
+---
+
+## Prior: 2026-11-21 Phase 0 static checks
+
+See earlier session notes: dataset 2000–2099 contiguous; packaging mismatches; no `node_modules` at that time.

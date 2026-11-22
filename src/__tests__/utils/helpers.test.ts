@@ -1,6 +1,6 @@
-import { getDaysInMonth, parseDateInput } from '../../utils/helpers';
-import { BS_CALENDAR_DATA, MAX_BS_YEAR, MIN_BS_YEAR } from '../../constants/calendar-data';
-import { NepaliDate } from '../../types';
+import { getDaysInMonth, parseDateInput } from '../../core/calendar';
+import { BS_CALENDAR_DATA, MAX_BS_YEAR, MIN_BS_YEAR } from '../../core/calendar-data';
+import { NepaliDate } from '../../core/types';
 
 describe('Helper Functions', () => {
   describe('getDaysInMonth', () => {

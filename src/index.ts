@@ -1,27 +1,42 @@
 import {
+  CalendarDate,
+  AdDate,
+  BsDate,
   NepaliDate,
+} from "./core/types";
+import {
+  MIN_BS_YEAR,
+  MAX_BS_YEAR,
+  MIN_AD_YEAR,
+  REF_AD_YMD,
+  REF_BS,
+} from "./core/calendar-data";
+import { convertADToBS, getCurrentBSDate } from "./core/converters/ad-to-bs";
+import { convertBSToAD } from "./core/converters/bs-to-ad";
+import {
+  convertAdToBs,
+  convertBsToAd,
+  getBsWeekdayIndex,
+} from "./core/converters/date-only";
+import { getDaysInMonth } from "./core/calendar";
+import {
   NepaliMonth,
   NepaliMonthNepali,
   NepaliWeekDay,
   NepaliWeekDayNepali,
-  NepaliPatroOptions,
-  NepaliDatePickerOptions,
-  DateFormatPattern
-} from "./types";
+} from "./i18n/names";
+import { NepaliPatroOptions, DateFormatPattern } from "./i18n/types";
 import {
-  BS_CALENDAR_DATA,
-  MIN_BS_YEAR,
-  MAX_BS_YEAR,
-  MIN_AD_YEAR,
-} from "./constants/calendar-data";
-import { convertADToBS, getCurrentBSDate } from "./converters/ad-to-bs";
-import { convertBSToAD } from "./converters/bs-to-ad";
-import { getDaysInMonth, nepaliDigitsToEnglish, getDateFormatPatterns } from "./utils/helpers";
+  nepaliDigitsToEnglish,
+  getDateFormatPatterns,
+} from "./i18n/localization";
 import {
   formatBS as formatBSDate,
   toNepaliDigits,
-} from "./formatters/date-formatter";
+} from "./i18n/format";
+import { NepaliDatePickerOptions } from "./ui/types";
 import { NepaliDatePicker } from "./ui/NepaliDatePicker";
+
 class NepaliPatro {
   static readonly MIN_YEAR = MIN_BS_YEAR;
   static readonly MAX_YEAR = MAX_BS_YEAR;
@@ -43,6 +58,20 @@ class NepaliPatro {
    */
   static convertBSToAD(bsDate: NepaliDate | number[]): Date {
     return convertBSToAD(bsDate);
+  }
+
+  /**
+   * Date-only AD → BS (timezone-independent). Prefer over Date-based convertADToBS.
+   */
+  static convertAdToBs(ad: CalendarDate): NepaliDate {
+    return convertAdToBs(ad);
+  }
+
+  /**
+   * Date-only BS → AD civil date (timezone-independent). Prefer over convertBSToAD.
+   */
+  static convertBsToAd(bs: CalendarDate): AdDate {
+    return convertBsToAd(bs);
   }
 
   /**
@@ -113,8 +142,11 @@ class NepaliPatro {
   }
 }
 
-// Named exports
+// Named exports — public names unchanged (Stage 2.6 ownership moves)
 export {
+  CalendarDate,
+  AdDate,
+  BsDate,
   NepaliDate,
   NepaliMonth,
   NepaliMonthNepali,
@@ -125,6 +157,9 @@ export {
   NepaliDatePickerOptions,
   convertADToBS,
   convertBSToAD,
+  convertAdToBs,
+  convertBsToAd,
+  getBsWeekdayIndex,
   getCurrentBSDate,
   formatBSDate,
   toNepaliDigits,
@@ -132,6 +167,8 @@ export {
   getDateFormatPatterns,
   DateFormatPattern,
   getDaysInMonth,
+  REF_AD_YMD,
+  REF_BS,
 };
 
 // Default export
@@ -143,4 +180,3 @@ export { NepaliPatro };
 if (typeof window !== "undefined") {
   (window as any).NepaliDatePicker = NepaliDatePicker;
 }
-

@@ -1,11 +1,88 @@
+/**
+ * NepaliDatePicker styles (Phase 3 Stage 3.7 — theme tokens).
+ * All rules are scoped under `.nepali-datepicker` (or that class itself).
+ * Consumers may override `--np-*` custom properties on the popup root.
+ */
+
 .nepali-datepicker {
-  background: white;
-  border-radius: 12px;
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
-  padding: 16px;
-  width: 320px;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  border: 1px solid #e1e5e9;
+  /* —— Theme tokens (light defaults) —— */
+  --np-surface: #ffffff;
+  --np-surface-muted: #f7fafc;
+  --np-surface-emphasis: #edf2f7;
+  --np-text: #2d3748;
+  --np-text-muted: #718096;
+  --np-text-subtle: #a0aec0;
+  --np-border: #e2e8f0;
+  --np-accent: #3182ce;
+  --np-accent-strong: #2b6cb0;
+  /* Stage 4.4 / ISS-027: darker selected fill for ≥4.5:1 with white text */
+  --np-selected-bg: #2b6cb0;
+  --np-selected-bg-hover: #2c5282;
+  --np-selected-text: #ffffff;
+  --np-today-bg: #e6fffa;
+  --np-today-bg-hover: #b2f5ea;
+  --np-today-text: #0d9488;
+  --np-disabled-opacity: 0.42;
+  --np-focus-ring: #2b6cb0;
+  --np-focus-ring-width: 2px;
+  --np-radius: 10px;
+  --np-radius-sm: 6px;
+  --np-space-1: 4px;
+  --np-space-2: 8px;
+  --np-space-3: 12px;
+  --np-space-4: 16px;
+  --np-font: "Segoe UI", "Helvetica Neue", "Noto Sans", sans-serif;
+  --np-font-size: 14px;
+  --np-font-size-sm: 12px;
+  --np-font-size-xs: 11px;
+  --np-font-size-lg: 17px;
+  --np-day-size: 42px;
+  --np-popup-width: 328px;
+  --np-shadow: 0 12px 28px rgba(15, 23, 42, 0.12), 0 2px 6px rgba(15, 23, 42, 0.06);
+  /* Stage 4.4 / ISS-026: dedicated AD color; avoid opacity as the contrast lever */
+  --np-ad-text: #4a5568;
+  --np-ad-opacity: 1;
+
+  box-sizing: border-box;
+  background: var(--np-surface);
+  color: var(--np-text);
+  border-radius: var(--np-radius);
+  box-shadow: var(--np-shadow);
+  padding: var(--np-space-4);
+  width: var(--np-popup-width);
+  font-family: var(--np-font);
+  font-size: var(--np-font-size);
+  border: 1px solid var(--np-border);
+  line-height: 1.3;
+}
+
+.nepali-datepicker *,
+.nepali-datepicker *::before,
+.nepali-datepicker *::after {
+  box-sizing: border-box;
+}
+
+/* Dark theme: re-token on the same root */
+.nepali-datepicker-dark {
+  --np-surface: #1a202c;
+  --np-surface-muted: #2d3748;
+  --np-surface-emphasis: #4a5568;
+  --np-text: #e2e8f0;
+  --np-text-muted: #a0aec0;
+  --np-text-subtle: #718096;
+  --np-border: #4a5568;
+  --np-accent: #63b3ed;
+  --np-accent-strong: #90cdf4;
+  --np-selected-bg: #2b6cb0;
+  --np-selected-bg-hover: #2c5282;
+  --np-selected-text: #ffffff;
+  --np-today-bg: #234e52;
+  --np-today-bg-hover: #285e61;
+  --np-today-text: #81e6d9;
+  --np-focus-ring: #90cdf4;
+  --np-shadow: 0 14px 32px rgba(0, 0, 0, 0.45);
+  --np-ad-text: #cbd5e0;
+  --np-ad-opacity: 1;
 }
 
 /* Header */
@@ -13,210 +90,345 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 16px;
-  padding: 0 4px;
+  margin-bottom: var(--np-space-3);
+  padding: 0 var(--np-space-1);
+  gap: var(--np-space-2);
 }
 
 .nepali-header-content {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: var(--np-space-2);
+  min-width: 0;
 }
 
 .nepali-nav-btn {
   background: none;
   border: none;
   cursor: pointer;
-  padding: 8px;
-  border-radius: 8px;
+  padding: var(--np-space-2);
+  border-radius: var(--np-radius-sm);
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #4a5568;
-  transition: all 0.2s ease;
+  color: var(--np-text-muted);
+  transition: background-color 0.15s ease, color 0.15s ease;
+  min-width: 36px;
+  min-height: 36px;
 }
 
 .nepali-nav-btn:hover {
-  background-color: #f7fafc;
-  color: #2d3748;
+  background-color: var(--np-surface-muted);
+  color: var(--np-text);
+}
+
+.nepali-nav-btn:focus-visible {
+  outline: var(--np-focus-ring-width) solid var(--np-focus-ring);
+  outline-offset: 2px;
 }
 
 .nepali-nav-btn:active {
-  transform: scale(0.95);
+  transform: scale(0.96);
 }
 
 .nepali-month-select,
 .nepali-year-select {
   background: none;
   border: none;
-  font-size: 18px;
-  font-weight: 600;
-  color: #2d3748;
+  font-size: var(--np-font-size-lg);
+  font-weight: 650;
+  color: var(--np-text);
   cursor: pointer;
-  padding: 4px 8px;
-  border-radius: 6px;
-  transition: background-color 0.2s ease;
+  padding: var(--np-space-1) var(--np-space-2);
+  border-radius: var(--np-radius-sm);
+  transition: background-color 0.15s ease;
+  font-family: inherit;
+  max-width: 100%;
 }
 
 .nepali-month-select:hover,
 .nepali-year-select:hover {
-  background-color: #f7fafc;
+  background-color: var(--np-surface-muted);
 }
 
 .nepali-month-select:focus,
 .nepali-year-select:focus {
   outline: none;
-  background-color: #edf2f7;
+  background-color: var(--np-surface-emphasis);
+}
+
+.nepali-month-select:focus-visible,
+.nepali-year-select:focus-visible {
+  outline: var(--np-focus-ring-width) solid var(--np-focus-ring);
+  outline-offset: 2px;
 }
 
 /* Weekdays */
 .nepali-weekdays {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
-  margin-bottom: 8px;
+  margin-bottom: var(--np-space-2);
 }
 
 .nepali-weekday {
-  padding: 12px 4px;
+  padding: var(--np-space-2) var(--np-space-1);
   text-align: center;
-  font-size: 12px;
-  font-weight: 600;
-  color: #718096;
+  font-size: var(--np-font-size-sm);
+  font-weight: 650;
+  color: var(--np-text-muted);
   text-transform: uppercase;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.04em;
 }
 
 /* Calendar Body */
 .nepali-calendar-body {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.nepali-week {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
   gap: 2px;
 }
 
-/* Days */
-.nepali-day {
+.nepali-gridcell {
   display: flex;
   align-items: center;
   justify-content: center;
-  height: 40px;
-  width: 40px;
+}
+
+/* Screen-reader / live month announcement (visually hidden) */
+.nepali-datepicker-live {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Days — BS primary, AD day subtitle secondary */
+.nepali-day {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1px;
+  height: var(--np-day-size);
+  width: var(--np-day-size);
   cursor: pointer;
-  border-radius: 8px;
-  font-size: 14px;
+  border-radius: var(--np-radius-sm);
+  font-size: var(--np-font-size);
   font-weight: 500;
-  color: #2d3748;
-  transition: all 0.2s ease;
+  color: var(--np-text);
+  transition: background-color 0.12s ease, color 0.12s ease, transform 0.12s ease;
   position: relative;
   margin: 0 auto;
+  background: none;
+  border: 1px solid transparent;
+  padding: 2px 0;
+  font-family: inherit;
+  line-height: 1.1;
+}
+
+.nepali-day-bs {
+  font-size: var(--np-font-size);
+  font-weight: 650;
+}
+
+.nepali-day-ad {
+  font-size: var(--np-font-size-xs);
+  font-weight: 500;
+  opacity: var(--np-ad-opacity);
+  color: var(--np-ad-text);
+}
+
+.nepali-day:focus {
+  outline: none;
+}
+
+.nepali-day:focus-visible {
+  outline: var(--np-focus-ring-width) solid var(--np-focus-ring);
+  outline-offset: 2px;
+  z-index: 1;
+  box-shadow: 0 0 0 1px var(--np-surface);
 }
 
 .nepali-day:hover {
-  background-color: #edf2f7;
-  transform: scale(1.05);
+  background-color: var(--np-surface-emphasis);
 }
 
 .nepali-day:active {
-  transform: scale(0.95);
+  transform: scale(0.97);
 }
 
 /* Other month days */
 .nepali-other-month {
-  color: #a0aec0;
+  color: var(--np-text-subtle);
+}
+
+.nepali-other-month .nepali-day-ad {
+  color: var(--np-text-subtle);
+  opacity: 0.9;
 }
 
 .nepali-other-month:hover {
-  background-color: #f7fafc;
-  color: #718096;
+  background-color: var(--np-surface-muted);
+  color: var(--np-text-muted);
 }
 
-/* Today */
+/* Today — fill + left accent bar (not color alone) */
 .nepali-today {
-  background-color: #e6fffa;
-  color: #00a693;
-  font-weight: 600;
+  background-color: var(--np-today-bg);
+  color: var(--np-today-text);
+  font-weight: 650;
+  box-shadow: inset 3px 0 0 var(--np-today-text);
+}
+
+.nepali-today .nepali-day-ad {
+  color: var(--np-today-text);
+  opacity: 1;
 }
 
 .nepali-today:hover {
-  background-color: #b2f5ea;
+  background-color: var(--np-today-bg-hover);
 }
 
 /* Selected day */
 .nepali-selected {
-  background-color: #4299e1;
-  color: white;
-  font-weight: 600;
+  background-color: var(--np-selected-bg);
+  color: var(--np-selected-text);
+  font-weight: 650;
+  box-shadow: none;
+  border-color: var(--np-accent-strong);
+}
+
+.nepali-selected .nepali-day-ad {
+  opacity: 1;
+  color: var(--np-selected-text);
 }
 
 .nepali-selected:hover {
-  background-color: #3182ce;
-  transform: scale(1.05);
+  background-color: var(--np-selected-bg-hover);
 }
 
-/* Selected today */
 .nepali-selected.nepali-today {
-  background-color: #4299e1;
-  color: white;
+  background-color: var(--np-selected-bg);
+  color: var(--np-selected-text);
+  box-shadow: inset 3px 0 0 rgba(255, 255, 255, 0.85);
 }
 
 .nepali-selected.nepali-today:hover {
-  background-color: #3182ce;
+  background-color: var(--np-selected-bg-hover);
 }
 
-.nepali-datepicker-dark {
-  background: #2d3748;
-  border-color: #4a5568;
-  color: #e2e8f0;
-}
-.nepali-datepicker-dark .nepali-nav-btn {
-  color: #a0aec0;
-}
-.nepali-datepicker-dark .nepali-nav-btn:hover {
-  background-color: #4a5568;
-  color: #e2e8f0;
-}
-.nepali-datepicker-dark .nepali-month-select,
-.nepali-datepicker-dark .nepali-year-select {
-  color: #e2e8f0;
-}
-.nepali-datepicker-dark .nepali-month-select:hover,
-.nepali-datepicker-dark .nepali-year-select:hover {
-  background-color: #4a5568;
-}
-.nepali-datepicker-dark .nepali-weekday {
-  color: #a0aec0;
-}
-.nepali-datepicker-dark .nepali-day {
-  color: #e2e8f0;
-}
-.nepali-datepicker-dark .nepali-day:hover {
-  background-color: #4a5568;
-}
-.nepali-datepicker-dark .nepali-other-month {
-  color: #718096;
-}
-.nepali-datepicker-dark .nepali-today {
-  background-color: #234e52;
-  color: #81e6d9;
-}
-.nepali-datepicker-dark .nepali-today:hover {
-  background-color: #285e61;
+/* Disabled dates */
+.nepali-day.nepali-disabled,
+.nepali-day:disabled {
+  opacity: var(--np-disabled-opacity);
+  cursor: not-allowed;
+  color: var(--np-text-subtle);
+  transform: none;
+  background: transparent;
+  box-shadow: none;
+  border-style: dashed;
+  border-color: var(--np-border);
 }
 
-/* Responsive adjustments */
+.nepali-day.nepali-disabled:hover,
+.nepali-day:disabled:hover {
+  background: transparent;
+  transform: none;
+}
+
+.nepali-day.nepali-disabled.nepali-selected,
+.nepali-day:disabled.nepali-selected {
+  background-color: var(--np-surface-emphasis);
+  color: var(--np-text-muted);
+  border-style: solid;
+}
+
+/* AD equivalent footer */
+.nepali-ad-equivalent {
+  margin-top: var(--np-space-3);
+  padding: var(--np-space-2) var(--np-space-1) 0;
+  text-align: center;
+  font-size: var(--np-font-size-sm);
+  font-weight: 550;
+  color: var(--np-text-muted);
+  letter-spacing: 0.01em;
+}
+
+/* Today / Clear actions */
+.nepali-datepicker-actions {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--np-space-2);
+  margin-top: var(--np-space-3);
+  padding-top: var(--np-space-3);
+  border-top: 1px solid var(--np-border);
+}
+
+.nepali-action-btn {
+  flex: 1;
+  background: var(--np-surface);
+  border: 1px solid var(--np-border);
+  border-radius: var(--np-radius-sm);
+  padding: var(--np-space-2) var(--np-space-3);
+  font-size: var(--np-font-size-sm);
+  font-weight: 650;
+  font-family: inherit;
+  color: var(--np-text);
+  cursor: pointer;
+  min-height: 36px;
+  transition: background-color 0.12s ease, border-color 0.12s ease;
+}
+
+.nepali-action-btn:hover:not(:disabled) {
+  background-color: var(--np-surface-muted);
+  border-color: var(--np-text-subtle);
+}
+
+.nepali-action-btn:focus-visible {
+  outline: var(--np-focus-ring-width) solid var(--np-focus-ring);
+  outline-offset: 2px;
+}
+
+.nepali-action-btn:disabled {
+  opacity: var(--np-disabled-opacity);
+  cursor: not-allowed;
+}
+
+/*
+ * Narrow screens (Stage 4.4):
+ * 7×44px days + 6×2px gaps = 320px grid → needs popup ≥ 344px with 12px padding.
+ * 292px cannot host 44px hit targets without overflow; width raised deliberately.
+ */
 @media (max-width: 480px) {
   .nepali-datepicker {
-    width: 280px;
-    padding: 12px;
+    --np-popup-width: 344px;
+    --np-space-4: 12px;
+    --np-day-size: 44px;
+    --np-font-size-xs: 11px;
+    padding: var(--np-space-4);
+    max-width: calc(100vw - 16px);
   }
-  
-  .nepali-day {
-    height: 36px;
-    width: 36px;
-    font-size: 13px;
+
+  .nepali-day-bs {
+    font-size: 14px;
   }
-  
-  .nepali-weekday {
-    padding: 8px 4px;
+
+  .nepali-day-ad {
     font-size: 11px;
+  }
+
+  .nepali-weekday {
+    padding: var(--np-space-2) 2px;
+    font-size: var(--np-font-size-sm);
   }
 }

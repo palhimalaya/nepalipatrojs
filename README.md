@@ -1,245 +1,244 @@
-# NepaliPatroJS 🇳🇵📅
+# NepaliPatroJS
 
-A JavaScript/TypeScript library for Nepali date conversion and calendar utilities.
+A JavaScript/TypeScript library for **Bikram Sambat (BS)** ↔ Gregorian (**AD**) conversion, formatting, and a vanilla browser datepicker.
 
 [![npm version](https://img.shields.io/npm/v/nepalipatrojs.svg)](https://www.npmjs.com/package/nepalipatrojs)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-## ✨ Features
+**Package version (repo):** `2.0.0` · **Last published on npm:** `1.0.5` (publish requires separate release authorization)
 
-- 🔄 Convert dates between Bikram Sambat (BS) and Gregorian calendar (AD)
-- 📆 Get current date in Nepali calendar
-- 🎨 Format Nepali dates with various format options
-- 🈂️ Support for both English and Nepali (Devanagari) language output
-- 📊 Get days in a month for any year in the BS calendar
-- 📝 TypeScript support with full type definitions
+## Features
 
-## 📦 Installation
+- Convert between BS and AD (date-only APIs preferred; legacy `Date` wrappers retained)
+- Format BS dates (English or Nepali digits/names)
+- Vanilla DOM datepicker: keyboard navigation, constraints, dual AD labels, light/dark theme tokens
+- TypeScript types (`dist/index.d.ts` bundled on build)
+- ESM + CJS + UMD bundles
+
+## Supported range and data honesty
+
+| Item | Value |
+|------|--------|
+| BS years in dataset | **2000–2099** (`NepaliPatro.MIN_YEAR` / `MAX_YEAR`) |
+| Reference epoch | **2000-01-01 BS** ≡ **1943-04-14 AD** (`REF_BS` / `REF_AD_YMD`) |
+
+The month-length table is treated as the library’s **civil working dataset**. It is covered by structural checks, a SHA-256 pin, golden fixtures, and exhaustive BS↔AD **round-trips**. Those prove **internal consistency**, not independent historical accuracy.
+
+**Provenance of the table is currently unknown** (ISS-016). Do not treat this library as an authoritative historical almanac until an upstream source is cited and cross-checked. See [docs/architecture/core-engine.md](docs/architecture/core-engine.md).
+
+## Installation
 
 ```bash
 npm install nepalipatrojs
 ```
 
-Or with yarn:
+### CSS
 
-```bash
-yarn add nepalipatrojs
+```ts
+import 'nepalipatrojs/css';
+// alias also works:
+import 'nepalipatrojs/styles';
+// → dist/nepali-patro-js.css
 ```
 
+CDN:
 
-## 🚀 Usage
+```html
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/nepalipatrojs/dist/nepali-patro-js.css" />
+```
 
-### Import (Node, Bundlers, or TypeScript)
+## Import
 
-```typescript
-// ES6 import
-import NepaliPatro from 'nepalipatrojs';
+```ts
+import NepaliPatro, {
+  NepaliDatePicker,
+  convertAdToBs,
+  convertBsToAd,
+  formatBSDate,
+} from 'nepalipatrojs';
 
-// CommonJS require
+// CommonJS
 const NepaliPatro = require('nepalipatrojs').default;
+```
+
+UMD / CDN: global facade `NepaliPatro`; datepicker also on `window.NepaliDatePicker`.
+
+Detailed surface: [docs/api/public-api-inventory.md](docs/api/public-api-inventory.md).
+
+---
+
+## Date-only conversion (preferred)
+
+Timezone-independent civil `{ year, month, day }` APIs (ADR-002):
+
+```ts
+import { convertAdToBs, convertBsToAd } from 'nepalipatrojs';
+
+const bs = convertAdToBs({ year: 2022, month: 1, day: 1 });
+// → { year: 2078, month: 9, day: 17 }
+
+const ad = convertBsToAd({ year: 2078, month: 9, day: 17 });
+// → { year: 2022, month: 1, day: 1 }  // civil AD, not a JS Date
+```
+
+Also on the facade: `NepaliPatro.convertAdToBs` / `convertBsToAd`.
+
+### Legacy `Date` wrappers (v1 compatibility)
+
+```ts
+// Date → local calendar fields (TZ-sensitive for the same instant)
+NepaliPatro.convertADToBS(new Date(2022, 0, 1));
+NepaliPatro.convertADToBS([2022, 1, 1]); // [y,m,d] civil — TZ-independent
+
+// Returns JS Date at local midnight of the civil AD day
+NepaliPatro.convertBSToAD({ year: 2078, month: 9, day: 17 });
+```
+
+Prefer date-only APIs in new code. See [docs/api/conversion.md](docs/api/conversion.md).
+
+### Current BS “today”
+
+```ts
+NepaliPatro.getCurrentBSDate(); // host local civil date
+NepaliPatro.now();              // alias
+```
+
+### Format
+
+```ts
+import NepaliPatro, { formatBSDate } from 'nepalipatrojs';
+
+const bs = { year: 2078, month: 1, day: 15 };
+
+NepaliPatro.formatBS(bs);                        // 2078-01-15
+NepaliPatro.formatBS(bs, 'MMMM D, YYYY');         // Baisakh 15, 2078
+NepaliPatro.formatBS(bs, 'MMMM D, YYYY', { language: 'np' });
+// बैशाख १५, २०७८
+
+// Named export (same formatter):
+formatBSDate(bs, 'DD/MM/YYYY');
+```
+
+**Locale codes (current runtime):** use **`en`** or **`np`**.  
+`language: 'ne'` is **not** a supported synonym today (ISS-005): digits stay Western Arabic while month names may still switch — do not rely on `'ne'`. A future change may canonicalize `ne` with `np` as alias; that is **not** implemented yet.
+
+### Month length
+
+```ts
+NepaliPatro.getDaysInMonth(2078, 2); // Jestha 2078 → 31 (dataset)
 ```
 
 ---
 
-## 🖼️ Nepali Datepicker UI Component
+## Nepali datepicker
 
-The library provides a ready-to-use Nepali datepicker UI for web apps.
+Vanilla DOM component. **BS is authoritative** for selection and constraints. Each day cell shows a secondary AD day-of-month; a footer shows the AD civil date for the **focused** BS day (not mouse hover — ISS-024).
 
-### Usage (Browser/UMD)
-
-1. Include the CSS and JS in your HTML:
+### Browser / UMD
 
 ```html
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/nepalipatrojs/dist/nepali-patro-js.css" />
 <script src="https://cdn.jsdelivr.net/npm/nepalipatrojs/dist/nepali-patro-js.umd.js"></script>
-```
-
-2. Add an input element:
-
-```html
 <input id="dateInput" placeholder="Select Nepali Date" />
+<script>
+  const input = document.getElementById('dateInput');
+  const dp = new NepaliDatePicker(input, {
+    format: 'YYYY-MM-DD',
+    theme: 'light',
+    language: 'en',
+  });
+</script>
 ```
 
-3. Initialize the datepicker:
+### ESM
 
-```js
-// For UMD build, NepaliDatePicker is available globally
-const input = document.getElementById('dateInput');
-const dp = new NepaliDatePicker(input, {
-  format: 'YYYY/MM/DD', // or 'MMMM D, YYYY', etc.
-  theme: 'dark',        // 'light' (default) or 'dark'
-  language: 'en',       // 'en' (default) or 'np'
-});
-```
-
-### Usage (ESM/TypeScript)
-
-```typescript
+```ts
 import { NepaliDatePicker } from 'nepalipatrojs';
+import 'nepalipatrojs/css';
 
-const input = document.getElementById('dateInput');
+const input = document.getElementById('dateInput') as HTMLInputElement;
 const dp = new NepaliDatePicker(input, {
-  format: 'YYYY/MM/DD',
+  format: 'YYYY-MM-DD',
   theme: 'dark',
   language: 'np',
+  minDate: { year: 2080, month: 1, day: 1 },
+  maxDate: { year: 2085, month: 12, day: 30 },
+  disabledDates: [{ year: 2081, month: 1, day: 1 }],
+  isDateDisabled: (d) => d.month === 12 && d.day === 1,
 });
+
+dp.setZIndex(1000);
+// …later
+dp.destroy();
 ```
 
-#### Options
+### Options
 
-| Option   | Type                | Default           | Description                                 |
-|----------|---------------------|-------------------|---------------------------------------------|
-| format   | string              | 'MMMM D, YYYY'    | Date format string                          |
-| theme    | 'light' \| 'dark'   | 'light'           | Calendar theme                              |
-| language | 'en' \| 'np'        | 'en'              | Language for month/digits                   |
+| Option | Type | Default | Notes |
+|--------|------|---------|-------|
+| `format` | `string` | `'YYYY-MM-DD'` | BS value written to the input |
+| `theme` | `'light' \| 'dark'` | `'light'` | Adds `.nepali-datepicker-light` or `.nepali-datepicker-dark` |
+| `language` | `'en' \| 'np'` | `'en'` | Digits / month labels / UI strings |
+| `zIndex` | `number` | `999999` | Sticky; `setZIndex` updates open popup |
+| `minDate` | `NepaliDate` | — | Inclusive; **copied** at construction |
+| `maxDate` | `NepaliDate` | — | Inclusive; **copied** at construction |
+| `disabledDates` | `NepaliDate[]` | — | Exact dates; **snapshotted** at construction |
+| `isDateDisabled` | `(date) => boolean` | — | `true` = unavailable; kept by **reference**, evaluated dynamically |
 
-#### Theming
+**Today** uses the BS “today” snapshot from construction; disabled if outside constraints. **Clear** empties the input, clears selection, fires `change`, and **keeps the popup open**. Day selection / Today closes the popup and fires `change`.
 
-The datepicker supports both light and dark themes. You can customize the CSS for `.nepali-datepicker-light` and `.nepali-datepicker-dark` classes.
+### Keyboard (summary)
+
+Arrow keys move focus among available days; Home/End, PageUp/PageDown; Enter/Space select; Escape closes and restores focus. Not a substitute for real assistive-technology testing (ISS-013).
+
+### Theming
+
+Override CSS variables on `.nepali-datepicker` (or a parent). Examples: `--np-accent`, `--np-day-size`, `--np-popup-width`, `--np-surface`. Full list: [docs/api/datepicker.md](docs/api/datepicker.md).
 
 ---
 
-### Convert AD to BS
+## Format tokens
 
-```typescript
-// Using Date object
-const adDate = new Date(2022, 0, 1); // January 1, 2022
-const bsDate = NepaliPatro.convertADToBS(adDate);
-console.log(bsDate);
-// Output: { year: 2078, month: 9, day: 17 }
+| Token | Meaning | Example |
+|-------|---------|---------|
+| `YYYY` | 4-digit year | 2078 |
+| `YY` | 2-digit year | 78 |
+| `MMMM` / `MMM` | Month name / short | Baisakh / Bai |
+| `MM` / `M` | Month number | 01 / 1 |
+| `DD` / `D` | Day of month | 15 / 15 |
+| `dddd` / `ddd` | Weekday name / short | (from BS weekday index) |
+| `d` | Weekday index | 1–7 |
+| `[text]` | Literal | |
 
-// Using array [year, month, day]
-const bsDate2 = NepaliPatro.convertADToBS([2022, 1, 1]); // January 1, 2022
-console.log(bsDate2);
-// Output: { year: 2078, month: 9, day: 17 }
-```
+## Types (shape)
 
-### Convert BS to AD
-
-```typescript
-// Using object
-const bsDate = { year: 2078, month: 9, day: 17 };
-const adDate = NepaliPatro.convertBSToAD(bsDate);
-console.log(adDate);
-// Output: Date object representing January 1, 2022
-
-// Using array [year, month, day]
-const adDate2 = NepaliPatro.convertBSToAD([2078, 9, 17]);
-console.log(adDate2);
-// Output: Date object representing January 1, 2022
-```
-
-### Get Current BS Date
-
-```typescript
-const today = NepaliPatro.getCurrentBSDate();
-
-//or use
-
-const today = NepaliPatro.now()
-console.log(today);
-// Output: { year: 2081, month: 1, day: 28 } (if today is May 10, 2025)
-```
-
-### Format BS Date
-
-```typescript
-const bsDate = { year: 2078, month: 1, day: 15 };
-
-// Default format (YYYY-MM-DD)
-const formatted = NepaliPatro.formatBS(bsDate);
-console.log(formatted); // Output: 2078-01-15
-
-// Custom format
-const customFormatted = NepaliPatro.formatBS(bsDate, 'DD/MM/YYYY');
-console.log(customFormatted); // Output: 15/01/2078
-
-// With month name
-const withMonthName = NepaliPatro.formatBS(bsDate, 'MMMM D, YYYY');
-console.log(withMonthName); // Output: Baisakh 15, 2078
-
-// In Nepali language
-const inNepali = NepaliPatro.formatBS(bsDate, 'MMMM D, YYYY', { language: 'ne' });
-console.log(inNepali); // Output: बैशाख 15, 2078
-```
-
-### Get Days in Month
-
-```typescript
-// Get total days in Jestha 2078 BS
-const daysInMonth = NepaliPatro.getDaysInMonth(2078, 2);
-console.log(daysInMonth); // Output: 32
-```
-
-### Convert to Nepali Digits
-
-```typescript
-// Convert numbers to Nepali digits
-const nepaliNumber = NepaliPatro.toNepaliDigits(2078);
-console.log(nepaliNumber); // Output: २०७८
-```
-
-## 📚 API Reference
-
-### `convertADToBS(date: Date | number[]): NepaliDate`
-
-Converts a Gregorian date (AD) to Bikram Sambat date (BS).
-
-### `convertBSToAD(bsDate: NepaliDate | number[]): Date`
-
-Converts a Bikram Sambat date (BS) to Gregorian date (AD).
-
-### `getCurrentBSDate(): NepaliDate`
-
-Returns the current date in BS calendar.
-
-### `formatBS(date: NepaliDate, format?: string, options?: NepaliPatroOptions): string`
-
-Formats a BS date according to the given format string.
-
-### `getDaysInMonth(year: number, month: number): number`
-
-Returns the number of days in a given month and year in BS calendar.
-
-### `toNepaliDigits(num: number | string): string`
-
-Converts English digits to Nepali digits.
-
-## 🧩 Types
-
-```typescript
+```ts
 interface NepaliDate {
   year: number;
-  month: number;
+  month: number; // 1–12
   day: number;
 }
 
-interface NepaliPatroOptions {
-  language?: 'en' | 'ne';
-  format?: string;
-  returnType?: 'string' | 'object';
-}
+// NepaliPatroOptions.language is 'en' | 'np' (not 'ne')
 ```
 
-## 🔤 Format Tokens
+## Documentation map
 
-| Token | Description | Example |
-|-------|-------------|---------|
-| YYYY | 4-digit year | 2078 |
-| YY | 2-digit year | 78 |
-| MM | 2-digit month | 01 |
-| M | 1-digit month | 1 |
-| MMMM | Month name | Baisakh |
-| DD | 2-digit day | 02 |
-| D | 1-digit day | 2 |
+| Doc | Purpose |
+|-----|---------|
+| [QUICK_START.md](QUICK_START.md) | Short recipes |
+| [docs/api/](docs/api/) | API reference |
+| [PROJECT_CONTEXT.md](PROJECT_CONTEXT.md) | Contributor / AI session bootstrap |
+| [docs/progress/STATUS.md](docs/progress/STATUS.md) | Current phase |
 
+## Browser & bundlers
 
-## 🌐 Browser & Bundler Compatibility
+Works in modern browsers, Node.js, and common bundlers (Rollup, Webpack, Vite, …). Real-browser smoke coverage is planned (Phase 4.2); current automated UI tests use jsdom.
 
-This library works in all modern browsers, Node.js, and with bundlers like Rollup, Webpack, Vite, etc.
+## Contributing
 
-## 🤝 Contributing
+Issues and PRs welcome. Follow `PROJECT_CONTEXT.md` and `docs/progress/MASTER-PLAN.md` for staged work.
 
-Contributions are welcome! Feel free to open issues or submit pull requests.
+## License
 
-## 📄 License
+MIT

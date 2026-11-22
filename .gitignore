@@ -2,11 +2,16 @@
 node_modules/
 jspm_packages/
 
-# TypeScript compiled output
+# TypeScript / Rollup output — track only shippable public artifacts
 dist/*
 !dist/nepali-patro-js.css
 !dist/nepali-patro-js.umd.js
+!dist/nepali-patro-js.umd.js.map
 !dist/nepali-patro-js.esm.js
+!dist/nepali-patro-js.esm.js.map
+!dist/nepali-patro-js.cjs
+!dist/nepali-patro-js.cjs.map
+!dist/index.d.ts
 
 build/
 *.tsbuildinfo
@@ -16,6 +21,8 @@ coverage/
 
 # Logs
 logs/
+!docs/progress/logs/
+!docs/progress/logs/**
 *.log
 npm-debug.log*
 yarn-debug.log*
@@ -36,3 +43,11 @@ lerna-debug.log*
 .env.test.local
 .env.production.local
 
+# Local browser-smoke scratch (profiles, captures, temp fixture)
+.smoke-chrome-profile-*/
+.smoke-firefox-profile/
+.smoke-evidence/
+smoke-phase42.html
+
+# npm pack artifacts
+*.tgz

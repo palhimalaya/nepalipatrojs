@@ -16,57 +16,52 @@ jobs:
 
     steps:
     - uses: actions/checkout@v4
-    
+
     - name: Use Node.js ${{ matrix.node-version }}
       uses: actions/setup-node@v4
       with:
         node-version: ${{ matrix.node-version }}
         cache: 'npm'
-        
-    - name: Cache TypeScript build
-      uses: actions/cache@v4
-      with:
-        path: dist
-        key: ${{ runner.os }}-ts-build-${{ matrix.node-version }}-${{ hashFiles('src/**/*.ts') }}-${{ hashFiles('tsconfig.json') }}
-    
+
     - name: Display Node and npm versions
       run: |
         node -v
         npm -v
-    
+
     - name: Install dependencies
       run: npm ci
-      
-    - name: Display TypeScript version
-      run: npx tsc --version
-    
+
+    - name: Typecheck
+      run: npm run typecheck
+
+    # ISS-010 / Phase 5.1: build must fail the job (no continue-on-error).
     - name: Build
       run: npm run build
-      continue-on-error: true
-      id: build
-    
+
     - name: Debug build failures
-      if: steps.build.outcome == 'failure'
+      if: failure()
       run: |
-        echo "TypeScript build failed on Node.js version ${{ matrix.node-version }}"
+        echo "Build/typecheck failed on Node.js version ${{ matrix.node-version }}"
         echo "Environment:"
         npm list typescript
         node -p "process.versions"
-        
+
+    # ISS-010 / Phase 5.1: test must fail the job (no continue-on-error).
     - name: Test
       run: npm test
-      continue-on-error: true
-      id: test
-    
+
+    - name: Pack smoke
+      run: npm run pack:smoke
+
     - name: Upload coverage report
       uses: actions/upload-artifact@v4
       with:
         name: coverage-report-${{ matrix.node-version }}-${{ github.run_id }}-${{ github.run_attempt }}
         path: coverage/
       if: success() || failure()
-    
+
     - name: Upload logs on failure
-      if: failure() || steps.test.outcome == 'failure'
+      if: failure()
       uses: actions/upload-artifact@v4
       with:
         name: npm-logs-${{ matrix.node-version }}-${{ github.run_id }}-${{ github.run_attempt }}

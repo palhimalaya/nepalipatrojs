@@ -1,5 +1,4 @@
-import { format } from 'path';
-import { MAX_BS_YEAR, MIN_BS_YEAR } from '../constants/calendar-data';
+import { MAX_BS_YEAR, MIN_BS_YEAR } from '../core/calendar-data';
 import NepaliPatro, { NepaliDate } from '../index';
 
 describe('NepaliPatro', () => {
@@ -38,40 +37,37 @@ describe('NepaliPatro', () => {
   });
 
   describe('convertBSToAD', () => {
-    it('should convert BS date to AD date', () => {
-      const bsDate: NepaliDate = {
+    it('should convert reference BS date to AD date', () => {
+      const adDate = NepaliPatro.convertBSToAD({ year: 2000, month: 1, day: 1 });
+      expect(adDate.getFullYear()).toBe(1943);
+      expect(adDate.getMonth()).toBe(3);
+      expect(adDate.getDate()).toBe(14);
+    });
+
+    it('should convert 2078-01-01 BS to 2021-04-14 AD', () => {
+      const adDate = NepaliPatro.convertBSToAD({
         year: 2078,
         month: 1,
-        day: 1
-      };
-      
-      const adDate = NepaliPatro.convertBSToAD(bsDate);
-      
+        day: 1,
+      });
       expect(adDate.getFullYear()).toBe(2021);
-      expect(adDate.getMonth()).toBe(4);
-      expect(adDate.getDate()).toBe(15);
+      expect(adDate.getMonth()).toBe(3);
+      expect(adDate.getDate()).toBe(14);
     });
-    
-    it('should handle array input for BS date', () => {
-      const bsDate = [2079, 1, 1];
-      
-      const adDate = NepaliPatro.convertBSToAD(bsDate);
-      
+
+    it('should convert 2079-01-01 BS to 2022-04-14 AD', () => {
+      const adDate = NepaliPatro.convertBSToAD([2079, 1, 1]);
       expect(adDate.getFullYear()).toBe(2022);
-      expect(adDate.getMonth()).toBe(4);
-      expect(adDate.getDate()).toBe(15);
+      expect(adDate.getMonth()).toBe(3);
+      expect(adDate.getDate()).toBe(14);
     });
-    
+
     it('should throw error for dates outside supported range', () => {
-      const bsDate: NepaliDate = {
-        year: 1999,
-        month: 1,
-        day: 1
-      };
-      
       expect(() => {
-        NepaliPatro.convertBSToAD(bsDate);
-      }).toThrow(`Year out of range. Supported BS years: ${MIN_BS_YEAR} to ${MAX_BS_YEAR}`);
+        NepaliPatro.convertBSToAD({ year: 1999, month: 1, day: 1 });
+      }).toThrow(
+        `Year out of range. Supported BS years: ${MIN_BS_YEAR} to ${MAX_BS_YEAR}`
+      );
     });
   });
 

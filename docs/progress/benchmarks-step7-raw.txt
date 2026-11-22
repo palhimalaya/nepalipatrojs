@@ -1,0 +1,109 @@
+NepaliPatroJS — Phase 1 Step 6 conversion benchmarks
+------------------------------------------------------------------------
+Node: v24.15.0
+Platform: linux x64
+TZ: (unset)
+Time: 2026-11-21T15:58:39.861Z
+------------------------------------------------------------------------
+Enumerated BS dates: 36525
+Prefix tables init: 0.130 ms | totalDays=36525 | ~5,608 bytes
+Lookup table init: 3.992 ms | entries=36525 | 142.7 KiB
+Prototype vs production correctness (500 random): failures=0
+------------------------------------------------------------------------
+Single-conversion latency (500 timed calls each, after warm-up)
+  prod Ad→Bs (earliest)        Ad→Bs    median=0.290µs  p95=0.631µs  p99=2.865µs  max=6.402µs
+  prefix Ad→Bs (earliest)      Ad→Bs    median=0.151µs  p95=0.171µs  p99=0.260µs  max=7.654µs
+  lookup Ad→Bs (earliest)      Ad→Bs    median=0.181µs  p95=0.210µs  p99=0.470µs  max=9.769µs
+  prod Bs→Ad (earliest)        Bs→Ad    median=0.281µs  p95=0.581µs  p99=1.483µs  max=4.870µs
+  prefix Bs→Ad (earliest)      Bs→Ad    median=0.181µs  p95=0.371µs  p99=0.440µs  max=5.129µs
+  prod Ad→Bs (ref)             Ad→Bs    median=0.140µs  p95=0.151µs  p99=0.200µs  max=3.587µs
+  prefix Ad→Bs (ref)           Ad→Bs    median=0.140µs  p95=0.151µs  p99=0.241µs  max=5.480µs
+  lookup Ad→Bs (ref)           Ad→Bs    median=0.130µs  p95=0.140µs  p99=0.181µs  max=0.270µs
+  prod Bs→Ad (ref)             Bs→Ad    median=0.240µs  p95=0.300µs  p99=0.751µs  max=5.540µs
+  prefix Bs→Ad (ref)           Bs→Ad    median=0.161µs  p95=0.180µs  p99=0.211µs  max=1.403µs
+  prod Ad→Bs (mid)             Ad→Bs    median=0.150µs  p95=0.151µs  p99=0.180µs  max=9.147µs
+  prefix Ad→Bs (mid)           Ad→Bs    median=0.120µs  p95=0.131µs  p99=0.221µs  max=1.092µs
+  lookup Ad→Bs (mid)           Ad→Bs    median=0.110µs  p95=0.111µs  p99=0.131µs  max=0.922µs
+  prod Bs→Ad (mid)             Bs→Ad    median=1.132µs  p95=1.202µs  p99=1.833µs  max=10.950µs
+  prefix Bs→Ad (mid)           Bs→Ad    median=0.140µs  p95=0.151µs  p99=0.171µs  max=7.274µs
+  prod Ad→Bs (late)            Ad→Bs    median=0.150µs  p95=0.151µs  p99=0.170µs  max=1.012µs
+  prefix Ad→Bs (late)          Ad→Bs    median=0.130µs  p95=0.131µs  p99=0.150µs  max=0.852µs
+  lookup Ad→Bs (late)          Ad→Bs    median=0.100µs  p95=0.160µs  p99=0.180µs  max=0.271µs
+  prod Bs→Ad (late)            Bs→Ad    median=2.093µs  p95=2.114µs  p99=3.386µs  max=21.671µs
+  prefix Bs→Ad (late)          Bs→Ad    median=0.150µs  p95=0.190µs  p99=2.024µs  max=3.767µs
+  prod Ad→Bs (leap)            Ad→Bs    median=0.160µs  p95=0.240µs  p99=2.364µs  max=8.446µs
+  prefix Ad→Bs (leap)          Ad→Bs    median=0.130µs  p95=0.180µs  p99=2.204µs  max=5.219µs
+  lookup Ad→Bs (leap)          Ad→Bs    median=0.100µs  p95=0.150µs  p99=1.894µs  max=5.160µs
+  prod Bs→Ad (leap)            Bs→Ad    median=1.763µs  p95=2.585µs  p99=3.617µs  max=11.201µs
+  prefix Bs→Ad (leap)          Bs→Ad    median=0.150µs  p95=0.210µs  p99=1.944µs  max=2.535µs
+  prod Ad→Bs (ny2080)          Ad→Bs    median=0.130µs  p95=0.200µs  p99=1.954µs  max=11.842µs
+  prefix Ad→Bs (ny2080)        Ad→Bs    median=0.111µs  p95=0.170µs  p99=2.194µs  max=2.395µs
+  lookup Ad→Bs (ny2080)        Ad→Bs    median=0.100µs  p95=0.140µs  p99=2.013µs  max=5.169µs
+  prod Bs→Ad (ny2080)          Bs→Ad    median=1.443µs  p95=2.465µs  p99=3.517µs  max=8.667µs
+  prefix Bs→Ad (ny2080)        Bs→Ad    median=0.150µs  p95=1.854µs  p99=2.214µs  max=22.692µs
+------------------------------------------------------------------------
+Random single conversions (500 distinct dates, one timed call each)
+  prod Ad→Bs (random)          median=0.270µs  p95=2.044µs  p99=3.286µs
+  prefix Ad→Bs (random)        median=0.211µs  p95=0.531µs  p99=2.305µs
+  lookup Ad→Bs (random)        median=0.211µs  p95=0.531µs  p99=2.384µs
+  prod Bs→Ad (random)          median=1.393µs  p95=2.374µs  p99=3.707µs
+  prefix Bs→Ad (random)        median=0.191µs  p95=0.390µs  p99=2.234µs
+------------------------------------------------------------------------
+Bulk throughput (all 36,525 dates, single pass, warm)
+  prod Ad→Bs                   9.0 ms  0.247 µs/op  4,055,215 ops/s
+  prefix Ad→Bs                 3.2 ms  0.088 µs/op  11,421,536 ops/s
+  lookup Ad→Bs                 2.6 ms  0.073 µs/op  13,792,075 ops/s
+  prod Bs→Ad                   45.0 ms  1.232 µs/op  811,364 ops/s
+  prefix Bs→Ad                 3.0 ms  0.081 µs/op  12,360,837 ops/s
+------------------------------------------------------------------------
+Repeated conversion (same late date × 50_000, warm)
+  prod Ad→Bs (late×50k)        3.6 ms  0.07207921999999997 µs/op
+  prefix Ad→Bs (late×50k)      3.1 ms  0.06173632000000054 µs/op
+  lookup Ad→Bs (late×50k)      2.3 ms  0.046448520000000146 µs/op
+  prod Bs→Ad (late×50k)        100.7 ms  2.01439232 µs/op
+  prefix Bs→Ad (late×50k)      3.2 ms  0.06392624000000069 µs/op
+------------------------------------------------------------------------
+Distance sensitivity (prod Ad→Bs median µs vs days from REF)
+  daysFromRef=    0  median=0.130µs  p95=0.131µs
+  daysFromRef=18433  median=0.131µs  p95=0.150µs
+  daysFromRef=36524  median=0.140µs  p95=0.141µs
+------------------------------------------------------------------------
+JSON summary (machine-readable)
+{
+  "node": "v24.15.0",
+  "platform": "linux-x64",
+  "tz": null,
+  "totalBsDates": 36525,
+  "prefixInitMs": 0.13027499999999748,
+  "lookupInitMs": 3.9917310000000015,
+  "lookupKiB": 142.67578125,
+  "bulk": [
+    {
+      "label": "prod Ad→Bs",
+      "total_ms": 9.006920999999991,
+      "per_op_us": 0.2465960574948663
+    },
+    {
+      "label": "prefix Ad→Bs",
+      "total_ms": 3.1979060000000032,
+      "per_op_us": 0.08755389459274478
+    },
+    {
+      "label": "lookup Ad→Bs",
+      "total_ms": 2.6482600000000076,
+      "per_op_us": 0.07250540725530479
+    },
+    {
+      "label": "prod Bs→Ad",
+      "total_ms": 45.01681099999999,
+      "per_op_us": 1.23249311430527
+    },
+    {
+      "label": "prefix Bs→Ad",
+      "total_ms": 2.9548969999999883,
+      "per_op_us": 0.08090067077344253
+    }
+  ],
+  "lateProdAdToBsMedianUs": 0.15000000000497948,
+  "latePrefixAdToBsMedianUs": 0.1299999999986312
+}
