@@ -3,13 +3,13 @@ import { getCurrentBSDate } from "../converters/ad-to-bs";
 import { convertBSToAD } from "../converters/bs-to-ad";
 import { formatBS as formatBSDate } from "../formatters/date-formatter";
 import { NepaliDate, NepaliDatePickerOptions } from "../types";
+import { getDaysInMonth } from "../utils/calendar";
 import {
-  getDaysInMonth,
   localizeDigits,
   localizeMonth,
   nepaliDigitsToEnglish,
   getDateFormatPatterns,
-} from "../utils/helpers";
+} from "../utils/localization";
 
 export class NepaliDatePicker {
   private static instances: Set<NepaliDatePicker> = new Set();
@@ -263,7 +263,11 @@ export class NepaliDatePicker {
     }
   }
 
-  /** Days in BS month via core API; fallback when year is outside supported range. */
+  /**
+   * Days in BS month via getDaysInMonth only.
+   * Numeric fallback (30) when year is outside supported range — used solely for
+   * adjacent-month grid padding (e.g. before MIN_BS_YEAR). Does not read calendar data.
+   */
   private daysInBsMonth(year: number, month1Based: number, fallback = 30): number {
     try {
       return getDaysInMonth(year, month1Based);

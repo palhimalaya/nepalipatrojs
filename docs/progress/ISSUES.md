@@ -179,3 +179,10 @@ Severity: `critical` | `high` | `medium` | `low`
 - **Fix:** Uses `getDaysInMonth` + `MIN_BS_YEAR`/`MAX_BS_YEAR` only. No `BS_CALENDAR_DATA` import/reference. Private `daysInBsMonth` wraps core API with safe fallback for padding outside range.  
 - **Verification:** Regression asserts no `BS_CALENDAR_DATA` in datepicker source; month-length UI tests; full Jest; tsc; build.  
 - **Related:** ADR-001/004; Stage 2.2  
+- **Follow-up:** Stage 2.3 clarified `daysInBsMonth` fallback is a numeric constant (`30`) for adjacent-month grid padding only — no calendar-data access and no duplicate month-length arithmetic.
+
+## Stage 2.3 note — helpers split (no new ISS)
+
+- **Status:** completed 2026-11-22 (internal refactor; no behavioral change)
+- **Change:** Core helpers → `src/utils/calendar.ts`; i18n helpers → `src/utils/localization.ts`; `helpers.ts` retained as re-export shim.
+- **Related:** phase2-assessment V3; ADR-001  

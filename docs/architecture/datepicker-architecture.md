@@ -16,7 +16,7 @@ Single class: `src/ui/NepaliDatePicker.ts` (~645 lines).
 | Locale | `en` / `np` digit and month localization |
 | Events | Sets `input.value`, dispatches `change` |
 | Cleanup | `destroy()` removes listener + instance from static `Set` |
-| Import | converters/formatters/types/helpers + year range (Stages 2.1–2.2); **no barrel**; **no `BS_CALENDAR_DATA`** |
+| Import | converters/formatters/types + `calendar` / `localization` + year range (Stages 2.1–2.3); **no barrel**; **no `BS_CALENDAR_DATA`** |
 
 ### Missing product features
 

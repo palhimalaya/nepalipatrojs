@@ -5,8 +5,8 @@
 | Doc | Status | Description |
 |-----|--------|-------------|
 | [system-overview.md](system-overview.md) | Phase 0 | Current v1 map + proposed v2 layout |
-| [phase2-assessment.md](phase2-assessment.md) | Phase 2 | Module boundaries assessment (impl not started) |
-| [core-engine.md](core-engine.md) | Phase 0–1 | Conversion, validation, date-only model |
+| [phase2-assessment.md](phase2-assessment.md) | Phase 2 | Module boundaries assessment + Stage 2.x progress |
+| [core-engine.md](core-engine.md) | Phase 0–2 | Conversion, validation, date-only model, helper split |
 | [datepicker-architecture.md](datepicker-architecture.md) | Phase 0 | Modular UI plan |
 | [localization.md](localization.md) | Phase 0 | Locales, digits, formatting |
 | [packaging.md](packaging.md) | Phase 0 | Build, exports, types, CI |

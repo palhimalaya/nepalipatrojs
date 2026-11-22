@@ -26,7 +26,11 @@ import {
   convertBsToAd,
   getBsWeekdayIndex,
 } from "./converters/date-only";
-import { getDaysInMonth, nepaliDigitsToEnglish, getDateFormatPatterns } from "./utils/helpers";
+import { getDaysInMonth } from "./utils/calendar";
+import {
+  nepaliDigitsToEnglish,
+  getDateFormatPatterns,
+} from "./utils/localization";
 import {
   formatBS as formatBSDate,
   toNepaliDigits,

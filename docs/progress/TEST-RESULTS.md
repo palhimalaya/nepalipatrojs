@@ -422,6 +422,24 @@ Public ESM export keys unchanged vs Stage 2.0 inventory.
 
 ---
 
+## 2026-11-22 — Phase 2 Stage 2.3: Separate core and i18n helpers
+
+### Change
+
+Split `helpers.ts` into `calendar.ts` (core) and `localization.ts` (i18n). `helpers.ts` retained as re-export compatibility shim. Internal production imports updated; public barrel unchanged.
+
+### Commands
+
+```bash
+npx jest --runInBand --coverage=false   # PASS 176/176 ~33s
+npx tsc --noEmit                        # PASS
+npm run build                           # PASS
+```
+
+Added `module-boundaries.test.ts` (4 tests): calendar ↛ localization/DOM; localization ↛ calendar helpers/DOM; helpers re-export-only; converters ↛ localization.
+
+---
+
 ## 2026-11-22 — Phase 2 Stage 2.2: Remove raw calendar data from datepicker (ISS-021)
 
 ### Change

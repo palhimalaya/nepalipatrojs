@@ -98,6 +98,17 @@ Round-trips ≠ historical proof (ADR-003). ISS-016 remains open.
 5. **Arithmetic** — correct day counts (ISS-019) + Gregorian day numbers.
 6. **Integrity** — checksum + structural tests; provenance honest.
 
+## Helper module split (Stage 2.3)
+
+| Function | Module | Notes |
+|----------|--------|-------|
+| `getDaysInMonth` | `src/utils/calendar.ts` | Sole month-length source for converters + datepicker |
+| `parseDateInput` | `src/utils/calendar.ts` | BS input normalization for converters |
+| `localizeDigits` / `localizeMonth` / `nepaliDigitsToEnglish` / `getDateFormatPatterns` | `src/utils/localization.ts` | Presentation / i18n only |
+| Re-exports | `src/utils/helpers.ts` | Compatibility shim; no implementations |
+
+`calendar.ts` depends only on `constants/calendar-data` + `types`. It must not import localization or DOM.
+
 ## Non-negotiables
 
 - Do not replace/extend dataset without approval.

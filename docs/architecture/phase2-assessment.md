@@ -12,7 +12,9 @@
 | `src/constants/calendar-data.ts` | `BS_CALENDAR_DATA`, REF epoch, digits, range constants |
 | `src/utils/gregorian.ts` | Pure Gregorian day arithmetic |
 | `src/utils/validations.ts` | BS/AD throw-on-invalid |
-| `src/utils/helpers.ts` | **Mixed:** `getDaysInMonth`, `parseDateInput`, digit/month localization, format patterns |
+| `src/utils/calendar.ts` | Core: `getDaysInMonth`, `parseDateInput` (Stage 2.3) |
+| `src/utils/localization.ts` | i18n: `localizeDigits`, `localizeMonth`, `nepaliDigitsToEnglish`, `getDateFormatPatterns` (Stage 2.3) |
+| `src/utils/helpers.ts` | Re-export shim only (Stage 2.3; kept for compat) |
 | `src/converters/date-only.ts` | Date-only AD↔BS + weekday indices |
 | `src/converters/bs-prefix.ts` | Internal AD→BS prefix tables (ISS-003) |
 | `src/converters/bs-day-index.ts` | BS absolute day index (ISS-019) |
@@ -75,7 +77,7 @@ No other production cycles found among converters/utils/formatters.
 |----|----------|---------|
 | V1 | **High** | Circular dependency `index` ↔ `NepaliDatePicker` |
 | V2 | **High** | Datepicker reads `BS_CALENDAR_DATA` directly (duplicates `getDaysInMonth` / bypasses validation helpers) |
-| V3 | **Medium** | `helpers.ts` mixes core calendar, i18n, and parse-pattern concerns |
+| V3 | **Medium** | ~~`helpers.ts` mixes core calendar, i18n, and parse-pattern concerns~~ **Resolved Stage 2.3** |
 | V4 | **Medium** | Datepicker monolithic: state, parse, HTML string render, position, z-index DOM scan, locale |
 | V5 | **Medium** | Packaging: `exports["./styles"]` → missing `only-styles.css`; CI `continue-on-error`; types story historically broken (note: build currently emits `dist/index.d.ts` — verify publish/`files`/gitignore still align) |
 | V6 | **Low** | `index.ts` attaches `window.NepaliDatePicker` (acceptable for UMD, but couples barrel to browser) |

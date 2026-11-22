@@ -47,6 +47,7 @@ User-facing npm release notes will also live in the root `CHANGELOG` when 2.0 sh
 - Stage 2.0 public API inventory frozen (`docs/api/public-api-inventory.md`).
 - **ISS-020 / Stage 2.1:** `NepaliDatePicker` no longer imports the public barrel; cycle removed without API changes.
 - **ISS-021 / Stage 2.2:** Datepicker uses `getDaysInMonth` instead of raw `BS_CALENDAR_DATA`.
+- **Stage 2.3:** Split helpers into `utils/calendar.ts` (core) and `utils/localization.ts` (i18n); `helpers.ts` kept as re-export shim. No public API change.
 
 ### Changed (process)
 

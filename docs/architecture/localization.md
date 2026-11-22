@@ -6,10 +6,14 @@
 |---------|----------------|
 | Locale option type | `'en' \| 'np'` in `NepaliPatroOptions` / picker options |
 | README / Quick Start | Often show `'ne'` for `formatBS` |
-| Digits → Nepali | `toNepaliDigits` in formatter; `localizeDigits` in helpers |
-| Digits → English | `nepaliDigitsToEnglish` in helpers |
-| Month / weekday names | TypeScript enums (`NepaliMonth`, `NepaliMonthNepali`, …) |
+| Digits → Nepali | `toNepaliDigits` in formatter; `localizeDigits` in `utils/localization.ts` |
+| Digits → English | `nepaliDigitsToEnglish` in `utils/localization.ts` |
+| Month names (picker) | `localizeMonth` in `utils/localization.ts` |
+| Month / weekday enums | TypeScript enums (`NepaliMonth`, `NepaliMonthNepali`, …) |
+| Parse patterns | `getDateFormatPatterns` in `utils/localization.ts` |
 | Format tokens | `YYYY YY MMMM MMM MM M DD D dddd ddd d` via sequential `String.replace` |
+
+**Stage 2.3:** localization helpers live in `src/utils/localization.ts` (no DOM; no import of `calendar.ts`). Physical `src/i18n/` folder is Stage 2.4.
 
 ## Verified bugs
 

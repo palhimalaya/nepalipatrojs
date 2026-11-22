@@ -296,6 +296,10 @@ function validateAdDate(year, month, day) {
 }
 
 /**
+ * Core calendar utilities (Stage 2.3).
+ * No i18n or DOM dependencies.
+ */
+/**
  * Gets the number of days in a Nepali month
  * @param year The Nepali year in BS calendar
  * @param month The month (1-12)
@@ -325,110 +329,19 @@ function parseDateInput(date) {
         return {
             year: date.year,
             month: date.month,
-            day: date.day
+            day: date.day,
         };
     }
     else if (Array.isArray(date) && date.length >= 3) {
         return {
             year: date[0],
             month: date[1],
-            day: date[2]
+            day: date[2],
         };
     }
     else {
         throw new Error('Invalid date format. Provide a NepaliDate object or [year, month, day] array.');
     }
-}
-/**
- * Localize number to Nepali digits based on language
- * @param num The number to localize
- * @param language The language code ('en' or 'np')
- * @returns Localized string with Nepali digits if language is 'np', otherwise returns the original number as a string
- */
-function localizeDigits(num, language) {
-    switch (language) {
-        case "np":
-            return String(num)
-                .split("")
-                .map((digit) => /\d/.test(digit) ? NEPALI_DIGITS[parseInt(digit, 10)] : digit)
-                .join("");
-        default:
-            return String(num);
-    }
-}
-/**
- * Localizes the month name based on the language
- * @param month The month number (1-12)
- * @param language The language code ('en' or 'np')
- * @returns Localized month name in either English or Nepali
- */
-function localizeMonth(month, language) {
-    if (language === 'np') {
-        return NepaliMonthNepali[month];
-    }
-    else {
-        return NepaliMonth[month];
-    }
-}
-/**
- * Converts Nepali digits to English digits
- * @param text The text containing Nepali digits to convert
- * @returns String with English digits
- */
-function nepaliDigitsToEnglish(text) {
-    const nepaliToEnglish = {
-        '०': '0', '१': '1', '२': '2', '३': '3', '४': '4',
-        '५': '5', '६': '6', '७': '7', '८': '8', '९': '9'
-    };
-    return text.replace(/[०-९]/g, (match) => nepaliToEnglish[match] || match);
-}
-/**
- * Gets common date format patterns for parsing various date formats
- * @returns Array of date format patterns with regex and index mappings
- */
-function getDateFormatPatterns() {
-    return [
-        // YYYY-MM-DD, YYYY/MM/DD, YYYY.MM.DD
-        {
-            regex: /(\d{4})[-/.]\s*(\d{1,2})[-/.]\s*(\d{1,2})/,
-            yearIndex: 1,
-            monthIndex: 2,
-            dayIndex: 3,
-            description: 'YYYY-MM-DD format'
-        },
-        // DD-MM-YYYY, DD/MM/YYYY, DD.MM.YYYY  
-        {
-            regex: /(\d{1,2})[-/.]\s*(\d{1,2})[-/.]\s*(\d{4})/,
-            yearIndex: 3,
-            monthIndex: 2,
-            dayIndex: 1,
-            description: 'DD-MM-YYYY format'
-        },
-        // MM-DD-YYYY, MM/DD/YYYY, MM.DD.YYYY (less common but possible)
-        {
-            regex: /(\d{1,2})[-/.]\s*(\d{1,2})[-/.]\s*(\d{4})/,
-            yearIndex: 3,
-            monthIndex: 1,
-            dayIndex: 2,
-            description: 'MM-DD-YYYY format'
-        },
-        // YYYYMMDD
-        {
-            regex: /(\d{4})(\d{2})(\d{2})/,
-            yearIndex: 1,
-            monthIndex: 2,
-            dayIndex: 3,
-            description: 'YYYYMMDD format'
-        },
-        // DDMMYYYY
-        {
-            regex: /(\d{2})(\d{2})(\d{4})/,
-            yearIndex: 3,
-            monthIndex: 2,
-            dayIndex: 1,
-            description: 'DDMMYYYY format'
-        }
-    ];
 }
 
 function compareBs(a, b) {
@@ -612,6 +525,105 @@ function convertBSToAD(bsDate) {
     const ad = convertBsToAd({ year, month, day });
     // Local civil construction — timestamp varies by host TZ; Y/M/D fields match `ad`.
     return new Date(ad.year, ad.month - 1, ad.day);
+}
+
+/**
+ * Localization / presentation utilities (Stage 2.3).
+ * No DOM dependencies. Does not import calendar conversion logic.
+ */
+/**
+ * Localize number to Nepali digits based on language
+ * @param num The number to localize
+ * @param language The language code ('en' or 'np')
+ * @returns Localized string with Nepali digits if language is 'np'
+ */
+function localizeDigits(num, language) {
+    switch (language) {
+        case 'np':
+            return String(num)
+                .split('')
+                .map((digit) => /\d/.test(digit) ? NEPALI_DIGITS[parseInt(digit, 10)] : digit)
+                .join('');
+        default:
+            return String(num);
+    }
+}
+/**
+ * Localizes the month name based on the language
+ * @param month The month number (1-12)
+ * @param language The language code ('en' or 'np')
+ * @returns Localized month name in either English or Nepali
+ */
+function localizeMonth(month, language) {
+    if (language === 'np') {
+        return NepaliMonthNepali[month];
+    }
+    else {
+        return NepaliMonth[month];
+    }
+}
+/**
+ * Converts Nepali digits to English digits
+ * @param text The text containing Nepali digits to convert
+ * @returns String with English digits
+ */
+function nepaliDigitsToEnglish(text) {
+    const nepaliToEnglish = {
+        '०': '0',
+        '१': '1',
+        '२': '2',
+        '३': '3',
+        '४': '4',
+        '५': '5',
+        '६': '6',
+        '७': '7',
+        '८': '8',
+        '९': '9',
+    };
+    return text.replace(/[०-९]/g, (match) => nepaliToEnglish[match] || match);
+}
+/**
+ * Gets common date format patterns for parsing various date formats
+ * @returns Array of date format patterns with regex and index mappings
+ */
+function getDateFormatPatterns() {
+    return [
+        {
+            regex: /(\d{4})[-/.]\s*(\d{1,2})[-/.]\s*(\d{1,2})/,
+            yearIndex: 1,
+            monthIndex: 2,
+            dayIndex: 3,
+            description: 'YYYY-MM-DD format',
+        },
+        {
+            regex: /(\d{1,2})[-/.]\s*(\d{1,2})[-/.]\s*(\d{4})/,
+            yearIndex: 3,
+            monthIndex: 2,
+            dayIndex: 1,
+            description: 'DD-MM-YYYY format',
+        },
+        {
+            regex: /(\d{1,2})[-/.]\s*(\d{1,2})[-/.]\s*(\d{4})/,
+            yearIndex: 3,
+            monthIndex: 1,
+            dayIndex: 2,
+            description: 'MM-DD-YYYY format',
+        },
+        {
+            regex: /(\d{4})(\d{2})(\d{2})/,
+            yearIndex: 1,
+            monthIndex: 2,
+            dayIndex: 3,
+            description: 'YYYYMMDD format',
+        },
+        {
+            regex: /(\d{2})(\d{2})(\d{4})/,
+            yearIndex: 3,
+            monthIndex: 2,
+            dayIndex: 1,
+            description: 'DDMMYYYY format',
+        },
+    ];
 }
 
 /**
@@ -891,7 +903,11 @@ class NepaliDatePicker {
             return false;
         }
     }
-    /** Days in BS month via core API; fallback when year is outside supported range. */
+    /**
+     * Days in BS month via getDaysInMonth only.
+     * Numeric fallback (30) when year is outside supported range — used solely for
+     * adjacent-month grid padding (e.g. before MIN_BS_YEAR). Does not read calendar data.
+     */
     daysInBsMonth(year, month1Based, fallback = 30) {
         try {
             return getDaysInMonth(year, month1Based);
