@@ -6,21 +6,21 @@
  * The oracle is test-only and must not be used in production.
  */
 
-import { convertAdToBs, convertBsToAd } from '../../converters/date-only';
+import { convertAdToBs, convertBsToAd } from '../../core/converters/date-only';
 import {
   BS_CALENDAR_DATA,
   MAX_BS_YEAR,
   MIN_BS_YEAR,
   REF_AD_YMD,
   REF_BS,
-} from '../../constants/calendar-data';
-import { getDaysInMonth } from '../../utils/helpers';
-import { daysBetweenGregorian } from '../../utils/gregorian';
+} from '../../core/calendar-data';
+import { getDaysInMonth } from '../../core/calendar';
+import { daysBetweenGregorian } from '../../core/gregorian';
 import {
   BS_SUPPORTED_DAY_COUNT,
   bsPrefixTableByteLength,
-} from '../../converters/bs-prefix';
-import { CalendarDate } from '../../types';
+} from '../../core/converters/bs-prefix';
+import { CalendarDate } from '../../core/types';
 
 /** Pre-ISS-003 day-by-day AD→BS (oracle). */
 function convertAdToBsDayWalk(ad: CalendarDate): CalendarDate {

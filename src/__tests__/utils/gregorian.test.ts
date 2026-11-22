@@ -5,7 +5,7 @@ import {
   gregorianDayNumber,
   gregorianFromDayNumber,
   isGregorianLeapYear,
-} from '../../utils/gregorian';
+} from '../../core/gregorian';
 
 describe('Gregorian civil helpers (no Date)', () => {
   it('leap years', () => {

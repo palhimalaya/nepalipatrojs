@@ -1,8 +1,8 @@
 import { readFileSync } from 'fs';
 import { join } from 'path';
 import { NepaliDatePicker } from '../../ui/NepaliDatePicker';
-import { getDaysInMonth } from '../../utils/helpers';
-import { MAX_BS_YEAR, MIN_BS_YEAR } from '../../constants/calendar-data';
+import { getDaysInMonth } from '../../core/calendar';
+import { MAX_BS_YEAR, MIN_BS_YEAR } from '../../core/calendar-data';
 
 describe('NepaliDatePicker', () => {
   let input: HTMLInputElement;
@@ -181,6 +181,25 @@ describe('NepaliDatePicker', () => {
       const dp = new NepaliDatePicker(input, { format: 'YYYY-MM-DD' });
       expect(() => input.click()).not.toThrow();
       expect(document.querySelector('.nepali-datepicker')).toBeTruthy();
+      dp.destroy();
+    });
+
+    it('daysInBsMonth fallback is year-range-only (documented defensive UI padding)', () => {
+      const src = readFileSync(
+        join(__dirname, '../../ui/NepaliDatePicker.ts'),
+        'utf8'
+      );
+      expect(src).toMatch(/year < MIN_BS_YEAR \|\| year > MAX_BS_YEAR/);
+      expect(src).toMatch(/throw err/);
+      // Opening Baisakh of MIN_BS_YEAR needs prev-year padding without crashing
+      input.value = `${MIN_BS_YEAR}-01-01`;
+      const dp = new NepaliDatePicker(input, { format: 'YYYY-MM-DD' });
+      expect(() => input.click()).not.toThrow();
+      const currentDays = document.querySelectorAll(
+        '.nepali-day:not(.nepali-other-month)'
+      );
+      expect(currentDays.length).toBe(getDaysInMonth(MIN_BS_YEAR, 1));
+      expect(document.querySelectorAll('.nepali-other-month').length).toBeGreaterThan(0);
       dp.destroy();
     });
   });

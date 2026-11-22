@@ -5,9 +5,9 @@ import {
   NepaliWeekDay,
   NepaliWeekDayNepali,
   NepaliPatroOptions,
-} from '../types';
-import { getBsWeekdayIndex } from '../converters/date-only';
-import { NEPALI_DIGITS } from '../constants/calendar-data';
+} from '../core/types';
+import { getBsWeekdayIndex } from '../core/converters/date-only';
+import { NEPALI_DIGITS } from '../core/calendar-data';
 
 /**
  * Converts English digits to Nepali digits
@@ -82,14 +82,14 @@ export function formatBS(
         return digits(pad2(date.month));
       case 'M':
         return digits(date.month);
-      case 'DD':
-        return digits(pad2(date.day));
-      case 'D':
-        return digits(date.day);
       case 'dddd':
         return weekdayName;
       case 'ddd':
         return weekdayShort;
+      case 'DD':
+        return digits(pad2(date.day));
+      case 'D':
+        return digits(date.day);
       case 'd':
         return digits(weekDay);
       default:

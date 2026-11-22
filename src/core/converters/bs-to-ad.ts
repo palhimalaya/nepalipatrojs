@@ -1,5 +1,5 @@
 import { NepaliDate } from '../types';
-import { parseDateInput } from '../utils/calendar';
+import { parseDateInput } from '../calendar';
 import { convertBsToAd } from './date-only';
 
 export { daysBetweenBS, daysFromRefBs } from './bs-day-index';

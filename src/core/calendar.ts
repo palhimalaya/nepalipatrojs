@@ -7,8 +7,8 @@ import {
   BS_CALENDAR_DATA,
   MAX_BS_YEAR,
   MIN_BS_YEAR,
-} from '../constants/calendar-data';
-import { NepaliDate } from '../types';
+} from './calendar-data';
+import { NepaliDate } from './types';
 
 /**
  * Gets the number of days in a Nepali month

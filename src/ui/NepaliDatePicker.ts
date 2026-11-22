@@ -1,15 +1,15 @@
-import { MAX_BS_YEAR, MIN_BS_YEAR } from "../constants/calendar-data";
-import { getCurrentBSDate } from "../converters/ad-to-bs";
-import { convertBSToAD } from "../converters/bs-to-ad";
-import { formatBS as formatBSDate } from "../formatters/date-formatter";
-import { NepaliDate, NepaliDatePickerOptions } from "../types";
-import { getDaysInMonth } from "../utils/calendar";
+import { MAX_BS_YEAR, MIN_BS_YEAR } from "../core/calendar-data";
+import { getCurrentBSDate } from "../core/converters/ad-to-bs";
+import { convertBSToAD } from "../core/converters/bs-to-ad";
+import { getDaysInMonth } from "../core/calendar";
+import { NepaliDate, NepaliDatePickerOptions } from "../core/types";
+import { formatBS as formatBSDate } from "../i18n/format";
 import {
   localizeDigits,
   localizeMonth,
   nepaliDigitsToEnglish,
   getDateFormatPatterns,
-} from "../utils/localization";
+} from "../i18n/localization";
 
 export class NepaliDatePicker {
   private static instances: Set<NepaliDatePicker> = new Set();
@@ -264,15 +264,20 @@ export class NepaliDatePicker {
   }
 
   /**
-   * Days in BS month via getDaysInMonth only.
-   * Numeric fallback (30) when year is outside supported range — used solely for
-   * adjacent-month grid padding (e.g. before MIN_BS_YEAR). Does not read calendar data.
+   * Days in BS month via getDaysInMonth only (single calendar truth).
+   * Numeric fallback (30) applies only when `year` is outside MIN/MAX_BS_YEAR —
+   * used solely for adjacent-month grid padding (e.g. days before Baisakh of
+   * MIN_BS_YEAR). Does not read calendar data. Unexpected core errors for
+   * supported years are rethrown, not swallowed.
    */
   private daysInBsMonth(year: number, month1Based: number, fallback = 30): number {
     try {
       return getDaysInMonth(year, month1Based);
-    } catch {
-      return fallback;
+    } catch (err) {
+      if (year < MIN_BS_YEAR || year > MAX_BS_YEAR) {
+        return fallback;
+      }
+      throw err;
     }
   }
 

@@ -422,6 +422,24 @@ Public ESM export keys unchanged vs Stage 2.0 inventory.
 
 ---
 
+## 2026-11-22 — Phase 2 Stage 2.4: Physical core / i18n restructuring
+
+### Change
+
+Moved calendar/conversion/validation into `src/core/`; localization/formatting into `src/i18n/`; removed `utils/helpers.ts` shim. Public barrel and package exports unchanged.
+
+### Commands
+
+```bash
+npx jest --runInBand --coverage=false   # PASS 178/178 ~29s
+npx tsc --noEmit                        # PASS
+npm run build                           # PASS
+```
+
+Boundary tests updated for physical folders; UMD smoke + public API compat PASS after rebuild.
+
+---
+
 ## 2026-11-22 — Phase 2 Stage 2.3: Separate core and i18n helpers
 
 ### Change

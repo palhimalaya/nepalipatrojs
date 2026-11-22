@@ -10,31 +10,30 @@ import {
   NepaliPatroOptions,
   NepaliDatePickerOptions,
   DateFormatPattern
-} from "./types";
+} from "./core/types";
 import {
-  BS_CALENDAR_DATA,
   MIN_BS_YEAR,
   MAX_BS_YEAR,
   MIN_AD_YEAR,
   REF_AD_YMD,
   REF_BS,
-} from "./constants/calendar-data";
-import { convertADToBS, getCurrentBSDate } from "./converters/ad-to-bs";
-import { convertBSToAD } from "./converters/bs-to-ad";
+} from "./core/calendar-data";
+import { convertADToBS, getCurrentBSDate } from "./core/converters/ad-to-bs";
+import { convertBSToAD } from "./core/converters/bs-to-ad";
 import {
   convertAdToBs,
   convertBsToAd,
   getBsWeekdayIndex,
-} from "./converters/date-only";
-import { getDaysInMonth } from "./utils/calendar";
+} from "./core/converters/date-only";
+import { getDaysInMonth } from "./core/calendar";
 import {
   nepaliDigitsToEnglish,
   getDateFormatPatterns,
-} from "./utils/localization";
+} from "./i18n/localization";
 import {
   formatBS as formatBSDate,
   toNepaliDigits,
-} from "./formatters/date-formatter";
+} from "./i18n/format";
 import { NepaliDatePicker } from "./ui/NepaliDatePicker";
 class NepaliPatro {
   static readonly MIN_YEAR = MIN_BS_YEAR;
@@ -179,4 +178,3 @@ export { NepaliPatro };
 if (typeof window !== "undefined") {
   (window as any).NepaliDatePicker = NepaliDatePicker;
 }
-

@@ -144,21 +144,22 @@ Severity: `critical` | `high` | `medium` | `low`
 
 ## ISS-017 — Complete v1 public API inventory before removals
 
-- **Severity:** medium (process / compatibility)  
-- **Module:** public exports, migration guide  
-- **Status:** **resolved** (inventory frozen for Stage 2.1 planning — 2026-11-21)  
-- **Description:** ADR-005 requires a frozen, documented inventory of the v1 public API before any export is removed.  
-- **Deliverable:** [docs/api/public-api-inventory.md](../api/public-api-inventory.md) — entry points, exports, facade, picker, CSS, UMD, compatibility classes, Stage 2.1 test plan, open ambiguities.  
-- **Note:** Inventory does not authorize removals; ambiguities (e.g. `returnType`, docs `ne` vs runtime `np`) need separate decisions.  
-- **Related:** ADR-005; Stage 2.0  
+- **Severity:** medium (process / compatibility)
+- **Module:** public exports, migration guide
+- **Status:** **resolved** (inventory frozen for Stage 2.1 planning — 2026-11-21)
+- **Description:** ADR-005 requires a frozen, documented inventory of the v1 public API before any export is removed.
+- **Deliverable:** [docs/api/public-api-inventory.md](../api/public-api-inventory.md) — entry points, exports, facade, picker, CSS, UMD, compatibility classes, Stage 2.1 test plan, open ambiguities.
+- **Note:** Inventory does not authorize removals; ambiguities (e.g. `returnType`, docs `ne` vs runtime `np`) need separate decisions.
+- **Clarification (2026-11-22):** ISS-017 remains **resolved** as the public API inventory freeze. Stage 2.5 boundary enforcement is **ISS-018 only** — do not reopen ISS-017 for architecture lint/tests.
+- **Related:** ADR-005; Stage 2.0
 
 ## ISS-018 — Module boundary enforcement not yet automated
 
-- **Severity:** medium  
-- **Module:** tooling / Phase 2  
-- **Status:** open — tracked in Phase 2 assessment Stage 2.5  
-- **Description:** ADR-001 requires lint or architecture tests so `core` cannot import DOM/React/datepicker. Not implemented.  
-- **Related:** ADR-001; [phase2-assessment.md](../architecture/phase2-assessment.md)  
+- **Severity:** medium
+- **Module:** tooling / Phase 2
+- **Status:** open — Stage 2.5 (lightweight Stage 2.4 checks exist; full enforcement pending)
+- **Description:** ADR-001 requires lint or architecture tests so `core` cannot import DOM/React/datepicker. Stage 2.4 added physical `src/core/` + `src/i18n/` plus Jest source-scan boundary tests; Stage 2.5 owns fuller automated enforcement (e.g. dependency-cruiser / eslint boundaries).
+- **Related:** ADR-001; [phase2-assessment.md](../architecture/phase2-assessment.md); Stage 2.4/2.5
 
 ## ISS-020 — Circular dependency `index` ↔ `NepaliDatePicker`
 
@@ -179,10 +180,16 @@ Severity: `critical` | `high` | `medium` | `low`
 - **Fix:** Uses `getDaysInMonth` + `MIN_BS_YEAR`/`MAX_BS_YEAR` only. No `BS_CALENDAR_DATA` import/reference. Private `daysInBsMonth` wraps core API with safe fallback for padding outside range.  
 - **Verification:** Regression asserts no `BS_CALENDAR_DATA` in datepicker source; month-length UI tests; full Jest; tsc; build.  
 - **Related:** ADR-001/004; Stage 2.2  
-- **Follow-up:** Stage 2.3 clarified `daysInBsMonth` fallback is a numeric constant (`30`) for adjacent-month grid padding only — no calendar-data access and no duplicate month-length arithmetic.
+- **Follow-up:** Stage 2.3 clarified `daysInBsMonth` fallback is a numeric constant (`30`) for adjacent-month grid padding only — no calendar-data access and no duplicate month-length arithmetic. Stage 2.4 tightened the catch so only out-of-range years use the fallback; supported-year core errors are rethrown. Documented + tested.
 
 ## Stage 2.3 note — helpers split (no new ISS)
 
 - **Status:** completed 2026-11-22 (internal refactor; no behavioral change)
-- **Change:** Core helpers → `src/utils/calendar.ts`; i18n helpers → `src/utils/localization.ts`; `helpers.ts` retained as re-export shim.
-- **Related:** phase2-assessment V3; ADR-001  
+- **Change:** Core helpers → `src/utils/calendar.ts`; i18n helpers → `src/utils/localization.ts`; `helpers.ts` retained as re-export shim (removed in Stage 2.4 after migration).
+- **Related:** phase2-assessment V3; ADR-001
+
+## Stage 2.4 note — physical core / i18n layout (no new ISS)
+
+- **Status:** completed 2026-11-22 (directory restructure; no public API / algorithm change)
+- **Change:** Production modules under `src/core/` and `src/i18n/`; `ui/` unchanged; `helpers.ts` removed.
+- **Related:** ADR-001; Stage 2.4

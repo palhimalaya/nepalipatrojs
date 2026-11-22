@@ -1,6 +1,6 @@
 import { CalendarDate } from '../types';
-import { BS_CALENDAR_DATA, REF_BS } from '../constants/calendar-data';
-import { getDaysInMonth } from '../utils/calendar';
+import { BS_CALENDAR_DATA, REF_BS } from '../calendar-data';
+import { getDaysInMonth } from '../calendar';
 
 type Ymd = CalendarDate;
 

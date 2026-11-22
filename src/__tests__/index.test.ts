@@ -1,4 +1,4 @@
-import { MAX_BS_YEAR, MIN_BS_YEAR } from '../constants/calendar-data';
+import { MAX_BS_YEAR, MIN_BS_YEAR } from '../core/calendar-data';
 import NepaliPatro, { NepaliDate } from '../index';
 
 describe('NepaliPatro', () => {

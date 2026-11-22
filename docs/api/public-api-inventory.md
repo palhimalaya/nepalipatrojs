@@ -231,20 +231,20 @@ Add (when 2.1 authorized) — not implemented now:
 - No `nepalipatrojs/core` deep public export.
 - Packaging/CSS/`types` publish fixes → **Phase 5**.
 
-## 11. Stages 2.1–2.3 datepicker / helpers dependency (implemented)
+## 11. Stages 2.1–2.4 datepicker / internal layout (implemented)
 
 **Stage 2.1:** `NepaliDatePicker.ts` no longer imports `../index` (cycle removed).
 
 **Stage 2.2:** No `BS_CALENDAR_DATA`; uses `getDaysInMonth` + `MIN`/`MAX_BS_YEAR`.
 
-**Stage 2.3:** Helpers split; datepicker imports:
+**Stage 2.3–2.4:** Physical modules; datepicker imports:
 
-- `../converters/ad-to-bs` (`getCurrentBSDate`)
-- `../converters/bs-to-ad` (`convertBSToAD`)
-- `../formatters/date-formatter` (`formatBS` as `formatBSDate`)
-- `../types`
-- `../constants/calendar-data` (`MIN_BS_YEAR`, `MAX_BS_YEAR` only)
-- `../utils/calendar` (`getDaysInMonth`)
-- `../utils/localization` (`localizeDigits`, `localizeMonth`, `nepaliDigitsToEnglish`, `getDateFormatPatterns`)
+- `../core/converters/ad-to-bs` (`getCurrentBSDate`)
+- `../core/converters/bs-to-ad` (`convertBSToAD`)
+- `../core/calendar` (`getDaysInMonth`)
+- `../core/calendar-data` (`MIN_BS_YEAR`, `MAX_BS_YEAR` only)
+- `../core/types`
+- `../i18n/format` (`formatBS` as `formatBSDate`)
+- `../i18n/localization` (`localizeDigits`, `localizeMonth`, `nepaliDigitsToEnglish`, `getDateFormatPatterns`)
 
-Public barrel still imports and re-exports the picker; UMD/`window.NepaliDatePicker` unchanged. **Export list unchanged.**
+Public barrel still imports and re-exports the picker; UMD/`window.NepaliDatePicker` unchanged. **Export list unchanged.** No public deep export `nepalipatrojs/core`.

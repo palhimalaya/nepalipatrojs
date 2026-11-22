@@ -10,19 +10,19 @@
  * Legacy Date input keeps local-field extraction (may differ by TZ for the same instant).
  */
 
-import { convertADToBS } from '../../converters/ad-to-bs';
-import { convertBSToAD } from '../../converters/bs-to-ad';
+import { convertADToBS } from '../../core/converters/ad-to-bs';
+import { convertBSToAD } from '../../core/converters/bs-to-ad';
 import {
   convertAdToBs,
   convertBsToAd,
   getAdWeekdayIndex,
   getBsWeekdayIndex,
-} from '../../converters/date-only';
-import { formatBS } from '../../formatters/date-formatter';
-import { parseDateInput } from '../../utils/helpers';
-import { MAX_BS_YEAR, MIN_BS_YEAR, REF_AD_YMD, REF_BS } from '../../constants/calendar-data';
-import { getDaysInMonth } from '../../utils/helpers';
-import { NepaliWeekDay } from '../../types';
+} from '../../core/converters/date-only';
+import { formatBS } from '../../i18n/format';
+import { parseDateInput } from '../../core/calendar';
+import { MAX_BS_YEAR, MIN_BS_YEAR, REF_AD_YMD, REF_BS } from '../../core/calendar-data';
+import { getDaysInMonth } from '../../core/calendar';
+import { NepaliWeekDay } from '../../core/types';
 
 const HOST_TZ = process.env.TZ ?? '(unset — host default)';
 

@@ -69,7 +69,8 @@ Overall status: **IN PROGRESS** (Phase 0 CLOSED; Phase 1 IN PROGRESS — baselin
 11. ~~Phase 2 Stage 2.1 break cycle~~ **DONE 2026-11-21** (ISS-020)
 12. ~~Phase 2 Stage 2.2 datepicker core APIs only~~ **DONE 2026-11-22** (ISS-021)
 13. ~~Phase 2 Stage 2.3 split core / i18n helpers~~ **DONE 2026-11-22**
-14. Phase 2 Stage 2.4 — physical `core/` + `i18n/` folders ← **NEXT** (await authorization)
+14. ~~Phase 2 Stage 2.4 physical `core/` + `i18n/` folders~~ **DONE 2026-11-22**
+15. Phase 2 Stage 2.5 — architecture boundary enforcement (ISS-018) ← **NEXT** (await authorization)
 
 **Maintainer locks:** packaging → Phase 5; no `nepalipatrojs/core` deep export for now.
 
@@ -77,7 +78,7 @@ Overall status: **IN PROGRESS** (Phase 0 CLOSED; Phase 1 IN PROGRESS — baselin
 
 ## Phase 2 — Architecture / module boundaries
 
-**Status:** Stages 2.0–2.3 COMPLETED; Stage 2.4 pending authorization  
+**Status:** Stages 2.0–2.4 COMPLETED; Stage 2.5 pending authorization  
 **Docs:** [phase2-assessment.md](../architecture/phase2-assessment.md), [public-api-inventory.md](../api/public-api-inventory.md)
 
 ### Assessment / inventory
@@ -93,7 +94,7 @@ Overall status: **IN PROGRESS** (Phase 0 CLOSED; Phase 1 IN PROGRESS — baselin
 - [x] Stage 2.1 Break `index` ↔ `NepaliDatePicker` cycle (no public API change)
 - [x] Stage 2.2 Datepicker uses core APIs only (no raw calendar-data)
 - [x] Stage 2.3 Split helpers (core vs i18n) — `calendar.ts` / `localization.ts`; `helpers.ts` re-export shim
-- [ ] Stage 2.4 Physical `core/` + `i18n/` folders + barrel
+- [x] Stage 2.4 Physical `core/` + `i18n/` folders; `helpers.ts` removed; `ui/` retained
 - [ ] Stage 2.5 Boundary lint/architecture tests (ISS-018)
 - [ ] Packaging/CI → **Phase 5** (not Stage 2.6 in Phase 2)
 

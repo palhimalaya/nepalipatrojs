@@ -1,13 +1,13 @@
 import { AdDate, BsDate, CalendarDate } from '../types';
-import { validateAdDate, validateBsDate } from '../utils/validations';
+import { validateAdDate, validateBsDate } from '../validations';
 import {
   MIN_BS_YEAR,
   MAX_BS_YEAR,
   REF_AD_JS_WEEKDAY,
   REF_AD_YMD,
   REF_BS,
-} from '../constants/calendar-data';
-import { addGregorianDays, daysBetweenGregorian } from '../utils/gregorian';
+} from '../calendar-data';
+import { addGregorianDays, daysBetweenGregorian } from '../gregorian';
 import { daysBetweenBS, daysFromRefBs } from './bs-day-index';
 import { bsDateFromDayIndex } from './bs-prefix';
 

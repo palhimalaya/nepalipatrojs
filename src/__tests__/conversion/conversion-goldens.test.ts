@@ -1,8 +1,8 @@
-import { convertADToBS } from '../../converters/ad-to-bs';
-import { convertBSToAD } from '../../converters/bs-to-ad';
-import { getDaysInMonth } from '../../utils/helpers';
+import { convertADToBS } from '../../core/converters/ad-to-bs';
+import { convertBSToAD } from '../../core/converters/bs-to-ad';
+import { getDaysInMonth } from '../../core/calendar';
 import { GOLDEN_CONVERSIONS } from './fixtures';
-import { MAX_BS_YEAR, MIN_BS_YEAR } from '../../constants/calendar-data';
+import { MAX_BS_YEAR, MIN_BS_YEAR } from '../../core/calendar-data';
 
 function adParts(d: Date): { year: number; month: number; day: number } {
   return { year: d.getFullYear(), month: d.getMonth() + 1, day: d.getDate() };

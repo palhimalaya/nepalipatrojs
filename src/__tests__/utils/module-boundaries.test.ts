@@ -1,53 +1,68 @@
 /**
- * Stage 2.3 — lightweight architecture checks (no physical core/ folder yet).
+ * Stage 2.4 — physical core / i18n boundary checks.
  */
 
-import { readFileSync } from 'fs';
+import { readFileSync, readdirSync, statSync } from 'fs';
 import { join } from 'path';
 
-const UTILS = join(__dirname, '../../utils');
+const SRC = join(__dirname, '../..');
 
-function read(name: string): string {
-  return readFileSync(join(UTILS, name), 'utf8');
+function walkTs(dir: string): string[] {
+  const out: string[] = [];
+  for (const name of readdirSync(dir)) {
+    const p = join(dir, name);
+    if (statSync(p).isDirectory()) {
+      out.push(...walkTs(p));
+    } else if (name.endsWith('.ts')) {
+      out.push(p);
+    }
+  }
+  return out;
 }
 
-describe('Stage 2.3 helper module boundaries', () => {
-  it('calendar.ts has no i18n or DOM dependencies', () => {
-    const src = read('calendar.ts');
-    expect(src).not.toMatch(/from\s+['"].*localization['"]/);
-    expect(src).not.toMatch(/NepaliMonth|NEPALI_DIGITS|document\.|window\./);
-    expect(src).toMatch(/getDaysInMonth/);
-    expect(src).toMatch(/parseDateInput/);
+function read(rel: string): string {
+  return readFileSync(join(SRC, rel), 'utf8');
+}
+
+describe('Stage 2.4 physical module boundaries', () => {
+  it('core/ must not import i18n, ui, or DOM APIs', () => {
+    const files = walkTs(join(SRC, 'core'));
+    expect(files.length).toBeGreaterThan(0);
+    for (const file of files) {
+      const src = readFileSync(file, 'utf8');
+      expect(src).not.toMatch(/from\s+['"][^'"]*i18n[^'"]*['"]/);
+      expect(src).not.toMatch(/from\s+['"][^'"]*\/ui\/[^'"]*['"]/);
+      expect(src).not.toMatch(/\bdocument\./);
+      expect(src).not.toMatch(/\bwindow\./);
+    }
   });
 
-  it('localization.ts has no DOM and does not import calendar helpers', () => {
-    const src = read('localization.ts');
-    expect(src).not.toMatch(/from\s+['"]\.\/calendar['"]/);
-    expect(src).not.toMatch(/getDaysInMonth|parseDateInput/);
-    expect(src).not.toMatch(/document\.|window\./);
-    expect(src).toMatch(/localizeDigits/);
-    expect(src).toMatch(/getDateFormatPatterns/);
+  it('i18n/ must not import ui or DOM APIs', () => {
+    const files = walkTs(join(SRC, 'i18n'));
+    expect(files.length).toBeGreaterThan(0);
+    for (const file of files) {
+      const src = readFileSync(file, 'utf8');
+      expect(src).not.toMatch(/from\s+['"][^'"]*\/ui\/[^'"]*['"]/);
+      expect(src).not.toMatch(/\bdocument\./);
+      expect(src).not.toMatch(/\bwindow\./);
+    }
   });
 
-  it('helpers.ts is a compatibility re-export only', () => {
-    const src = read('helpers.ts');
-    expect(src).toMatch(/from\s+['"]\.\/calendar['"]/);
-    expect(src).toMatch(/from\s+['"]\.\/localization['"]/);
-    // No inline function bodies for the split helpers
-    expect(src).not.toMatch(/export function getDaysInMonth/);
-    expect(src).not.toMatch(/export function localizeDigits/);
+  it('i18n may use core weekday index but not calendar month-length helpers for formatting', () => {
+    const format = read('i18n/format.ts');
+    expect(format).toMatch(/from\s+['"]\.\.\/core\/converters\/date-only['"]/);
+    expect(format).not.toMatch(/getDaysInMonth|parseDateInput/);
   });
 
-  it('converters do not import localization', () => {
-    const dayIndex = readFileSync(
-      join(__dirname, '../../converters/bs-day-index.ts'),
-      'utf8'
-    );
-    const bsToAd = readFileSync(
-      join(__dirname, '../../converters/bs-to-ad.ts'),
-      'utf8'
-    );
-    expect(dayIndex).not.toMatch(/localization|localizeDigits|localizeMonth/);
-    expect(bsToAd).not.toMatch(/localization|localizeDigits|localizeMonth/);
+  it('helpers.ts compatibility shim is removed', () => {
+    expect(() => read('utils/helpers.ts')).toThrow();
+  });
+
+  it('ui consumes core + i18n, not the public barrel', () => {
+    const src = read('ui/NepaliDatePicker.ts');
+    expect(src).toMatch(/from\s+['"]\.\.\/core\//);
+    expect(src).toMatch(/from\s+['"]\.\.\/i18n\//);
+    expect(src).not.toMatch(/from\s+['"]\.\.\/index['"]/);
+    expect(src).not.toMatch(/BS_CALENDAR_DATA/);
   });
 });

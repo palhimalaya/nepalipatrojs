@@ -26,24 +26,28 @@ Intended consumers: Nepali web apps, business platforms, forms needing BS dates,
 
 ## Supported calendar range (verified)
 
-- **BS years:** 2000–2099 (100 contiguous years in `src/constants/calendar-data.ts`)
+- **BS years:** 2000–2099 (100 contiguous years in `src/core/calendar-data.ts`)
 - **Reference epoch:** `2000-01-01 BS` ≡ `1943-04-14 AD` (`REF_BS` / `REF_AD`)
 - Dataset shape: `Record<year, [daysPerMonth[12], totalDays]>`
 - Year totals in the dataset match `sum(daysPerMonth)` for sampled years (including leap-like 366-day BS years)
 
 Do **not** replace calendar data or the reference epoch without proving accuracy.
 
-## Current architecture (v1, high level)
+## Current architecture (after Stage 2.4)
 
 ```
 src/
-  index.ts                 # NepaliPatro facade + re-exports + window global
-  constants/calendar-data  # BS month lengths + refs + digits
-  converters/              # AD↔BS
-  formatters/              # formatBS, toNepaliDigits
-  utils/                   # helpers, validations
-  types/                   # NepaliDate, enums, options
-  ui/NepaliDatePicker.ts   # monolithic ~645-line datepicker
+  index.ts                 # public compatibility facade + window global
+  core/                    # no i18n, no DOM
+    calendar-data.ts       # BS month lengths + refs (+ NEPALI_DIGITS co-located)
+    types.ts               # CalendarDate, enums, options
+    calendar.ts            # getDaysInMonth, parseDateInput
+    gregorian.ts / validations.ts
+    converters/            # date-only + legacy wrappers + prefix/day-index
+  i18n/                    # no DOM
+    localization.ts        # digits, months, parse patterns
+    format.ts              # formatBS, toNepaliDigits
+  ui/NepaliDatePicker.ts   # vanilla DOM datepicker
   ui/styles.css
 ```
 
@@ -79,12 +83,13 @@ npm run build
 
 **Phase 1 — CLOSED.** Correctness, timezone, ISS-003 prefix AD→BS approved.
 
-**Phase 2 — Stages 2.0–2.2 COMPLETED; Stage 2.3 not started.**
+**Phase 2 — Stages 2.0–2.4 COMPLETED; Stage 2.5 not started.**
 
-- Assessment / API inventory under `docs/architecture/` and `docs/api/`
+- Physical `src/core/` + `src/i18n/`; public barrel unchanged
+- ISS-017 remains resolved (API inventory); ISS-018 owns boundary enforcement (Stage 2.5)
 - ISS-020 / ISS-021 resolved: no barrel cycle; no raw `BS_CALENDAR_DATA` in datepicker
-- Locks: barrel-only entry; packaging → Phase 5; ISS-016 provenance open
-- **Next:** Stage 2.3 split core / i18n helpers (await authorization).
+- Locks: barrel-only entry (no `nepalipatrojs/core`); packaging → Phase 5; ISS-016 provenance open
+- **Next:** Stage 2.5 architecture boundary enforcement — ISS-018 (await authorization).
 
 ## Known limitations (v1)
 

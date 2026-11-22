@@ -184,3 +184,41 @@ Correctness of ISS-003 is accepted. Published microsecond figures need care:
 
 This assessment is complete. **No refactoring started.**  
 Next implementation requires separate authorization, preferably beginning with **Stage 2.1 (break index↔datepicker cycle)**.
+
+---
+
+## 12. Stage 2.4 implementation note (2026-11-22)
+
+Physical layout established. Historical inventory in §1 describes pre-2.4 paths.
+
+### Old → new mapping
+
+| Old | New | Responsibility |
+|-----|-----|----------------|
+| `constants/calendar-data.ts` | `core/calendar-data.ts` | Dataset, REF, ranges, `NEPALI_DIGITS` |
+| `types/index.ts` | `core/types.ts` | Date types, locale enums, options |
+| `utils/gregorian.ts` | `core/gregorian.ts` | Pure Gregorian arithmetic |
+| `utils/validations.ts` | `core/validations.ts` | BS/AD validation |
+| `utils/calendar.ts` | `core/calendar.ts` | `getDaysInMonth`, `parseDateInput` |
+| `converters/*` | `core/converters/*` | Conversion + day-index + prefix |
+| `utils/localization.ts` | `i18n/localization.ts` | Digits, months, parse patterns |
+| `formatters/date-formatter.ts` | `i18n/format.ts` | `formatBS`, `toNepaliDigits` |
+| `utils/helpers.ts` | **removed** | Was re-export shim only |
+| `ui/*` | `ui/*` | Unchanged (Phase 3 rename) |
+| `types/css.d.ts` | `types/css.d.ts` | Ambient CSS modules |
+| `index.ts` | `index.ts` | Public facade |
+
+### Dependency graph (after)
+
+```
+core ──✕──► i18n, ui, DOM
+i18n ──► core
+ui   ──► core, i18n
+index ──► core, i18n, ui
+```
+
+### Exceptions kept deliberate
+
+1. `NEPALI_DIGITS` in `core/calendar-data.ts`
+2. Locale enums + UI options in `core/types.ts`
+3. Datepicker folder name remains `ui/`

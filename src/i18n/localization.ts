@@ -3,12 +3,12 @@
  * No DOM dependencies. Does not import calendar conversion logic.
  */
 
-import { NEPALI_DIGITS } from '../constants/calendar-data';
+import { NEPALI_DIGITS } from '../core/calendar-data';
 import {
   DateFormatPattern,
   NepaliMonth,
   NepaliMonthNepali,
-} from '../types';
+} from '../core/types';
 
 /**
  * Localize number to Nepali digits based on language

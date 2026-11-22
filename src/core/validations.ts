@@ -1,4 +1,4 @@
-import { MIN_BS_YEAR, MAX_BS_YEAR, MIN_AD_YEAR, BS_CALENDAR_DATA } from '../constants/calendar-data';
+import { MIN_BS_YEAR, MAX_BS_YEAR, MIN_AD_YEAR, BS_CALENDAR_DATA } from './calendar-data';
 import { daysInGregorianMonth } from './gregorian';
 
 /**

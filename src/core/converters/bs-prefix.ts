@@ -2,7 +2,7 @@ import {
   BS_CALENDAR_DATA,
   MAX_BS_YEAR,
   MIN_BS_YEAR,
-} from '../constants/calendar-data';
+} from '../calendar-data';
 import { CalendarDate } from '../types';
 
 /**

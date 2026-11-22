@@ -686,14 +686,14 @@
                     return digits(pad2(date.month));
                 case 'M':
                     return digits(date.month);
-                case 'DD':
-                    return digits(pad2(date.day));
-                case 'D':
-                    return digits(date.day);
                 case 'dddd':
                     return weekdayName;
                 case 'ddd':
                     return weekdayShort;
+                case 'DD':
+                    return digits(pad2(date.day));
+                case 'D':
+                    return digits(date.day);
                 case 'd':
                     return digits(weekDay);
                 default:
@@ -910,16 +910,21 @@
             }
         }
         /**
-         * Days in BS month via getDaysInMonth only.
-         * Numeric fallback (30) when year is outside supported range — used solely for
-         * adjacent-month grid padding (e.g. before MIN_BS_YEAR). Does not read calendar data.
+         * Days in BS month via getDaysInMonth only (single calendar truth).
+         * Numeric fallback (30) applies only when `year` is outside MIN/MAX_BS_YEAR —
+         * used solely for adjacent-month grid padding (e.g. days before Baisakh of
+         * MIN_BS_YEAR). Does not read calendar data. Unexpected core errors for
+         * supported years are rethrown, not swallowed.
          */
         daysInBsMonth(year, month1Based, fallback = 30) {
             try {
                 return getDaysInMonth(year, month1Based);
             }
-            catch (_a) {
-                return fallback;
+            catch (err) {
+                if (year < MIN_BS_YEAR || year > MAX_BS_YEAR) {
+                    return fallback;
+                }
+                throw err;
             }
         }
         openCalendar() {

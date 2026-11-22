@@ -1,4 +1,4 @@
-import { CalendarDate } from '../types';
+import { CalendarDate } from './types';
 
 /**
  * Pure Gregorian (proleptic) civil-date helpers.

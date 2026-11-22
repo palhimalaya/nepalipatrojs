@@ -4,7 +4,7 @@
 
 ### Dataset
 
-- File: `src/constants/calendar-data.ts`
+- File: `src/core/calendar-data.ts`
 - Years **2000–2099**, contiguous (100 entries) — structural tests enforce this
 - Entry: `[number[12] /* days per month */, number /* total days */]`
 - Year totals equal `sum(month lengths)` for every year
@@ -98,16 +98,20 @@ Round-trips ≠ historical proof (ADR-003). ISS-016 remains open.
 5. **Arithmetic** — correct day counts (ISS-019) + Gregorian day numbers.
 6. **Integrity** — checksum + structural tests; provenance honest.
 
-## Helper module split (Stage 2.3)
+## Module layout (Stage 2.4)
 
-| Function | Module | Notes |
-|----------|--------|-------|
-| `getDaysInMonth` | `src/utils/calendar.ts` | Sole month-length source for converters + datepicker |
-| `parseDateInput` | `src/utils/calendar.ts` | BS input normalization for converters |
-| `localizeDigits` / `localizeMonth` / `nepaliDigitsToEnglish` / `getDateFormatPatterns` | `src/utils/localization.ts` | Presentation / i18n only |
-| Re-exports | `src/utils/helpers.ts` | Compatibility shim; no implementations |
+| Concern | Module |
+|---------|--------|
+| Dataset + REF + digits | `src/core/calendar-data.ts` |
+| Date types / enums / options | `src/core/types.ts` |
+| `getDaysInMonth`, `parseDateInput` | `src/core/calendar.ts` |
+| Gregorian arithmetic | `src/core/gregorian.ts` |
+| Validation | `src/core/validations.ts` |
+| Converters | `src/core/converters/*` |
+| Digits / months / patterns | `src/i18n/localization.ts` |
+| `formatBS`, `toNepaliDigits` | `src/i18n/format.ts` |
 
-`calendar.ts` depends only on `constants/calendar-data` + `types`. It must not import localization or DOM.
+`core/` must not import `i18n/` or `ui/` or use DOM.
 
 ## Non-negotiables
 

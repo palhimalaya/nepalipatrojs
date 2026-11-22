@@ -1,4 +1,4 @@
-import { CalendarDate } from '../types';
+import { CalendarDate } from './types';
 
 export const MIN_BS_YEAR = 2000;
 export const MAX_BS_YEAR = 2099;

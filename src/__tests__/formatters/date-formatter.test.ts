@@ -1,5 +1,5 @@
-import { formatBS, toNepaliDigits } from '../../formatters/date-formatter';
-import { NepaliDate, NepaliMonth, NepaliMonthNepali, NepaliWeekDay } from '../../types';
+import { formatBS, toNepaliDigits } from '../../i18n/format';
+import { NepaliDate, NepaliMonth, NepaliMonthNepali, NepaliWeekDay } from '../../core/types';
 
 /** English month names from the enum (not from formatBS). */
 const ENGLISH_MONTHS: Record<number, string> = {
