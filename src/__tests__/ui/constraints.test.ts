@@ -94,4 +94,28 @@ describe('constraints (pure)', () => {
     const c = emptyConstraints();
     expect(isDateSelectable({ year: 2080, month: 5, day: 10 }, c)).toBe(true);
   });
+
+  it('disabledDates is snapshotted (caller array/object mutation ignored)', () => {
+    const caller = [{ year: 2080, month: 1, day: 15 }];
+    const c = normalizeConstraints({ disabledDates: caller });
+    caller.push({ year: 2080, month: 1, day: 16 });
+    caller[0].day = 1;
+    expect(isDateSelectable({ year: 2080, month: 1, day: 15 }, c)).toBe(false);
+    expect(isDateSelectable({ year: 2080, month: 1, day: 16 }, c)).toBe(true);
+    expect(isDateSelectable({ year: 2080, month: 1, day: 1 }, c)).toBe(true);
+    expect(c.disabledDates).not.toBe(caller);
+  });
+
+  it('isDateDisabled is evaluated dynamically on each check', () => {
+    let blocked = true;
+    const c = normalizeConstraints({
+      isDateDisabled: () => blocked,
+    });
+    const d = { year: 2080, month: 5, day: 10 };
+    expect(isDateSelectable(d, c)).toBe(false);
+    blocked = false;
+    expect(isDateSelectable(d, c)).toBe(true);
+    blocked = true;
+    expect(isDateSelectable(d, c)).toBe(false);
+  });
 });

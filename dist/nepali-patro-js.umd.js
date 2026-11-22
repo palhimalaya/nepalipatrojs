@@ -715,9 +715,15 @@
      * Pure BS date-only comparisons — no DOM, no timezone APIs.
      *
      * Semantics:
-     * - `minDate` / `maxDate` are **inclusive**.
-     * - A date is disabled if outside [min, max], listed in `disabledDates`,
-     *   or `isDateDisabled(date)` returns true.
+     * - `minDate` / `maxDate` are **inclusive** and **snapshotted** at normalize/construct
+     *   (copied civil triples — later mutation of the caller's objects is ignored).
+     * - `disabledDates` is **snapshotted** into a new array of copied triples at
+     *   normalize/construct — mutating or replacing the caller's array afterward
+     *   does not change picker behavior.
+     * - `isDateDisabled` is retained by **reference** and evaluated **dynamically**
+     *   on every availability check (render, click, keyboard, Today).
+     * - A date is disabled if outside [min, max], listed in the snapshotted
+     *   `disabledDates`, or `isDateDisabled(date)` returns true.
      * - Contradictory min > max → both bounds ignored (with warning at normalize time).
      * - Malformed dates (invalid month/day) → that constraint ignored.
      */
@@ -776,6 +782,7 @@
             minDate = null;
             maxDate = null;
         }
+        // Snapshot: new array + copied triples (caller's array/objects are not retained).
         const disabledDates = [];
         if (input.disabledDates) {
             for (const d of input.disabledDates) {
@@ -787,6 +794,7 @@
                 }
             }
         }
+        // Dynamic: keep the function reference; invoke on each availability check.
         const isDateDisabled = typeof input.isDateDisabled === 'function' ? input.isDateDisabled : null;
         return { minDate, maxDate, disabledDates, isDateDisabled };
     }
@@ -1133,6 +1141,66 @@
     }
 
     /**
+     * Gregorian (AD) equivalent display helpers (Phase 3 Stage 3.6).
+     * Conversion ownership: core `convertBsToAd` only (date-only, TZ-independent).
+     * BS remains the selection calendar; AD is secondary presentation.
+     */
+    const AD_MONTH_SHORT_EN = [
+        'Jan',
+        'Feb',
+        'Mar',
+        'Apr',
+        'May',
+        'Jun',
+        'Jul',
+        'Aug',
+        'Sep',
+        'Oct',
+        'Nov',
+        'Dec',
+    ];
+    /** Safe BS→AD; returns null for out-of-range / invalid civil dates. */
+    function convertBsToAdOrNull(bs) {
+        try {
+            return convertBsToAd(bs);
+        }
+        catch (_a) {
+            return null;
+        }
+    }
+    /** Compact day-of-month for secondary cell subtitle (digits follow language). */
+    function formatAdCellDay(ad, language) {
+        return localizeDigits(ad.day, language);
+    }
+    /**
+     * Full AD civil label for footer / accessible names.
+     * Month names stay Latin short form; day/year digits follow `language`.
+     */
+    function formatAdFullLabel(ad, language) {
+        var _a;
+        const month = (_a = AD_MONTH_SHORT_EN[ad.month - 1]) !== null && _a !== void 0 ? _a : String(ad.month);
+        const day = localizeDigits(ad.day, language);
+        const year = localizeDigits(ad.year, language);
+        return `${day} ${month} ${year}`;
+    }
+    /** Footer line text for a BS date (empty string if conversion fails). */
+    function formatAdEquivalentLine(bs, language) {
+        const ad = convertBsToAdOrNull(bs);
+        if (!ad)
+            return '';
+        const body = formatAdFullLabel(ad, language);
+        return language === 'np' ? `ईस्वी · ${body}` : `AD · ${body}`;
+    }
+    /** Accessible AD fragment appended to BS day labels. */
+    function formatAdAccessibleSuffix(bs, language) {
+        const ad = convertBsToAdOrNull(bs);
+        if (!ad)
+            return '';
+        const body = formatAdFullLabel(ad, language);
+        return language === 'np' ? `ईस्वी ${body}` : `AD ${body}`;
+    }
+
+    /**
      * Pure BS calendar grid model (Phase 3 Stage 3.1).
      * No DOM. Uses core getDaysInMonth + date-only weekday index (not JS Date weekday APIs).
      */
@@ -1225,8 +1293,10 @@
      * Safe DOM construction for the datepicker popup (Phase 3 Stage 3.2 / ISS-014).
      * ARIA / grid semantics (Phase 3 Stage 3.3).
      * Constraints / Today / Clear (Phase 3 Stage 3.5).
+     * Dual AD equivalent display (Phase 3 Stage 3.6).
      * Dynamic labels use textContent / createTextNode only.
      */
+    const AD_EQUIVALENT_SELECTOR = '.nepali-ad-equivalent';
     function el(tag, className) {
         const node = document.createElement(tag);
         if (className) {
@@ -1252,14 +1322,41 @@
         const monthName = localizeMonth(cell.month, language);
         const day = localizeDigits(cell.day, language);
         const year = localizeDigits(cell.year, language);
-        const base = `${day} ${monthName} ${year}`;
+        const bs = `${day} ${monthName} ${year}`;
+        const ad = formatAdAccessibleSuffix({ year: cell.year, month: cell.month, day: cell.day }, language);
+        let label = ad ? `${bs}, ${ad}` : bs;
         if (cell.disabled) {
-            return language === 'np' ? `${base} (अक्षम)` : `${base} (unavailable)`;
+            label =
+                language === 'np' ? `${label} (अक्षम)` : `${label} (unavailable)`;
         }
-        return base;
+        return label;
     }
     function monthYearLabel(year, month, language) {
         return `${localizeMonth(month, language)} ${localizeDigits(year, language)}`;
+    }
+    /**
+     * Update the AD equivalent footer to match a BS date (focused / selected).
+     * Used for in-month keyboard moves without a full re-render.
+     */
+    function setAdEquivalentFooter(root, bs, language) {
+        const footer = root.querySelector(AD_EQUIVALENT_SELECTOR);
+        if (!footer)
+            return;
+        const text = formatAdEquivalentLine(bs, language);
+        footer.textContent = '';
+        if (text) {
+            footer.appendChild(document.createTextNode(text));
+        }
+    }
+    function renderAdEquivalentFooter(bs, language) {
+        const footer = el('div', 'nepali-ad-equivalent');
+        footer.setAttribute('aria-live', 'polite');
+        footer.setAttribute('aria-atomic', 'true');
+        const text = formatAdEquivalentLine(bs, language);
+        if (text) {
+            footer.appendChild(document.createTextNode(text));
+        }
+        return footer;
     }
     function renderDayCell(cell, language, focused, today) {
         const classes = ['nepali-day'];
@@ -1272,11 +1369,16 @@
         if (cell.disabled) {
             classes.push('nepali-disabled');
         }
-        const isToday = sameDate({ year: cell.year, month: cell.month, day: cell.day }, today);
+        const cellDate = {
+            year: cell.year,
+            month: cell.month,
+            day: cell.day,
+        };
+        const isToday = sameDate(cellDate, today);
         if (isToday) {
             classes.push('nepali-today');
         }
-        const isFocused = sameDate({ year: cell.year, month: cell.month, day: cell.day }, focused);
+        const isFocused = sameDate(cellDate, focused);
         const gridcell = el('div', 'nepali-gridcell');
         gridcell.setAttribute('role', 'gridcell');
         gridcell.setAttribute('aria-selected', cell.selected ? 'true' : 'false');
@@ -1303,7 +1405,17 @@
             day.setAttribute('aria-disabled', 'true');
         }
         day.tabIndex = isFocused && !cell.disabled ? 0 : -1;
-        day.appendChild(document.createTextNode(localizeDigits(cell.day, language)));
+        const bsNum = el('span', 'nepali-day-bs');
+        bsNum.appendChild(document.createTextNode(localizeDigits(cell.day, language)));
+        day.appendChild(bsNum);
+        const ad = convertBsToAdOrNull(cellDate);
+        if (ad) {
+            const adNum = el('span', 'nepali-day-ad');
+            adNum.setAttribute('aria-hidden', 'true');
+            adNum.appendChild(document.createTextNode(formatAdCellDay(ad, language)));
+            day.appendChild(adNum);
+            day.setAttribute('data-ad', `${ad.year}-${ad.month}-${ad.day}`);
+        }
         gridcell.appendChild(day);
         return gridcell;
     }
@@ -1392,8 +1504,10 @@
             }
             body.appendChild(week);
         }
+        // Footer tracks focused date (keyboard “hover”); selected remains BS-primary in the grid.
+        const adFooter = renderAdEquivalentFooter(focused, language);
         const actions = renderActions(language, todayDisabled);
-        root.append(header, live, weekdays, body, actions);
+        root.append(header, live, weekdays, body, adFooter, actions);
         return root;
     }
 
@@ -1824,6 +1938,7 @@
                 target.tabIndex = 0;
                 target.focus();
             }
+            setAdEquivalentFooter(this.floatingCalendar, next, this.language);
         }
         setupCalendarEvents(calendarDiv) {
             const prevButton = calendarDiv.querySelector(".nepali-prev-btn");

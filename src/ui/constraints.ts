@@ -3,9 +3,15 @@
  * Pure BS date-only comparisons — no DOM, no timezone APIs.
  *
  * Semantics:
- * - `minDate` / `maxDate` are **inclusive**.
- * - A date is disabled if outside [min, max], listed in `disabledDates`,
- *   or `isDateDisabled(date)` returns true.
+ * - `minDate` / `maxDate` are **inclusive** and **snapshotted** at normalize/construct
+ *   (copied civil triples — later mutation of the caller's objects is ignored).
+ * - `disabledDates` is **snapshotted** into a new array of copied triples at
+ *   normalize/construct — mutating or replacing the caller's array afterward
+ *   does not change picker behavior.
+ * - `isDateDisabled` is retained by **reference** and evaluated **dynamically**
+ *   on every availability check (render, click, keyboard, Today).
+ * - A date is disabled if outside [min, max], listed in the snapshotted
+ *   `disabledDates`, or `isDateDisabled(date)` returns true.
  * - Contradictory min > max → both bounds ignored (with warning at normalize time).
  * - Malformed dates (invalid month/day) → that constraint ignored.
  */
@@ -95,6 +101,7 @@ export function normalizeConstraints(
     maxDate = null;
   }
 
+  // Snapshot: new array + copied triples (caller's array/objects are not retained).
   const disabledDates: NepaliDate[] = [];
   if (input.disabledDates) {
     for (const d of input.disabledDates) {
@@ -108,6 +115,7 @@ export function normalizeConstraints(
     }
   }
 
+  // Dynamic: keep the function reference; invoke on each availability check.
   const isDateDisabled =
     typeof input.isDateDisabled === 'function' ? input.isDateDisabled : null;
 

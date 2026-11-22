@@ -18,12 +18,18 @@ export interface NepaliDatePickerOptions {
   theme?: 'light' | 'dark';
   language?: 'en' | 'np';
   zIndex?: number;
-  /** Inclusive minimum selectable BS date. */
+  /** Inclusive minimum selectable BS date (copied at construction). */
   minDate?: NepaliDate;
-  /** Inclusive maximum selectable BS date. */
+  /** Inclusive maximum selectable BS date (copied at construction). */
   maxDate?: NepaliDate;
-  /** Exact BS dates that cannot be selected. */
+  /**
+   * Exact BS dates that cannot be selected.
+   * Snapshotted at construction (array + entries copied).
+   */
   disabledDates?: NepaliDate[];
-  /** Return true to disable a BS date (combined with min/max/list). */
+  /**
+   * Return true to disable a BS date (combined with min/max/list).
+   * Retained by reference and evaluated dynamically on each check.
+   */
   isDateDisabled?: (date: NepaliDate) => boolean;
 }

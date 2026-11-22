@@ -92,7 +92,13 @@ describe('Stage 3.2 safe rendering (ISS-014)', () => {
 
     const selected = root.querySelector('.nepali-day.nepali-selected');
     expect(selected?.textContent).toContain('<script>');
-    expect(selected?.childElementCount).toBe(0);
+    // Day buttons may contain structural spans (BS/AD); none may be parsed markup.
+    expect(selected?.querySelector('script')).toBeNull();
+    expect(selected?.querySelector('img')).toBeNull();
+    expect(selected?.querySelector('b')).toBeNull();
+    expect(
+      selected?.querySelector('.nepali-day-bs')?.childElementCount
+    ).toBe(0);
     expect((window as unknown as { __np_xss?: number }).__np_xss).toBe(0);
   });
 

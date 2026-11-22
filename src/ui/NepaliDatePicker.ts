@@ -27,7 +27,7 @@ import {
   readViewport,
   resolveZIndex,
 } from "./position";
-import { buildCalendarElement } from "./render";
+import { buildCalendarElement, setAdEquivalentFooter } from "./render";
 import {
   clearSelected,
   closePicker,
@@ -471,6 +471,7 @@ export class NepaliDatePicker {
       target.tabIndex = 0;
       target.focus();
     }
+    setAdEquivalentFooter(this.floatingCalendar, next, this.language);
   }
 
   private setupCalendarEvents(calendarDiv: HTMLElement): void {

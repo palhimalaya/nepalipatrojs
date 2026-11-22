@@ -85,12 +85,12 @@ npm run build
 
 **Phase 2 — COMPLETED** (architecture + ownership).
 
-**Phase 3 — Stages 3.0–3.5 COMPLETED.**
+**Phase 3 — Stages 3.0–3.6 COMPLETED.**
 
-- Modular datepicker with a11y, positioning, constraints, Today/Clear
-- Still pending: dual AD (3.6), visual redesign (3.7)
+- Modular datepicker with a11y, positioning, constraints, Today/Clear, AD equivalents
+- Still pending: visual redesign / theme tokens (3.7)
 - Locks: barrel-only entry; packaging → Phase 5; ISS-016 provenance open
-- **Next:** Stage 3.6 Dual AD/BS display (await authorization).
+- **Next:** Stage 3.7 visual redesign (await authorization).
 
 ## Known limitations (v1)
 

@@ -1,9 +1,9 @@
 # Datepicker architecture
 
-## Current (v1 → Stage 3.5)
+## Current (v1 → Stage 3.6)
 
 Orchestrator: `src/ui/NepaliDatePicker.ts`  
-Pure modules: `state`, `grid`, `keyboard`, `position`, `constraints`  
+Pure modules: `state`, `grid`, `keyboard`, `position`, `constraints`, `ad-display`  
 Safe DOM: `src/ui/render.ts`
 
 **Full Phase 3.0 assessment:** [phase3-datepicker-assessment.md](phase3-datepicker-assessment.md).  
@@ -16,7 +16,8 @@ Safe DOM: `src/ui/render.ts`
 | Constraints | Pure `constraints.ts` — inclusive min/max + list + predicate |
 | Keyboard math | Pure `keyboard.ts` — skips unavailable dates |
 | Parsing | Inline; out-of-range parsed values are not applied |
-| Rendering | Safe DOM; Today/Clear actions; disabled day buttons |
+| Rendering | Safe DOM; Today/Clear; disabled days; AD day subtitle + AD footer |
+| Dual calendar | BS primary; AD via `convertBsToAd` (no AD grid / mode switch) |
 | Navigation | Prev/next + `<select>` + PageUp/PageDown / arrows |
 | Positioning | `position.ts` — body-attached `absolute` |
 | Z-index | Sticky precedence (no DOM scan) |
@@ -28,13 +29,14 @@ Safe DOM: `src/ui/render.ts`
 
 ### Constraints (Stage 3.5)
 
-- **Inclusive** `minDate` / `maxDate` (BS `NepaliDate`).
-- `disabledDates: NepaliDate[]` — exact matches.
-- `isDateDisabled?(date): boolean` — `true` means unavailable.
+- **Inclusive** `minDate` / `maxDate` (BS `NepaliDate`) — **copied** at construction.
+- `disabledDates: NepaliDate[]` — exact matches; **snapshotted** (new array + copied triples) at construction. Caller mutations afterward are ignored.
+- `isDateDisabled?(date): boolean` — `true` means unavailable; function **reference retained** and evaluated **dynamically** on every check.
 - Combined with OR (any rule disables).
 - Comparisons use civil Y-M-D order only (timezone-independent).
 - Malformed dates ignored (warn). `minDate > maxDate` → both bounds ignored (warn).
 - Unavailable days: `disabled` + `aria-disabled`; not mouse/keyboard selectable.
+- There is **no** runtime constraint-mutation API (`setMinDate`, etc.); use a dynamic predicate when availability must change after construct.
 
 ### Positioning strategy (Stage 3.4 / ISS-012)
 
@@ -124,10 +126,19 @@ No duplicate popup listeners across re-renders: teardown runs before each rebuil
 - Nested scroll containers are handled via capturing `scroll`, but visual subpixel differences vary by browser.
 - No collision detection with unrelated overlays beyond the sticky z-index policy.
 
+### Dual AD/BS display (Stage 3.6)
+
+- BS grid remains the only selection model.
+- Each day button: primary BS day + secondary AD day (`aria-hidden`); full AD in `aria-label`.
+- Footer `.nepali-ad-equivalent` (`aria-live="polite"`) tracks the **focused** BS date.
+- Digits follow `language` (`en` / `np`); AD month abbreviations stay Latin short form.
+- Disabled BS dates still show AD text but stay non-selectable.
+- **Deferred:** full AD calendar grid, AD month navigation, calendar-mode toggle.
+
 ### Missing product features
 
-- Dual AD/BS calendar modes (Stage 3.6)
 - Visual redesign / theme tokens (Stage 3.7)
+- Optional AD grid / calendar-system toggle (post–3.6, if authorized)
 
 ### Visual (v1)
 

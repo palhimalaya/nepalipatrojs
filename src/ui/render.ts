@@ -2,12 +2,19 @@
  * Safe DOM construction for the datepicker popup (Phase 3 Stage 3.2 / ISS-014).
  * ARIA / grid semantics (Phase 3 Stage 3.3).
  * Constraints / Today / Clear (Phase 3 Stage 3.5).
+ * Dual AD equivalent display (Phase 3 Stage 3.6).
  * Dynamic labels use textContent / createTextNode only.
  */
 
 import { MAX_BS_YEAR, MIN_BS_YEAR } from '../core/calendar-data';
 import { NepaliDate } from '../core/types';
 import { localizeDigits, localizeMonth } from '../i18n/localization';
+import {
+  convertBsToAdOrNull,
+  formatAdAccessibleSuffix,
+  formatAdCellDay,
+  formatAdEquivalentLine,
+} from './ad-display';
 import { buildBsMonthGrid, CalendarCell } from './grid';
 
 export type DatePickerTheme = 'light' | 'dark';
@@ -31,6 +38,8 @@ export interface RenderCalendarOptions {
   minYear?: number;
   maxYear?: number;
 }
+
+export const AD_EQUIVALENT_SELECTOR = '.nepali-ad-equivalent';
 
 function el<K extends keyof HTMLElementTagNameMap>(
   tag: K,
@@ -71,11 +80,17 @@ function accessibleDateLabel(
   const monthName = localizeMonth(cell.month, language);
   const day = localizeDigits(cell.day, language);
   const year = localizeDigits(cell.year, language);
-  const base = `${day} ${monthName} ${year}`;
+  const bs = `${day} ${monthName} ${year}`;
+  const ad = formatAdAccessibleSuffix(
+    { year: cell.year, month: cell.month, day: cell.day },
+    language
+  );
+  let label = ad ? `${bs}, ${ad}` : bs;
   if (cell.disabled) {
-    return language === 'np' ? `${base} (अक्षम)` : `${base} (unavailable)`;
+    label =
+      language === 'np' ? `${label} (अक्षम)` : `${label} (unavailable)`;
   }
-  return base;
+  return label;
 }
 
 function monthYearLabel(
@@ -84,6 +99,38 @@ function monthYearLabel(
   language: DatePickerLanguage
 ): string {
   return `${localizeMonth(month, language)} ${localizeDigits(year, language)}`;
+}
+
+/**
+ * Update the AD equivalent footer to match a BS date (focused / selected).
+ * Used for in-month keyboard moves without a full re-render.
+ */
+export function setAdEquivalentFooter(
+  root: HTMLElement,
+  bs: NepaliDate,
+  language: DatePickerLanguage
+): void {
+  const footer = root.querySelector(AD_EQUIVALENT_SELECTOR);
+  if (!footer) return;
+  const text = formatAdEquivalentLine(bs, language);
+  footer.textContent = '';
+  if (text) {
+    footer.appendChild(document.createTextNode(text));
+  }
+}
+
+function renderAdEquivalentFooter(
+  bs: NepaliDate,
+  language: DatePickerLanguage
+): HTMLDivElement {
+  const footer = el('div', 'nepali-ad-equivalent');
+  footer.setAttribute('aria-live', 'polite');
+  footer.setAttribute('aria-atomic', 'true');
+  const text = formatAdEquivalentLine(bs, language);
+  if (text) {
+    footer.appendChild(document.createTextNode(text));
+  }
+  return footer;
 }
 
 function renderDayCell(
@@ -102,17 +149,16 @@ function renderDayCell(
   if (cell.disabled) {
     classes.push('nepali-disabled');
   }
-  const isToday = sameDate(
-    { year: cell.year, month: cell.month, day: cell.day },
-    today
-  );
+  const cellDate = {
+    year: cell.year,
+    month: cell.month,
+    day: cell.day,
+  };
+  const isToday = sameDate(cellDate, today);
   if (isToday) {
     classes.push('nepali-today');
   }
-  const isFocused = sameDate(
-    { year: cell.year, month: cell.month, day: cell.day },
-    focused
-  );
+  const isFocused = sameDate(cellDate, focused);
 
   const gridcell = el('div', 'nepali-gridcell');
   gridcell.setAttribute('role', 'gridcell');
@@ -140,9 +186,26 @@ function renderDayCell(
     day.setAttribute('aria-disabled', 'true');
   }
   day.tabIndex = isFocused && !cell.disabled ? 0 : -1;
-  day.appendChild(
+
+  const bsNum = el('span', 'nepali-day-bs');
+  bsNum.appendChild(
     document.createTextNode(localizeDigits(cell.day, language))
   );
+  day.appendChild(bsNum);
+
+  const ad = convertBsToAdOrNull(cellDate);
+  if (ad) {
+    const adNum = el('span', 'nepali-day-ad');
+    adNum.setAttribute('aria-hidden', 'true');
+    adNum.appendChild(
+      document.createTextNode(formatAdCellDay(ad, language))
+    );
+    day.appendChild(adNum);
+    day.setAttribute(
+      'data-ad',
+      `${ad.year}-${ad.month}-${ad.day}`
+    );
+  }
 
   gridcell.appendChild(day);
   return gridcell;
@@ -297,8 +360,10 @@ export function buildCalendarElement(
     body.appendChild(week);
   }
 
+  // Footer tracks focused date (keyboard “hover”); selected remains BS-primary in the grid.
+  const adFooter = renderAdEquivalentFooter(focused, language);
   const actions = renderActions(language, todayDisabled);
 
-  root.append(header, live, weekdays, body, actions);
+  root.append(header, live, weekdays, body, adFooter, actions);
   return root;
 }

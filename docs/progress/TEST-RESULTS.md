@@ -422,6 +422,22 @@ Public ESM export keys unchanged vs Stage 2.0 inventory.
 
 ---
 
+## 2026-11-22 — Phase 3 Stage 3.6: Dual AD/BS display
+
+### Change
+
+BS remains the selection calendar. Each day shows a secondary AD day-of-month; footer shows full AD for the focused BS date (`convertBsToAd`). No AD grid / mode switch.
+
+### Commands
+
+```bash
+npx jest --runInBand --coverage=false   # PASS 299/299 ~29s
+npx tsc --noEmit                        # PASS
+npm run build                           # PASS
+```
+
+---
+
 ## 2026-11-22 — Phase 3 Stage 3.5: Today, constraints, disabled dates
 
 ### Change

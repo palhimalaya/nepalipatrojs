@@ -255,4 +255,52 @@ describe('Stage 3.5 constraints UI', () => {
     input.click();
     expect(document.querySelector('.nepali-datepicker')).toBeFalsy();
   });
+
+  it('disabledDates snapshot: mutating caller array after construct has no effect', () => {
+    input.value = '2080-01-15';
+    const disabledDates = [{ year: 2080, month: 1, day: 16 }];
+    const dp = open(input, { disabledDates });
+    disabledDates.push({ year: 2080, month: 1, day: 17 });
+    disabledDates[0].day = 18;
+    // Force re-render with same instance constraints
+    (document.querySelector('.nepali-next-btn') as HTMLButtonElement).click();
+    (document.querySelector('.nepali-prev-btn') as HTMLButtonElement).click();
+    const day16 = document.querySelector(
+      '.nepali-day[data-day="16"]:not(.nepali-other-month)'
+    ) as HTMLButtonElement;
+    const day17 = document.querySelector(
+      '.nepali-day[data-day="17"]:not(.nepali-other-month)'
+    ) as HTMLButtonElement;
+    const day18 = document.querySelector(
+      '.nepali-day[data-day="18"]:not(.nepali-other-month)'
+    ) as HTMLButtonElement;
+    expect(day16.disabled).toBe(true); // original snapshot entry
+    expect(day17.disabled).toBe(false); // push ignored
+    expect(day18.disabled).toBe(false); // in-place mutation ignored
+    dp.destroy();
+  });
+
+  it('isDateDisabled predicate is evaluated dynamically on re-render', () => {
+    input.value = '2080-01-15';
+    let blockedDay = 16;
+    const dp = open(input, {
+      isDateDisabled: (d) => d.year === 2080 && d.month === 1 && d.day === blockedDay,
+    });
+    let day16 = document.querySelector(
+      '.nepali-day[data-day="16"]:not(.nepali-other-month)'
+    ) as HTMLButtonElement;
+    expect(day16.disabled).toBe(true);
+    blockedDay = 17;
+    (document.querySelector('.nepali-next-btn') as HTMLButtonElement).click();
+    (document.querySelector('.nepali-prev-btn') as HTMLButtonElement).click();
+    day16 = document.querySelector(
+      '.nepali-day[data-day="16"]:not(.nepali-other-month)'
+    ) as HTMLButtonElement;
+    const day17 = document.querySelector(
+      '.nepali-day[data-day="17"]:not(.nepali-other-month)'
+    ) as HTMLButtonElement;
+    expect(day16.disabled).toBe(false);
+    expect(day17.disabled).toBe(true);
+    dp.destroy();
+  });
 });
