@@ -5,7 +5,8 @@ A JavaScript/TypeScript library for **Bikram Sambat (BS)** ↔ Gregorian (**AD**
 [![npm version](https://img.shields.io/npm/v/nepalipatrojs.svg)](https://www.npmjs.com/package/nepalipatrojs)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-**Package version (repo):** `2.0.0` · **Last published on npm:** `1.0.5` (publish requires separate release authorization)
+**Published on npm:** `2.0.0`
+
 
 ## Features
 

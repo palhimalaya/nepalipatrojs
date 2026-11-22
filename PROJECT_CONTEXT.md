@@ -6,7 +6,7 @@
 
 **NepaliPatroJS** is a TypeScript/JavaScript library for the **Bikram Sambat (BS)** Nepali civil calendar: conversion to/from Gregorian (**AD**), formatting/localization, and a browser datepicker.
 
-- npm: `nepalipatrojs` (published: **1.0.5**; repo prepared as **2.0.0**, publish not yet authorized)
+- npm: `nepalipatrojs` (published: **2.0.0**)
 - Repo: https://github.com/palhimalaya/nepalipatrojs
 - License: MIT (Copyright 2025 Himalaya Pal)
 - Target major version: **2.0**
@@ -96,9 +96,10 @@ npm run build
 - **Stages 4.1–4.4 CLOSED** (2026-11-22): docs; browser smoke; a11y keyboard/ARIA-DOM; mobile CSS + contrast
 - Desktop day **42×42**; mobile **44×44** / popup **344**; ISS-026/027 resolved
 - ISS-025 nested scroll: **resolved**
-- Phase 5 stages **5.1–5.6 implemented** (packaging/CI); ISS-008/009/010/028 resolved
-- Open: ISS-013 (SR speech); npm **2.0.0 publish not authorized**
-- **Next:** Await 5.2–5.6 close + separate publish auth. No React.
+- Phase 5 **CLOSED** with npm **2.0.0** publish; ISS-008/009/010/028 resolved
+- Open: ISS-013 (SR speech)
+- **Next:** Optional ISS-013; React deferred.
+
 
 ## Known limitations (v1 / current)
 
