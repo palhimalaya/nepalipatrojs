@@ -4,6 +4,116 @@ Never record a pass unless the command was executed successfully in this environ
 
 ---
 
+## 2026-11-22 — Stage 4.4 mobile sizing + contrast (CSS-only)
+
+### Commands
+
+```bash
+npm run build                 # PASS
+npx tsc --noEmit              # PASS
+npx jest --runInBand --coverage=false   # 312/312
+```
+
+### Browser re-measure (IDE Chromium, CDP Emulation 390×844 @ DPR 2)
+
+| Metric | Before (4.2) | After (4.4) |
+|--------|--------------|-------------|
+| Desktop day | 42×42 | **42×42** |
+| Mobile day | 38×38 | **44×44** |
+| Mobile popup | 292 | **344** (fits; right 377 / vw 390; no overflowX) |
+| Weekday font | 10px | **12px** |
+| AD font (mobile) | 9px | **11px** |
+| AD contrast light | ~2.26:1 | **~7.53:1** (current month) |
+| Selected contrast | ~3.05:1 | **~5.42:1** |
+
+---
+
+## 2026-11-22 — Stage 4.3 manual accessibility (no production fixes)
+
+| Item | Result |
+|------|--------|
+| Keyboard + focus (IDE Chromium) | PASS (open/Esc/arrows/select restore/destroy) |
+| ARIA/DOM | PASS (dialog/grid/live/disabled/today/selected attrs; EN+NP labels) |
+| NVDA / VoiceOver / Orca speech | **NOT TESTED** |
+| Contrast approx. | AD ~2.26:1 (ISS-026); selected ~3.05:1 (ISS-027) |
+| Report | [phase4-accessibility-results.md](../architecture/phase4-accessibility-results.md) |
+
+---
+
+## 2026-11-22 — Stage 4.2 real-browser smoke (no production fixes)
+
+| Item | Result |
+|------|--------|
+| Primary browser | Cursor IDE Chromium/Electron 150 |
+| Mobile viewport | CDP Emulation **390×844 @ DPR 2** (`matchMobileMq: true`) |
+| Day button desktop | **42×42** |
+| Day button mobile | **38×38** (shortfall vs 44) |
+| Popup mobile | **292px** wide; fits; no overflowX |
+| B1–B8 | Mostly PASS; nested scroll **FAIL** → ISS-025 |
+| Production tree | Unchanged |
+| Report | [phase4-browser-smoke-results.md](../architecture/phase4-browser-smoke-results.md) |
+
+---
+
+## 2026-11-22 — ISS-025 nested-scroll reposition
+
+### Checks
+
+| Check | Result |
+|-------|--------|
+| Jest full suite | **317/317 PASS** |
+| `tsc --noEmit` | **PASS** |
+| `npm run build` | **PASS** |
+| Architecture/boundary | **22/22 PASS** |
+| Unit/integration | `position.test.ts` + `positioning-integration.test.ts` ISS-025 cases |
+| Browser (IDE Chromium) | Nested `#nested-scroll` scroll → popup `style.top` changed (`55.0781` → `415.812`); ancestor detected; flip/clamp still via existing `computePopupPosition` |
+
+### Not claimed
+
+Physical device / Safari / Firefox; full B1–B8 re-suite beyond nested-scroll spot-check.
+
+---
+
+## 2026-11-22 — Stage 4.1 documentation sync (no production code)
+
+### Checks (non-mutating)
+
+```bash
+# Read-only verification of documented examples against existing dist ESM:
+node --input-type=module -e "import { convertAdToBs, convertBsToAd, getDaysInMonth, formatBSDate, NepaliPatro } from './dist/nepali-patro-js.esm.js'; …"
+```
+
+| Claim | Result |
+|-------|--------|
+| `convertAdToBs({2022,1,1})` | `{2078,9,17}` |
+| `convertAdToBs({2024,1,1})` | `{2080,9,16}` |
+| `getDaysInMonth(2078, 2)` | `31` |
+| `formatBS(…, {language:'np'})` | Nepali digits + names |
+| `formatBS(…, {language:'ne'})` | Names may change; **digits stay Latin** — unsupported |
+| Jest / `npm run build` | **Not run** (docs-only stage) |
+| `src/`, `package.json`, CI, CSS | **Unchanged** |
+
+---
+
+## 2026-11-22 — Phase 4 assessment (no production code)
+
+### Commands
+
+```bash
+npx jest --runInBand --coverage=false   # 310/310 (~28s)
+npm pack --dry-run                      # 87 files; styles export target absent
+```
+
+### Inspect-only findings
+
+- `dist/index.d.ts` present after prior build; `dist/only-styles.css` **missing** (ISS-009)
+- CI: `continue-on-error: true` on build + test (ISS-010)
+- Responsive tokens: desktop day 42px; mobile day 38px; weekday 10px; popup 328/292
+
+Full report: [phase4-hardening-assessment.md](../architecture/phase4-hardening-assessment.md)
+
+---
+
 ## 2026-11-21 — Phase 1 Step 1: Environment & baseline
 
 ### Environment

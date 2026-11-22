@@ -60,6 +60,12 @@ User-facing npm release notes will also live in the root `CHANGELOG` when 2.0 sh
 - **Phase 3 Stage 3.6:** Dual AD equivalent display (`ui/ad-display.ts`) — per-cell AD day + focused AD footer; BS remains authoritative for selection.
 - **Phase 3 Stage 3.7:** Datepicker CSS theme tokens (`--np-*`); light/dark via existing `theme` option; no new runtime theme API.
 - **Phase 3 CLOSED (2026-11-22):** Maintainer approved stages 3.1–3.7. Next recommended work is a Phase 4 quality-hardening **assessment** (not yet authorized); React and packaging remain deferred.
+- **Phase 4 assessment (2026-11-22):** Integration & quality hardening assessment published (`docs/architecture/phase4-hardening-assessment.md`). No production code. Recommends docs sync → browser smoke → AT → optional mobile CSS → Phase 5 packaging.
+- **Phase 4.1 (2026-11-22):** README / QUICK_START / API docs synchronized with Phase 3 datepicker + date-only APIs; ISS-016 provenance honesty; ISS-005 documented (`np` vs `ne`). No production code.
+- **Phase 4.2 (2026-11-22):** Real-browser smoke B1–B8; measured mobile day **38×38** and popup **292px**; ISS-025 nested scroll. No production fixes.
+- **Phase 4.3 (2026-11-22):** Manual accessibility — keyboard/ARIA-DOM PASS; NVDA/VO/Orca speech NOT TESTED; ISS-026/027 contrast filed; ISS-013 remains open. No production fixes.
+- **Phase 4.4 (2026-11-22):** Mobile day **44px**, popup **344px**, weekday **12px**, AD **11px**; ISS-026/027 contrast tokens; desktop **42px** preserved. CSS-only.
+- **ISS-025 (2026-11-22):** Datepicker repositions when scrollable ancestors scroll; listeners cleaned on close/destroy. No public API change. **Resolved** (maintainer close).
 
 ### Changed (process)
 

@@ -9,6 +9,7 @@ import {
   DEFAULT_POPUP_Z_INDEX,
   POPUP_GAP_PX,
   applyPopupPositionStyles,
+  collectScrollableAncestors,
   computePopupPosition,
   resolveZIndex,
 } from '../../ui/position';
@@ -133,6 +134,54 @@ describe('ISS-012 source: no full-DOM z-index scan', () => {
   it('position module has no document-wide element scan', () => {
     const src = readFileSync(join(__dirname, '../../ui/position.ts'), 'utf8');
     expect(src).not.toMatch(/querySelectorAll/);
-    expect(src).not.toMatch(/getComputedStyle/);
+    // getComputedStyle is used only for ancestor overflow checks (ISS-025), not a DOM-wide walk.
+  });
+});
+
+describe('collectScrollableAncestors (ISS-025)', () => {
+  it('returns ancestors with overflow auto/scroll/overlay', () => {
+    const outer = document.createElement('div');
+    const mid = document.createElement('div');
+    const inner = document.createElement('div');
+    const start = document.createElement('input');
+    outer.appendChild(mid);
+    mid.appendChild(inner);
+    inner.appendChild(start);
+    document.body.appendChild(outer);
+
+    const styles = new Map<Element, Partial<CSSStyleDeclaration>>([
+      [outer, { overflow: 'auto', overflowX: 'auto', overflowY: 'auto' }],
+      [mid, { overflow: 'visible', overflowX: 'visible', overflowY: 'visible' }],
+      [inner, { overflow: 'visible', overflowX: 'visible', overflowY: 'scroll' }],
+    ]);
+
+    const found = collectScrollableAncestors(start, (el) => {
+      const partial = styles.get(el) || {
+        overflow: 'visible',
+        overflowX: 'visible',
+        overflowY: 'visible',
+      };
+      return partial as CSSStyleDeclaration;
+    });
+
+    expect(found).toEqual([inner, outer]);
+    document.body.removeChild(outer);
+  });
+
+  it('does not include the start element itself', () => {
+    const scroller = document.createElement('div');
+    const start = document.createElement('input');
+    scroller.appendChild(start);
+    document.body.appendChild(scroller);
+    const found = collectScrollableAncestors(start, (el) =>
+      ({
+        overflow: el === scroller ? 'auto' : 'visible',
+        overflowX: el === scroller ? 'auto' : 'visible',
+        overflowY: el === scroller ? 'auto' : 'visible',
+      }) as CSSStyleDeclaration
+    );
+    expect(found).toEqual([scroller]);
+    expect(found).not.toContain(start);
+    document.body.removeChild(scroller);
   });
 });

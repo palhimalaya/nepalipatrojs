@@ -23,6 +23,7 @@ import {
 } from "./keyboard";
 import {
   applyPopupPositionStyles,
+  collectScrollableAncestors,
   computePopupPosition,
   readViewport,
   resolveZIndex,
@@ -68,6 +69,8 @@ export class NepaliDatePicker {
   private positionListenersAttached = false;
   private repositionScheduled = false;
   private repositionRaf: number | null = null;
+  /** Nested scroll containers listening for ISS-025 (cleared on detach). */
+  private scrollAncestors: Element[] = [];
 
   /** Tracked so destroy() can remove every listener (ISS-022 / Stage 3.3). */
   private readonly onInputClick = (e: MouseEvent): void => {
@@ -539,8 +542,13 @@ export class NepaliDatePicker {
     window.addEventListener("resize", this.onViewportChange, {
       passive: true,
     });
-    // Capture phase so nested scroll containers trigger reposition.
+    // Viewport / document scrolling (capture covers some document cases).
     window.addEventListener("scroll", this.onViewportChange, true);
+    // ISS-025: element scroll events do not reach window — listen on ancestors.
+    this.scrollAncestors = collectScrollableAncestors(this.inputElement);
+    for (const el of this.scrollAncestors) {
+      el.addEventListener("scroll", this.onViewportChange, { passive: true });
+    }
     this.positionListenersAttached = true;
   }
 
@@ -548,6 +556,10 @@ export class NepaliDatePicker {
     if (!this.positionListenersAttached) return;
     window.removeEventListener("resize", this.onViewportChange);
     window.removeEventListener("scroll", this.onViewportChange, true);
+    for (const el of this.scrollAncestors) {
+      el.removeEventListener("scroll", this.onViewportChange);
+    }
+    this.scrollAncestors = [];
     this.positionListenersAttached = false;
     this.repositionScheduled = false;
     if (this.repositionRaf !== null) {

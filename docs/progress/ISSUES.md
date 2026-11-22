@@ -44,10 +44,11 @@ Severity: `critical` | `high` | `medium` | `low`
 ## ISS-005 — Locale `ne` vs `np` inconsistency
 
 - **Severity:** high  
-- **Module:** types, formatter, README, QUICK_START  
-- **Status:** open  
-- **Description:** Runtime expects `np`; docs show `ne` for formatting.  
-- **Proposed:** Canonical `ne`, alias `np` (ADR-005).  
+- **Module:** types, formatter, README, QUICK_START, datepicker  
+- **Status:** open — **docs corrected 2026-11-22 (Stage 4.1)**; runtime still uses `'np'` only  
+- **Description:** Types and runtime treat locale as `'en' | 'np'`. Historical docs used `'ne'`. Passing `language: 'ne'` to `formatBS` does **not** enable Nepali digits (`useNepaliDigits` is `language === 'np'`); month/weekday names take the non-`en` branch, which is accidental and unsupported.  
+- **Docs (4.1):** README / QUICK_START / formatting API now document `'np'` and warn against `'ne'`.  
+- **Proposed code change (not authorized in 4.1):** Canonical BCP-47 `ne` with `np` alias (ADR-005).  
 
 ## ISS-006 — Format token replace corrupts month/weekday names
 
@@ -106,11 +107,12 @@ Severity: `critical` | `high` | `medium` | `low`
 
 - **Severity:** medium  
 - **Module:** UI  
-- **Status:** **partial / open** — Phase 3 closed; keep open until real assistive-technology testing  
-- **Description:** Phase 3 delivered keyboard/ARIA/focus/constraints/dual display/theme tokens under jsdom. Remaining: real AT verification; deferred full AD calendar grid / mode switch.  
-- **Done in Stage 3.3–3.7:** keyboard nav, ARIA, constraints, Today/Clear, AD equivalents, CSS theme tokens.  
-- **Phase 3 close-out note:** Passing Jest does not equal screen-reader certification.  
-- **Related:** [phase3-datepicker-assessment.md](../architecture/phase3-datepicker-assessment.md)  
+- **Status:** **partial / open** — Stage 4.3 keyboard + ARIA-DOM verified; **screen-reader speech still NOT TESTED**  
+- **Description:** Phase 3 delivered keyboard/ARIA under jsdom. Stage 4.3 (2026-11-22) confirmed keyboard/focus/ARIA scaffolding in Chromium-based IDE browser. NVDA / VoiceOver / Orca **speech** not verified. Contrast defects filed as ISS-026/027. Deferred: full AD grid / mode switch.  
+- **Done:** Keyboard nav, dialog/grid ARIA, live month, disabled/today/selected attributes, EN/NP labels (DOM).  
+- **Still required for stronger claim:** Human SR session (NVDA or VoiceOver recommended); contrast fixes; optional markup review for `aria-selected` placement.  
+- **Do not** claim WCAG conformance.  
+- **Related:** [phase4-accessibility-results.md](../architecture/phase4-accessibility-results.md)  
 
 ## ISS-024 — AD footer tracks focus, not mouse hover
 
@@ -120,6 +122,37 @@ Severity: `critical` | `high` | `medium` | `low`
 - **Clarification:** Footer syncs on keyboard focus moves, month navigation re-renders, Clear (focused unchanged), and is removed when Today/selection closes the popup. Mouse **hover** does not update the footer; mouse **click** on a day selects and closes.  
 - **Not a silent Stage 3.7 fix:** no functional change folded into visual work.  
 - **Verification:** `ad-footer-sync.test.ts`  
+- **Stage 4.2:** Confirmed in real browser — footer unchanged on `mouseover`.
+
+## ISS-025 — Nested scroll containers do not reposition the popup
+
+- **Severity:** medium  
+- **Module:** `ui/NepaliDatePicker.ts` positioning listeners / `ui/position.ts`  
+- **Status:** **resolved** (maintainer approved close, 2026-11-22)  
+- **Evidence (pre-fix):** Fixture nested `overflow:auto` scrolled while popup open; popup `top` unchanged.  
+- **Cause:** `window.addEventListener('scroll', …, true)` never sees element scroller events (they do not propagate to `window`).  
+- **Fix:** `collectScrollableAncestors()`; attach/detach passive `scroll` on those nodes while open (with existing window scroll/resize + rAF coalesce).  
+- **Verification:** Jest positioning regressions; IDE Chromium smoke on `smoke-phase42.html` nested scroller (`style.top` updated after ancestor scroll). Browser coverage limited (not full cross-browser positioning cert); accepted for this scoped issue.  
+- **Related:** [phase4-browser-smoke-results.md](../architecture/phase4-browser-smoke-results.md)
+
+## ISS-026 — Low contrast AD subtitle (light theme)
+
+- **Severity:** high (visual readability)  
+- **Module:** `ui/styles.css` (`.nepali-day-ad`)  
+- **Status:** **resolved** (Stage 4.4, 2026-11-22)  
+- **Fix:** Dedicated `--np-ad-text` (`#4a5568` light / `#cbd5e0` dark); `--np-ad-opacity: 1` (no opacity dimming for primary AD subtitles).  
+- **After measure (IDE Chromium):** current-month AD contrast ≈ **7.53:1** light / **10.98:1** dark (approx. sRGB).  
+- **Note:** Other-month AD still uses `--np-text-subtle` (intentionally quieter). Not a WCAG certification claim.  
+- **Related:** Stage 4.4; [phase4-accessibility-results.md](../architecture/phase4-accessibility-results.md)
+
+## ISS-027 — Selected day text contrast (light theme)
+
+- **Severity:** medium–high  
+- **Module:** `ui/styles.css` (`--np-selected-bg` / `--np-selected-text`)  
+- **Status:** **resolved** (Stage 4.4, 2026-11-22)  
+- **Fix:** `--np-selected-bg: #2b6cb0`; hover `#2c5282` (light + dark). Border via `--np-accent-strong` retained (not color-alone).  
+- **After measure:** white on selected ≈ **5.42:1** (light and dark).  
+- **Related:** Stage 4.4
 
 ## ISS-023 — Constraint option mutability semantics (Stage 3.5 clarification)
 
@@ -161,12 +194,19 @@ Severity: `critical` | `high` | `medium` | `low`
 ## ISS-016 — Calendar dataset provenance unknown
 
 - **Severity:** medium (documentation / trust)  
-- **Module:** `src/constants/calendar-data.ts`, docs  
-- **Status:** open — **investigated 2026-11-21, still unresolved**  
-- **Description:** No authoritative source citation in repo comments, README, or git history. `calendar-data.ts` introduced in commit `a6f54aa` (“add converters…”) with no upstream attribution.  
-- **Findings:** Structural integrity + SHA-256 pin added. Some public tables disagree by one day on certain New Years (e.g. merokalam 2078-01-01 = 2021-04-13 vs dataset+REF ⇒ 2021-04-14). Round-trips ≠ historical proof.  
-- **Proposed:** Keep “provenance unknown”; seek author/upstream table; do not replace dataset without ADR-003 approval.  
-- **Related:** ADR-003  
+- **Module:** `src/core/calendar-data.ts` (formerly under `constants/`), consumer docs  
+- **Status:** open — **still unresolved**; Stage 4.1 documented honesty in README / QUICK_START (2026-11-22)  
+- **Description:** No authoritative source citation in repo comments, README, or git history. Table introduced in commit `a6f54aa` (“add converters…”) with no upstream attribution.  
+- **Evidence available today:**
+  - Contiguous BS **2000–2099** month lengths; year totals match sum of months
+  - SHA-256 pin of serialized table (see core-engine docs)
+  - Golden AD↔BS fixtures + exhaustive round-trips (**36525/36525**) prove **internal consistency**
+  - Date-only conversions identical under multiple timezones
+- **Not established:** Independent historical verification against a cited civil authority; authorship of the month table.  
+- **External disagreement sample (investigated 2026-11-21):** e.g. merokalam lists 2078-01-01 BS = 2021-04-13 AD while dataset+REF imply 2021-04-14 — treat as a risk signal, not a verdict on which source is “correct.”  
+- **Consumer messaging (Stage 4.1):** Explicit “provenance unknown”; round-trips ≠ historical proof; do not market as an authoritative almanac.  
+- **Proposed next (not 4.1):** Seek author/upstream table; design a validation process against named references; **do not replace dataset** without ADR-003 approval.  
+- **Related:** ADR-003; [phase4-hardening-assessment.md](../architecture/phase4-hardening-assessment.md)  
 
 ## ISS-019 — `daysBetweenBS` incorrect day count (BS → AD broken for many dates)
 

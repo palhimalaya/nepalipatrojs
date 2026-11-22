@@ -158,10 +158,13 @@ destroy(): void
 
 | Option | Type | Code default | Docs discrepancy |
 |--------|------|--------------|------------------|
-| `format` | string | `'YYYY-MM-DD'` | QUICK_START table says `'MMMM D, YYYY'` |
+| `format` | string | `'YYYY-MM-DD'` | OK (Stage 4.1 docs sync) |
 | `theme` | `'light'\|'dark'` | `'light'` | OK |
-| `language` | `'en'\|'np'` | `'en'` | Docs sometimes `'ne'` |
-| `zIndex` | number | computed | OK |
+| `language` | `'en'\|'np'` | `'en'` | Docs warn against `'ne'` (ISS-005) |
+| `zIndex` | number | `999999` default sticky | OK |
+| `minDate` / `maxDate` | `NepaliDate` | — | Inclusive; copied (Stage 3.5) |
+| `disabledDates` | `NepaliDate[]` | — | Snapshotted (Stage 3.5) |
+| `isDateDisabled` | `(d) => boolean` | — | Dynamic (Stage 3.5) |
 
 Observable behavior (contractual for Stage 2.1):
 

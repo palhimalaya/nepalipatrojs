@@ -15,8 +15,9 @@
   --np-border: #e2e8f0;
   --np-accent: #3182ce;
   --np-accent-strong: #2b6cb0;
-  --np-selected-bg: #4299e1;
-  --np-selected-bg-hover: #3182ce;
+  /* Stage 4.4 / ISS-027: darker selected fill for ≥4.5:1 with white text */
+  --np-selected-bg: #2b6cb0;
+  --np-selected-bg-hover: #2c5282;
   --np-selected-text: #ffffff;
   --np-today-bg: #e6fffa;
   --np-today-bg-hover: #b2f5ea;
@@ -33,12 +34,14 @@
   --np-font: "Segoe UI", "Helvetica Neue", "Noto Sans", sans-serif;
   --np-font-size: 14px;
   --np-font-size-sm: 12px;
-  --np-font-size-xs: 10px;
+  --np-font-size-xs: 11px;
   --np-font-size-lg: 17px;
   --np-day-size: 42px;
   --np-popup-width: 328px;
   --np-shadow: 0 12px 28px rgba(15, 23, 42, 0.12), 0 2px 6px rgba(15, 23, 42, 0.06);
-  --np-ad-opacity: 0.62;
+  /* Stage 4.4 / ISS-026: dedicated AD color; avoid opacity as the contrast lever */
+  --np-ad-text: #4a5568;
+  --np-ad-opacity: 1;
 
   box-sizing: border-box;
   background: var(--np-surface);
@@ -70,15 +73,16 @@
   --np-border: #4a5568;
   --np-accent: #63b3ed;
   --np-accent-strong: #90cdf4;
-  --np-selected-bg: #3182ce;
-  --np-selected-bg-hover: #2b6cb0;
+  --np-selected-bg: #2b6cb0;
+  --np-selected-bg-hover: #2c5282;
   --np-selected-text: #ffffff;
   --np-today-bg: #234e52;
   --np-today-bg-hover: #285e61;
   --np-today-text: #81e6d9;
   --np-focus-ring: #90cdf4;
   --np-shadow: 0 14px 32px rgba(0, 0, 0, 0.45);
-  --np-ad-opacity: 0.72;
+  --np-ad-text: #cbd5e0;
+  --np-ad-opacity: 1;
 }
 
 /* Header */
@@ -169,7 +173,7 @@
 .nepali-weekday {
   padding: var(--np-space-2) var(--np-space-1);
   text-align: center;
-  font-size: var(--np-font-size-xs);
+  font-size: var(--np-font-size-sm);
   font-weight: 650;
   color: var(--np-text-muted);
   text-transform: uppercase;
@@ -241,7 +245,7 @@
   font-size: var(--np-font-size-xs);
   font-weight: 500;
   opacity: var(--np-ad-opacity);
-  color: var(--np-text-muted);
+  color: var(--np-ad-text);
 }
 
 .nepali-day:focus {
@@ -270,6 +274,7 @@
 
 .nepali-other-month .nepali-day-ad {
   color: var(--np-text-subtle);
+  opacity: 0.9;
 }
 
 .nepali-other-month:hover {
@@ -287,7 +292,7 @@
 
 .nepali-today .nepali-day-ad {
   color: var(--np-today-text);
-  opacity: 0.85;
+  opacity: 1;
 }
 
 .nepali-today:hover {
@@ -304,7 +309,7 @@
 }
 
 .nepali-selected .nepali-day-ad {
-  opacity: 0.92;
+  opacity: 1;
   color: var(--np-selected-text);
 }
 
@@ -399,25 +404,31 @@
   cursor: not-allowed;
 }
 
-/* Responsive */
+/*
+ * Narrow screens (Stage 4.4):
+ * 7×44px days + 6×2px gaps = 320px grid → needs popup ≥ 344px with 12px padding.
+ * 292px cannot host 44px hit targets without overflow; width raised deliberately.
+ */
 @media (max-width: 480px) {
   .nepali-datepicker {
-    --np-popup-width: 292px;
+    --np-popup-width: 344px;
     --np-space-4: 12px;
-    --np-day-size: 38px;
+    --np-day-size: 44px;
+    --np-font-size-xs: 11px;
     padding: var(--np-space-4);
+    max-width: calc(100vw - 16px);
   }
 
   .nepali-day-bs {
-    font-size: 13px;
+    font-size: 14px;
   }
 
   .nepali-day-ad {
-    font-size: 9px;
+    font-size: 11px;
   }
 
   .nepali-weekday {
     padding: var(--np-space-2) 2px;
-    font-size: 10px;
+    font-size: var(--np-font-size-sm);
   }
 }

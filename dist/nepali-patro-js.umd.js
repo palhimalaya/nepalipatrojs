@@ -1139,6 +1139,32 @@
         popup.style.top = `${position.top}px`;
         popup.style.left = `${position.left}px`;
     }
+    const SCROLLABLE_OVERFLOW = /^(auto|scroll|overlay)$/i;
+    function overflowCanScroll(value) {
+        return SCROLLABLE_OVERFLOW.test(value.trim());
+    }
+    /**
+     * Walk ancestors of `start` and return elements that may scroll
+     * (`overflow` / `overflow-x` / `overflow-y` is auto|scroll|overlay).
+     *
+     * Element `scroll` events do not reach `window`, so callers must attach
+     * listeners to these nodes directly (ISS-025). Does not include `start`
+     * itself. Viewport scrolling remains the caller's `window` listener.
+     */
+    function collectScrollableAncestors(start, getStyles = (el) => getComputedStyle(el)) {
+        const found = [];
+        let current = start.parentElement;
+        while (current) {
+            const style = getStyles(current);
+            if (overflowCanScroll(style.overflow) ||
+                overflowCanScroll(style.overflowX) ||
+                overflowCanScroll(style.overflowY)) {
+                found.push(current);
+            }
+            current = current.parentElement;
+        }
+        return found;
+    }
 
     /**
      * Gregorian (AD) equivalent display helpers (Phase 3 Stage 3.6).
@@ -1612,6 +1638,8 @@
             this.positionListenersAttached = false;
             this.repositionScheduled = false;
             this.repositionRaf = null;
+            /** Nested scroll containers listening for ISS-025 (cleared on detach). */
+            this.scrollAncestors = [];
             /** Tracked so destroy() can remove every listener (ISS-022 / Stage 3.3). */
             this.onInputClick = (e) => {
                 e.stopPropagation();
@@ -1988,8 +2016,13 @@
             window.addEventListener("resize", this.onViewportChange, {
                 passive: true,
             });
-            // Capture phase so nested scroll containers trigger reposition.
+            // Viewport / document scrolling (capture covers some document cases).
             window.addEventListener("scroll", this.onViewportChange, true);
+            // ISS-025: element scroll events do not reach window — listen on ancestors.
+            this.scrollAncestors = collectScrollableAncestors(this.inputElement);
+            for (const el of this.scrollAncestors) {
+                el.addEventListener("scroll", this.onViewportChange, { passive: true });
+            }
             this.positionListenersAttached = true;
         }
         detachPositionListeners() {
@@ -1997,6 +2030,10 @@
                 return;
             window.removeEventListener("resize", this.onViewportChange);
             window.removeEventListener("scroll", this.onViewportChange, true);
+            for (const el of this.scrollAncestors) {
+                el.removeEventListener("scroll", this.onViewportChange);
+            }
+            this.scrollAncestors = [];
             this.positionListenersAttached = false;
             this.repositionScheduled = false;
             if (this.repositionRaf !== null) {

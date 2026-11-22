@@ -1,6 +1,6 @@
 # Master plan — NepaliPatroJS 2.0
 
-Overall status: **IN PROGRESS** (Phases 0–3 CLOSED; Phase 4 assessment recommended, not authorized)
+Overall status: **IN PROGRESS** (Phases 0–3 CLOSED; Phase 4 **assessment COMPLETED** — impl not authorized)
 
 ## Phase overview
 
@@ -10,11 +10,11 @@ Overall status: **IN PROGRESS** (Phases 0–3 CLOSED; Phase 4 assessment recomme
 | 1 | Core correctness | **COMPLETED** / CLOSED |
 | 2 | Architecture / module boundaries | **COMPLETED** / CLOSED |
 | 3 | Datepicker redesign | **COMPLETED** / CLOSED (2026-11-22) |
-| 4 | Integration & quality hardening (assessment first) | **NOT AUTHORIZED** |
-| 5 | Build, packaging, CI | NOT STARTED (deferred until Phase 4 assessment) |
+| 4 | Integration & quality hardening | **Assessment DONE** — impl stages await auth |
+| 5 | Build, packaging, CI | NOT STARTED (after 4.x evidence / maintainer call) |
 | 6 | Documentation site & playground | NOT STARTED |
 | 7 | Final verification | NOT STARTED |
-| — | Framework integration (React) | Deferred — was prior “Phase 4”; revisit after hardening assessment |
+| — | Framework integration (React) | Deferred — revisit after hardening |
 
 ---
 
@@ -82,9 +82,15 @@ Overall status: **IN PROGRESS** (Phases 0–3 CLOSED; Phase 4 assessment recomme
 23. ~~Phase 3 Stage 3.6 Dual AD/BS display~~ **DONE 2026-11-22**
 24. ~~Phase 3 Stage 3.7 Visual redesign / theme tokens~~ **DONE 2026-11-22**
 25. ~~Phase 3 close-out~~ **CLOSED 2026-11-22** (maintainer approved)
-26. Phase 4 — Integration & quality hardening **assessment** ← **await authorization**
+26. ~~Phase 4 assessment~~ **DONE 2026-11-22** → [phase4-hardening-assessment.md](../architecture/phase4-hardening-assessment.md)
+27. ~~Phase 4.1 docs sync + ISS-016 honesty~~ **DONE 2026-11-22**
+28. ~~Phase 4.2 browser smoke B1–B8~~ **DONE 2026-11-22** → [phase4-browser-smoke-results.md](../architecture/phase4-browser-smoke-results.md)
+29. ~~Phase 4.3 manual accessibility~~ **DONE 2026-11-22** → [phase4-accessibility-results.md](../architecture/phase4-accessibility-results.md)
+30. ~~Phase 4.4 mobile sizing + ISS-026/027 contrast~~ **DONE / CLOSED 2026-11-22**
+31. ~~ISS-025 nested-scroll positioning~~ **RESOLVED 2026-11-22**
+32. Phase 5 packaging/CI assessment ← **recommended next**; not authorized
 
-**Maintainer locks:** packaging changes → after Phase 4 assessment / Phase 5; no `nepalipatrojs/core` deep export for now; no React without separate auth.
+**Maintainer locks:** packaging changes → Phase 5; no `nepalipatrojs/core` deep export; no React / no CSS sizing without separate auth.
 
 ---
 
@@ -214,46 +220,49 @@ Overall status: **IN PROGRESS** (Phases 0–3 CLOSED; Phase 4 assessment recomme
 
 ## Phase 4 — Integration and quality hardening
 
-**Status:** **NOT AUTHORIZED** (assessment recommended by maintainer 2026-11-22)  
+**Status:** **Assessment COMPLETED** (2026-11-22) — implementation stages **not authorized**  
 **Depends on:** Phase 3 CLOSED  
-**Objective:** Assess quality gaps after the datepicker redesign and choose the next implementation priority. **Assessment only until separately authorized.**
+**Doc:** [phase4-hardening-assessment.md](../architecture/phase4-hardening-assessment.md)  
+**Objective:** Close release-readiness gaps (browser evidence, AT, docs, then packaging) without React or feature creep.
 
-### Recommended assessment scope (no implementation yet)
+### Assessment deliverables
 
-1. Real-browser testing strategy (keyboard, positioning, responsive layout, themes)
-2. Accessibility verification plan with actual assistive technology
-3. Public API and documentation consistency after the redesign
-4. Calendar dataset provenance and accuracy risks (ISS-016)
-5. Build artifacts and package compatibility — **inspect only; do not change packaging yet**
+- [x] Prioritized report + risk register
+- [x] Real-browser strategy + test matrix (B1–B8)
+- [x] AT plan (A1–A4)
+- [x] API/docs consistency gaps
+- [x] ISS-016 provenance risks
+- [x] Package/CI inspection (no code changes)
+- [x] Five responsive/hit-target checks documented
+- [x] Recommended implementation sequence 4.1 → 5.x
 
-### Responsive / hit-target checks (added 2026-11-22)
+### Implementation stages
 
-Maintainer reviewed screenshots + CSS token comparison. **No CSS follow-up authorized yet** — desktop `--np-day-size: 42px` is acceptable; gaps are mainly mobile and localization density. Fold into browser/responsive assessment:
+- [x] **4.1** Consumer docs sync (README/QUICK_START) + ISS-016 honesty — docs only (**DONE 2026-11-22**)
+- [x] **4.2** Browser smoke B1–B8 + responsive measures (**DONE 2026-11-22**)
+- [x] **4.3** Manual accessibility — keyboard/ARIA-DOM; SR speech NOT TESTED (**DONE 2026-11-22**)
+- [x] **4.4** Mobile sizing + ISS-026/027 contrast (**DONE 2026-11-22**) — desktop 42 keep; mobile 44; popup 344; AD/selected contrast fixed
+- [x] ISS-025 nested scroll reposition (**RESOLVED 2026-11-22**)
+- [ ] Human SR session (NVDA/VoiceOver) before accessibility release claims (ISS-013)
+- [ ] Hand off packaging fixes → **Phase 5** (ISS-008/009/010)
 
-- [ ] Verify **actual clickable** day-cell dimensions (hit area), not CSS box alone
-- [ ] Evaluate **44 × 44px** mobile touch targets (current mobile token: `38px`)
-- [ ] Weekday-label readability EN + NE (current `--np-font-size-xs: 10px`; consider ~12px)
-- [ ] Nepali numerals + dual BS/AD labels at narrow widths (density / clipping)
-- [ ] Popup fit on small screens — no horizontal overflow (mobile `--np-popup-width: 292px`)
+### Responsive / hit-target (4.2 → 4.4)
 
-After assessment findings: decide whether mobile sizing belongs in Phase 4 hardening or a separate small UI task.
-
-### Outcomes expected from the assessment
-
-- Priority recommendation among: browser testing, API/docs stabilization, packaging/distribution, React, or other
-- Explicit list of what remains deferred (React, `ui/` rename, AD grid, packaging code changes, optional mobile sizing CSS)
+| Check | 4.2 | 4.4 |
+|-------|-----|-----|
+| Desktop day | 42×42 | **42×42** (unchanged) |
+| Mobile day | 38×38 | **44×44** |
+| Weekday | 10px | **12px** |
+| AD subtitle | 9px mobile | **11px** |
+| Mobile popup | 292 | **344** (required for 44px grid; fits 390; `max-width: calc(100vw - 16px)`) |
 
 ### Explicit non-goals until authorized
 
-- No React integration
-- No packaging / export / CI code changes
-- No new datepicker interaction model
-- No dataset replacement
-- **No CSS sizing follow-up** until assessment review decides
+- No React; no packaging/CI code changes; no dataset replacement; no AD grid; no `ui/` rename; no CSS until 4.4 auth
 
 ### Deferred: React integration
 
-Previously labeled “Phase 4 — React.” Revisit only after Phase 4 hardening assessment chooses priorities. Core must remain React-free when that work starts.
+Revisit only after vanilla package + public API are stable. Core must remain React-free.
 
 ---
 

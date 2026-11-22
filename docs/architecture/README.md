@@ -11,6 +11,9 @@
 | [core-engine.md](core-engine.md) | Phase 0–2 | Conversion, validation, date-only model, helper split |
 | [datepicker-architecture.md](datepicker-architecture.md) | Phase 0 | Modular UI plan (high level) |
 | [phase3-datepicker-assessment.md](phase3-datepicker-assessment.md) | Phase 3.0 | Behavior inventory, contract, UX + module spec |
+| [phase4-hardening-assessment.md](phase4-hardening-assessment.md) | Phase 4 | Integration & quality hardening assessment (no code) |
+| [phase4-browser-smoke-results.md](phase4-browser-smoke-results.md) | Phase 4.2 | Real-browser smoke B1–B8 + geometry measurements |
+| [phase4-accessibility-results.md](phase4-accessibility-results.md) | Phase 4.3 | Manual a11y — keyboard/ARIA; SR speech gaps |
 | [localization.md](localization.md) | Phase 0 | Locales, digits, formatting |
 | [packaging.md](packaging.md) | Phase 0 | Build, exports, types, CI |
 

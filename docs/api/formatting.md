@@ -1,15 +1,34 @@
-# API — Formatting (draft)
+# API — Formatting
 
-## v1
+## Public surface
 
 ```ts
-NepaliPatro.formatBS(date, format = 'YYYY-MM-DD', options?: { language?: 'en' | 'np' })
+NepaliPatro.formatBS(date, format = 'YYYY-MM-DD', options?: NepaliPatroOptions): string
+formatBSDate(date, format?, options?)  // named export — same implementation
 NepaliPatro.toNepaliDigits(num)
 NepaliPatro.nepaliDigitsToEnglish(text)
 ```
 
-**Known issues:** docs show `language: 'ne'`; runtime uses `'np'`. Token replace bug ISS-006.
+`NepaliPatroOptions`:
 
-## Planned v2
+```ts
+{ language?: 'en' | 'np' }
+```
 
-Canonical `language: 'en' | 'ne'` with `np` alias; safe token formatter.
+## Locale (ISS-005)
+
+| Code | Supported? | Behavior |
+|------|------------|----------|
+| `en` | Yes (default) | English month/weekday names; Western digits |
+| `np` | Yes | Nepali (Devanagari) names + Nepali digits |
+| `ne` | **No** (do not use) | Not a documented synonym; may partially change names without Nepali digits |
+
+Future work may canonicalize BCP-47 `ne` with `np` as alias — **not implemented**.
+
+## Tokens
+
+`YYYY` `YY` `MMMM` `MMM` `MM` `M` `dddd` `ddd` `DD` `D` `d`, plus `[literal]` escapes.
+
+Weekday tokens use date-only `getBsWeekdayIndex` (not `Date.getDay()`).
+
+ISS-006 (token corruption of month/weekday names) is **resolved**.

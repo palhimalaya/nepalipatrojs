@@ -91,17 +91,23 @@ npm run build
 - Deferred: full AD grid / mode switch; `ui/` rename; real-browser / AT certification
 - Carry-forward: ISS-013 (AT), ISS-016 (provenance), ISS-024 (footer = focus)
 - Locks: barrel-only entry; no packaging/React without auth
-- Sizing decision (2026-11-22): no CSS follow-up; mobile hit-target / Nepali density checks → Phase 4 assessment
-- **Next:** Await Phase 4 assessment prompt (assessment only; no CSS/packaging/React).
+- Sizing: desktop 42px kept; mobile/density → measured in Phase 4.2 before any CSS
+- **Phase 4 assessment COMPLETED:** [phase4-hardening-assessment.md](docs/architecture/phase4-hardening-assessment.md)
+- **Stages 4.1–4.4 CLOSED** (2026-11-22): docs; browser smoke; a11y keyboard/ARIA-DOM; mobile CSS + contrast
+- Desktop day **42×42**; mobile **44×44** / popup **344**; ISS-026/027 resolved
+- ISS-025 nested scroll: **resolved**
+- Open: ISS-013 (SR speech)
+- **Next:** Recommended Phase 5 packaging/CI **assessment** (not authorized). No React.
 
-## Known limitations (v1)
+## Known limitations (v1 / current)
 
 - Legacy `Date` APIs remain timezone-sensitive by design (prefer date-only APIs)
-- Dataset provenance unknown (ISS-016)
-- No generated `.d.ts` in `dist/` despite `package.json` `types` field
-- CSS export path `./styles` → missing `only-styles.css`
-- CI can “pass” with failed build/test (`continue-on-error: true`)
-- Datepicker: Jest-covered a11y/keyboard only — not AT-certified (ISS-013); no real-browser smoke yet
+- Dataset provenance **unknown** (ISS-016) — documented in README; round-trips ≠ historical proof
+- Locale code is `'np'` not `'ne'` (ISS-005 open for future alias)
+- `dist/index.d.ts` emits on build; gitignore / publish story still Phase 5 (ISS-008)
+- CSS export `./styles` → missing `only-styles.css` (ISS-009); use `./css`
+- CI can “pass” with failed build/test (`continue-on-error: true`) (ISS-010)
+- Datepicker: Jest a11y/keyboard only — not AT-certified (ISS-013); no real-browser smoke yet
 - AD footer tracks focus, not hover (ISS-024 accepted)
 - BS range ends at 2099
 - (ISS-003 resolved — AD→BS uses prefix tables)

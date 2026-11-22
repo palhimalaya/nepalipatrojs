@@ -155,3 +155,38 @@ export function applyPopupPositionStyles(
   popup.style.top = `${position.top}px`;
   popup.style.left = `${position.left}px`;
 }
+
+const SCROLLABLE_OVERFLOW = /^(auto|scroll|overlay)$/i;
+
+function overflowCanScroll(value: string): boolean {
+  return SCROLLABLE_OVERFLOW.test(value.trim());
+}
+
+/**
+ * Walk ancestors of `start` and return elements that may scroll
+ * (`overflow` / `overflow-x` / `overflow-y` is auto|scroll|overlay).
+ *
+ * Element `scroll` events do not reach `window`, so callers must attach
+ * listeners to these nodes directly (ISS-025). Does not include `start`
+ * itself. Viewport scrolling remains the caller's `window` listener.
+ */
+export function collectScrollableAncestors(
+  start: Element,
+  getStyles: (el: Element) => CSSStyleDeclaration = (el) =>
+    getComputedStyle(el)
+): Element[] {
+  const found: Element[] = [];
+  let current: Element | null = start.parentElement;
+  while (current) {
+    const style = getStyles(current);
+    if (
+      overflowCanScroll(style.overflow) ||
+      overflowCanScroll(style.overflowX) ||
+      overflowCanScroll(style.overflowY)
+    ) {
+      found.push(current);
+    }
+    current = current.parentElement;
+  }
+  return found;
+}

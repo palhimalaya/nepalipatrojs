@@ -85,8 +85,24 @@ describe('Stage 3.7 theme tokens', () => {
     expect(css).toContain('--np-focus-ring');
   });
 
-  it('documents narrow-screen token overrides', () => {
+  it('documents narrow-screen token overrides (Stage 4.4)', () => {
     expect(css).toMatch(/@media\s*\(max-width:\s*480px\)/);
-    expect(css).toContain('--np-popup-width: 292px');
+    expect(css).toContain('--np-day-size: 44px');
+    expect(css).toContain('--np-popup-width: 344px');
+    expect(css).toContain('max-width: calc(100vw - 16px)');
+  });
+
+  it('keeps desktop day size at 42px outside the mobile media query', () => {
+    const rootBlock = css.match(
+      /\.nepali-datepicker\s*\{([\s\S]*?)\n\}/
+    );
+    expect(rootBlock?.[1]).toContain('--np-day-size: 42px');
+    expect(rootBlock?.[1]).toContain('--np-popup-width: 328px');
+  });
+
+  it('defines AD text token and darkened selected fill (ISS-026/027)', () => {
+    expect(css).toContain('--np-ad-text');
+    expect(css).toMatch(/--np-selected-bg:\s*#2b6cb0/);
+    expect(css).toMatch(/\.nepali-day-ad\s*\{[\s\S]*color:\s*var\(--np-ad-text\)/);
   });
 });

@@ -247,6 +247,140 @@ describe('Stage 3.4 positioning integration', () => {
     ).toBe(true);
   });
 
+  it('ISS-025: repositions when a nested scroll ancestor scrolls', () => {
+    document.body.innerHTML =
+      '<div id="scroller" style="overflow:auto;height:120px"><div style="height:400px"><input id="dateInput" /></div></div>';
+    const scroller = document.getElementById('scroller') as HTMLElement;
+    const nestedInput = document.getElementById('dateInput') as HTMLInputElement;
+    const addSpy = jest.spyOn(scroller, 'addEventListener');
+    const removeSpy = jest.spyOn(scroller, 'removeEventListener');
+
+    const dp = new NepaliDatePicker(nestedInput, { format: 'YYYY-MM-DD' });
+    mockRect(nestedInput, {
+      top: 40,
+      left: 20,
+      bottom: 64,
+      right: 220,
+      width: 200,
+      height: 24,
+    });
+    nestedInput.click();
+    const popup = document.querySelector('.nepali-datepicker') as HTMLElement;
+    mockRect(popup, {
+      top: 0,
+      left: 0,
+      bottom: 360,
+      right: 320,
+      width: 320,
+      height: 360,
+    });
+
+    expect(addSpy.mock.calls.filter((c) => c[0] === 'scroll').length).toBe(1);
+
+    mockRect(nestedInput, {
+      top: 10,
+      left: 20,
+      bottom: 34,
+      right: 220,
+      width: 200,
+      height: 24,
+    });
+    scroller.dispatchEvent(new Event('scroll'));
+    expect(popup.style.top).toBe('38px');
+    expect(popup.style.left).toBe('20px');
+
+    // Repeated scrolls coalesce via rAF (mocked sync) and do not re-attach listeners.
+    scroller.dispatchEvent(new Event('scroll'));
+    scroller.dispatchEvent(new Event('scroll'));
+    expect(addSpy.mock.calls.filter((c) => c[0] === 'scroll').length).toBe(1);
+
+    document.body.click();
+    expect(removeSpy.mock.calls.filter((c) => c[0] === 'scroll').length).toBe(
+      1
+    );
+    dp.destroy();
+  });
+
+  it('ISS-025: destroy removes nested scroll listeners while open', () => {
+    document.body.innerHTML =
+      '<div id="scroller" style="overflow:scroll"><input id="dateInput" /></div>';
+    const scroller = document.getElementById('scroller') as HTMLElement;
+    const nestedInput = document.getElementById('dateInput') as HTMLInputElement;
+    const removeSpy = jest.spyOn(scroller, 'removeEventListener');
+    const dp = new NepaliDatePicker(nestedInput);
+    mockRect(nestedInput, {
+      top: 30,
+      left: 10,
+      bottom: 54,
+      right: 210,
+      width: 200,
+      height: 24,
+    });
+    nestedInput.click();
+    dp.destroy();
+    expect(removeSpy.mock.calls.some((c) => c[0] === 'scroll')).toBe(true);
+    expect(document.querySelector('.nepali-datepicker')).toBeFalsy();
+  });
+
+  it('ISS-025: nested scroll on one instance does not move another popup', () => {
+    document.body.innerHTML = `
+      <div id="scrollA" style="overflow:auto"><input id="a" /></div>
+      <div id="scrollB" style="overflow:auto"><input id="b" /></div>
+    `;
+    const a = document.getElementById('a') as HTMLInputElement;
+    const b = document.getElementById('b') as HTMLInputElement;
+    const scrollA = document.getElementById('scrollA') as HTMLElement;
+    const dpA = new NepaliDatePicker(a);
+    const dpB = new NepaliDatePicker(b);
+
+    mockRect(a, {
+      top: 20,
+      left: 10,
+      bottom: 40,
+      right: 110,
+      width: 100,
+      height: 20,
+    });
+    a.click();
+    const popup = document.querySelector('.nepali-datepicker') as HTMLElement;
+    mockRect(popup, {
+      top: 0,
+      left: 0,
+      bottom: 100,
+      right: 100,
+      width: 100,
+      height: 100,
+    });
+    window.dispatchEvent(new Event('resize'));
+    const topBefore = popup.style.top;
+
+    mockRect(b, {
+      top: 200,
+      left: 300,
+      bottom: 220,
+      right: 400,
+      width: 100,
+      height: 20,
+    });
+    // Scroll B's container while A's popup is open — should not use B's geometry.
+    document.getElementById('scrollB')!.dispatchEvent(new Event('scroll'));
+    expect(popup.style.top).toBe(topBefore);
+
+    mockRect(a, {
+      top: 5,
+      left: 10,
+      bottom: 25,
+      right: 110,
+      width: 100,
+      height: 20,
+    });
+    scrollA.dispatchEvent(new Event('scroll'));
+    expect(popup.style.top).toBe('29px');
+
+    dpA.destroy();
+    dpB.destroy();
+  });
+
   it('multiple instances position against their own inputs', () => {
     document.body.innerHTML = '<input id="a" /><input id="b" />';
     const a = document.getElementById('a') as HTMLInputElement;

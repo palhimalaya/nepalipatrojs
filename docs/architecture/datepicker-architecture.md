@@ -124,7 +124,7 @@ No duplicate popup listeners across re-renders: teardown runs before each rebuil
 
 - jsdom / mocked-geometry tests ≠ real-browser layout certification.
 - Body attachment may still interact poorly with exotic `transform` / `filter` containing blocks on ancestors (rare); consumers can raise `zIndex` for overlays.
-- Nested scroll containers are handled via capturing `scroll`, but visual subpixel differences vary by browser.
+- Window/`document` scroll + resize reposition while open. **ISS-025:** scrollable ancestors (`overflow` auto/scroll/overlay) also get passive `scroll` listeners while the popup is open; removed on close/destroy. Element scroll does not reach `window`, so ancestor attachment is required.
 - No collision detection with unrelated overlays beyond the sticky z-index policy.
 
 ### Dual AD/BS display (Stage 3.6)
@@ -136,12 +136,13 @@ No duplicate popup listeners across re-renders: teardown runs before each rebuil
 - Disabled BS dates still show AD text but stay non-selectable.
 - **Deferred:** full AD calendar grid, AD month navigation, calendar-mode toggle.
 
-### Theme tokens (Stage 3.7)
+### Theme tokens (Stage 3.7 + 4.4)
 
 - Defaults and dark overrides live on `.nepali-datepicker` / `.nepali-datepicker-dark`.
 - Consumer customization: set `--np-*` on the popup or an ancestor; keep `theme: "light"|"dark"`.
 - No new public JS theme API.
 - States use outline, inset bar (today), dashed border (disabled), and fill — not color alone.
+- **Stage 4.4:** desktop `--np-day-size: 42px` unchanged; mobile `@media (max-width: 480px)` uses **44px** days and **344px** popup (`max-width: calc(100vw - 16px)`). `--np-ad-text` + selected `#2b6cb0` address ISS-026/027.
 
 ### Missing product features
 

@@ -5,7 +5,7 @@
 | Concern | Implementation |
 |---------|----------------|
 | Locale option type | `'en' \| 'np'` in `NepaliPatroOptions` / picker options |
-| README / Quick Start | Often show `'ne'` for `formatBS` |
+| README / Quick Start | Stage 4.1 documents `'np'`; warns against `'ne'` (ISS-005 still open for code alias) |
 | Digits → Nepali | `NEPALI_DIGITS` in `i18n/digits.ts`; `toNepaliDigits` / `localizeDigits` |
 | Digits → English | `nepaliDigitsToEnglish` in `i18n/localization.ts` |
 | Month / weekday enums | `i18n/names.ts` |

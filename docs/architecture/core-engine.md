@@ -35,7 +35,7 @@ Documented: **2000-01-01 BS == 1943-04-14 AD**.
 | `formatBS` weekday | `getBsWeekdayIndex` | **Date-only** (no `Date.getDay`) |
 | `validateAdDate` | `daysInGregorianMonth` | **Date-only** (no `new Date(y,m,0)`) |
 | `daysBetweenAD` (removed) | was `getTime()/86400000` | Replaced by Gregorian day numbers |
-| Datepicker grid | `convertBSToAD().getDay()` | Uses legacy `Date` weekday; civil Y/M/D still correct |
+| Datepicker grid | `getBsWeekdayIndex` (Phase 3) | Date-only weekday; no `Date.getDay()` for grid |
 | Core converters | no ISO string parse | Objects / `[y,m,d]` only — avoids `YYYY-MM-DD` → UTC midnight shift |
 | Datepicker input | regex `getDateFormatPatterns` | Parses digit groups to Y/M/D integers (not `Date.parse`) |
 

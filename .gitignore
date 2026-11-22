@@ -38,3 +38,9 @@ lerna-debug.log*
 .env.test.local
 .env.production.local
 
+# Local browser-smoke scratch (profiles, captures, temp fixture)
+.smoke-chrome-profile-*/
+.smoke-firefox-profile/
+.smoke-evidence/
+smoke-phase42.html
+

@@ -14,7 +14,7 @@ picker.setZIndex(n)
 |--------|------|---------|-------|
 | `format` | `string` | `"YYYY-MM-DD"` | BS format for input value |
 | `theme` | `"light" \| "dark"` | `"light"` | CSS theme class |
-| `language` | `"en" \| "np"` | `"en"` | Digits / month labels |
+| `language` | `"en" \| "np"` | `"en"` | Digits / month labels / UI strings. **Not** `"ne"` (ISS-005) |
 | `zIndex` | `number` | `999999` | Sticky; see Stage 3.4 precedence |
 | `minDate` | `NepaliDate` | — | **Inclusive** minimum; **copied** at construction |
 | `maxDate` | `NepaliDate` | — | **Inclusive** maximum; **copied** at construction |
@@ -64,6 +64,15 @@ Consumers may override CSS variables on the popup root (or a parent that wraps t
 | `--np-font` / `--np-font-size*` | Typography |
 | `--np-day-size` / `--np-popup-width` | Sizing |
 | `--np-shadow` | Elevation |
-| `--np-disabled-opacity` / `--np-ad-opacity` | Disabled / AD subtitle |
+| `--np-disabled-opacity` | Disabled dimming |
+| `--np-ad-text` / `--np-ad-opacity` | AD subtitle color (Stage 4.4; prefer contrast via color, not opacity) |
 
-Dark theme reassigns the same tokens on `.nepali-datepicker-dark`.
+Dark theme reassigns the same tokens on `.nepali-datepicker-dark`. Light theme adds `.nepali-datepicker-light`; visual defaults live on `.nepali-datepicker`.
+
+### Keyboard / accessibility (summary)
+
+Implemented under jsdom: dialog + grid ARIA, roving tabindex, Escape closes with focus restore, arrow/Home/End/Page navigation, Enter/Space select, `:focus-visible` rings. **Not** WCAG- or screen-reader-certified (ISS-013). Real-browser / AT verification is Phase 4.2 / 4.3.
+
+### CSS import
+
+Use `import 'nepalipatrojs/css'` or the CDN `nepali-patro-js.css` path. Do not rely on `nepalipatrojs/styles` (ISS-009).
