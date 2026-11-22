@@ -1,9 +1,10 @@
 # Datepicker architecture
 
-## Current (v1 → Stage 3.1)
+## Current (v1 → Stage 3.2)
 
 Orchestrator: `src/ui/NepaliDatePicker.ts`  
-Pure modules: `src/ui/state.ts`, `src/ui/grid.ts`
+Pure modules: `src/ui/state.ts`, `src/ui/grid.ts`  
+Safe DOM: `src/ui/render.ts`
 
 **Full Phase 3.0 assessment:** [phase3-datepicker-assessment.md](phase3-datepicker-assessment.md).
 
@@ -12,15 +13,23 @@ Pure modules: `src/ui/state.ts`, `src/ui/grid.ts`
 | State | Pure `state.ts` (`view`, `selected`, `open`, `destroyed`, `today`) |
 | Grid model | Pure `grid.ts` → 42 `CalendarCell`s; `getDaysInMonth` + `getBsWeekdayIndex` |
 | Parsing | Still inline in orchestrator (regex + month-name parsers) |
-| Rendering | HTML strings via `innerHTML` (**Stage 3.2**) |
+| Rendering | Safe DOM via `render.ts` (`createElement` / text nodes) — **no `innerHTML`** |
 | Navigation | Prev/next + `<select>`; updates pure state then re-renders |
 | Positioning | Absolute under input; flip if near edges (**Stage 3.4**) |
 | Z-index | Walk ancestors + modal selectors + **`querySelectorAll('*')`** (**Stage 3.4**) |
 | Theme | CSS class `nepali-datepicker-light/dark` |
 | Locale | `en` / `np` digit and month localization |
 | Events | Sets `input.value`, dispatches `change` |
-| Cleanup | `destroy()` removes **input + document** listeners, closes popup, marks destroyed, drops registry |
+| Cleanup | `destroy()` removes input + document listeners; popup listeners removed in `teardownCalendarDom` |
 | Import | `core/` + `i18n/`; **no barrel**; **no `BS_CALENDAR_DATA`** |
+
+### Listener inventory (lifecycle)
+
+| Listener | Target | Removed |
+|----------|--------|---------|
+| `onInputClick` | input | `destroy()` |
+| `onDocumentClick` | `document` | `destroy()` |
+| prev/next/month/year/calendar click | popup DOM | `teardownCalendarDom()` on close/re-render/destroy |
 
 ### Missing product features
 
@@ -29,7 +38,6 @@ Pure modules: `src/ui/state.ts`, `src/ui/grid.ts`
 - minDate / maxDate / disabledDates / `isDateDisabled`
 - Keyboard navigation, focus trap, ARIA
 - Escape to close (outside click exists)
-- Safe HTML escaping for dynamic content
 - Predictable z-index without full-DOM scan
 
 ### Visual (v1)

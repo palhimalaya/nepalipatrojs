@@ -85,12 +85,12 @@ npm run build
 
 **Phase 2 — COMPLETED** (architecture + ownership).
 
-**Phase 3 — 3.0 assessment + Stage 3.1 COMPLETED.**
+**Phase 3 — Stages 3.0–3.2 COMPLETED.**
 
-- Pure `ui/state.ts` + `ui/grid.ts`; ISS-022 destroy leak fixed
-- Still pending: innerHTML (3.2), a11y (3.3), z-index (3.4), constraints (3.5), dual AD (3.6), visual (3.7)
+- Pure `ui/state` + `ui/grid`; safe `ui/render` (ISS-014); ISS-022 destroy fixed
+- Still pending: a11y (3.3), z-index (3.4), constraints (3.5), dual AD (3.6), visual (3.7)
 - Locks: barrel-only entry; packaging → Phase 5; ISS-016 provenance open
-- **Next:** Stage 3.2 safe DOM rendering (await authorization).
+- **Next:** Stage 3.3 Escape / keyboard / focus / ARIA (await authorization).
 
 ## Known limitations (v1)
 

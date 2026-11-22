@@ -422,6 +422,22 @@ Public ESM export keys unchanged vs Stage 2.0 inventory.
 
 ---
 
+## 2026-11-22 — Phase 3 Stage 3.2: Safe DOM rendering (ISS-014)
+
+### Change
+
+`src/ui/render.ts` builds the popup with `createElement` / text nodes. No `innerHTML` in datepicker. Security tests mock malicious localization strings and assert no executable elements.
+
+### Commands
+
+```bash
+npx jest --runInBand --coverage=false   # PASS 220/220 ~29s
+npx tsc --noEmit                        # PASS
+npm run build                           # PASS
+```
+
+---
+
 ## 2026-11-22 — Phase 3 Stage 3.1: State/grid extraction + destroy fix
 
 ### Change

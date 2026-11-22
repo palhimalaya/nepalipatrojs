@@ -112,10 +112,11 @@ Severity: `critical` | `high` | `medium` | `low`
 ## ISS-014 — Unsafe / brittle HTML rendering
 
 - **Severity:** medium  
-- **Module:** datepicker `innerHTML` templates  
-- **Status:** open — Phase 3 implementation  
-- **Proposed:** DOM APIs + escaping (Phase 3).  
-- **Related:** ADR-004; assessment D3  
+- **Module:** datepicker rendering  
+- **Status:** **resolved** (Phase 3 Stage 3.2, 2026-11-22)  
+- **Description:** Calendar popup built via `innerHTML` string interpolation.  
+- **Fix:** `src/ui/render.ts` builds the tree with `createElement` / `createTextNode` / `textContent`; orchestrator attaches listeners only. Security regressions assert malicious-looking labels stay text.  
+- **Related:** ADR-004; Stage 3.2  
 
 ## ISS-022 — Datepicker `destroy()` leaves input click listener
 

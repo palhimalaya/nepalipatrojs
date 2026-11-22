@@ -806,6 +806,97 @@
     }
 
     /**
+     * Safe DOM construction for the datepicker popup (Phase 3 Stage 3.2 / ISS-014).
+     * Dynamic labels use textContent / createTextNode only (ISS-014).
+     */
+    function el(tag, className) {
+        const node = document.createElement(tag);
+        if (className) {
+            node.className = className;
+        }
+        return node;
+    }
+    /** Create an element whose only child content is a text node (never HTML). */
+    function textElement(tag, className, text) {
+        const node = el(tag, className);
+        node.appendChild(document.createTextNode(text));
+        return node;
+    }
+    function weekdayLabels(language) {
+        return language === 'np'
+            ? ['आ', 'सो', 'मं', 'बु', 'बि', 'शु', 'श']
+            : ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
+    }
+    function renderDayCell(cell, language) {
+        const classes = ['nepali-day'];
+        if (cell.kind !== 'current') {
+            classes.push('nepali-other-month');
+        }
+        if (cell.selected) {
+            classes.push('nepali-selected');
+        }
+        const day = textElement('div', classes.join(' '), localizeDigits(cell.day, language));
+        day.setAttribute('data-day', String(cell.day));
+        if (cell.kind === 'prev') {
+            day.setAttribute('data-other', 'prev');
+        }
+        else if (cell.kind === 'next') {
+            day.setAttribute('data-other', 'next');
+        }
+        return day;
+    }
+    /**
+     * Build the popup root `.nepali-datepicker` tree with createElement / textContent.
+     * Does not attach event listeners (orchestrator owns that).
+     */
+    function buildCalendarElement(options) {
+        const { theme, language, viewYear, viewMonth, selected, minYear = MIN_BS_YEAR, maxYear = MAX_BS_YEAR, } = options;
+        const root = el('div', `nepali-datepicker nepali-datepicker-${theme}`);
+        const header = el('div', 'nepali-datepicker-header');
+        const prevBtn = el('button', 'nepali-nav-btn nepali-prev-btn');
+        prevBtn.type = 'button';
+        prevBtn.appendChild(document.createTextNode('\u25C0')); // ◀
+        const nextBtn = el('button', 'nepali-nav-btn nepali-next-btn');
+        nextBtn.type = 'button';
+        nextBtn.appendChild(document.createTextNode('\u25B6')); // ▶
+        const headerContent = el('div', 'nepali-header-content');
+        const monthSelect = el('select', 'nepali-month-select');
+        for (let i = 0; i < 12; i++) {
+            const month1 = i + 1;
+            const opt = el('option');
+            opt.value = String(i);
+            opt.appendChild(document.createTextNode(localizeMonth(month1, language)));
+            if (month1 === viewMonth) {
+                opt.selected = true;
+            }
+            monthSelect.appendChild(opt);
+        }
+        const yearSelect = el('select', 'nepali-year-select');
+        for (let y = minYear; y <= maxYear; y++) {
+            const opt = el('option');
+            opt.value = String(y);
+            opt.appendChild(document.createTextNode(localizeDigits(y, language)));
+            if (y === viewYear) {
+                opt.selected = true;
+            }
+            yearSelect.appendChild(opt);
+        }
+        headerContent.append(monthSelect, yearSelect);
+        header.append(prevBtn, headerContent, nextBtn);
+        const weekdays = el('div', 'nepali-weekdays');
+        for (const label of weekdayLabels(language)) {
+            weekdays.appendChild(textElement('div', 'nepali-weekday', label));
+        }
+        const body = el('div', 'nepali-calendar-body');
+        const model = buildBsMonthGrid(viewYear, viewMonth, selected);
+        for (const cell of model.cells) {
+            body.appendChild(renderDayCell(cell, language));
+        }
+        root.append(header, weekdays, body);
+        return root;
+    }
+
+    /**
      * Pure datepicker state (Phase 3 Stage 3.1).
      * No DOM / browser APIs. Months are 1-based (BS domain).
      */
@@ -896,6 +987,26 @@
                     !this.inputElement.contains(target)) {
                     this.closeCalendar();
                 }
+            };
+            /** Popup listeners (removed when calendar DOM is torn down). */
+            this.onPrevMonthClick = (e) => {
+                e.stopPropagation();
+                this.previousBSMonth();
+            };
+            this.onNextMonthClick = (e) => {
+                e.stopPropagation();
+                this.nextBSMonth();
+            };
+            this.onMonthSelectChange = (e) => {
+                e.stopPropagation();
+                this.changeBSMonth(e);
+            };
+            this.onYearSelectChange = (e) => {
+                e.stopPropagation();
+                this.changeBSYear(e);
+            };
+            this.onCalendarClick = (e) => {
+                this.handleBSDateClick(e);
             };
             this.inputElement = inputElement;
             this.format = options.format || "YYYY-MM-DD";
@@ -1099,12 +1210,14 @@
             this.renderCalendar(this.state.view.year, this.state.view.month);
         }
         renderCalendar(bsYear, bsMonth1Based) {
-            if (this.floatingCalendar && this.floatingCalendar.parentNode) {
-                this.floatingCalendar.parentNode.removeChild(this.floatingCalendar);
-            }
-            const calendarDiv = document.createElement("div");
-            calendarDiv.className = `nepali-datepicker nepali-datepicker-${this.theme}`;
-            calendarDiv.innerHTML = this.generateCalendarHtml(bsYear, bsMonth1Based);
+            this.teardownCalendarDom();
+            const calendarDiv = buildCalendarElement({
+                theme: this.theme,
+                language: this.language,
+                viewYear: bsYear,
+                viewMonth: bsMonth1Based,
+                selected: this.state.selected,
+            });
             this.setupCalendarEvents(calendarDiv);
             const modalContainer = this.findModalContainer();
             const appendTarget = modalContainer || document.body;
@@ -1137,80 +1250,34 @@
             }
             return null;
         }
-        generateCalendarHtml(bsYear, bsMonth1Based) {
-            // Supported years via range constants (not raw dataset keys)
-            let yearOptions = "";
-            for (let y = MIN_BS_YEAR; y <= MAX_BS_YEAR; y++) {
-                yearOptions += `<option value="${y}"${y === bsYear ? " selected" : ""}>${localizeDigits(y, this.language)}</option>`;
-            }
-            let monthOptions = "";
-            for (let i = 0; i < 12; i++) {
-                const month1 = i + 1;
-                monthOptions += `<option value="${i}"${month1 === bsMonth1Based ? " selected" : ""}>${localizeMonth(month1, this.language)}</option>`;
-            }
-            const weekdays = this.language === "np"
-                ? ["आ", "सो", "मं", "बु", "बि", "शु", "श"]
-                : ["S", "M", "T", "W", "T", "F", "S"];
-            return `
-      <div class="nepali-datepicker-header">
-        <button type="button" class="nepali-nav-btn nepali-prev-btn">&#9664;</button>
-        <div class="nepali-header-content">
-          <select class="nepali-month-select">${monthOptions}</select>
-          <select class="nepali-year-select">${yearOptions}</select>
-        </div>
-        <button type="button" class="nepali-nav-btn nepali-next-btn">&#9654;</button>
-      </div>
-      <div class="nepali-weekdays">
-        ${weekdays.map(day => `<div class="nepali-weekday">${day}</div>`).join('')}
-      </div>
-      <div class="nepali-calendar-body">
-        ${this.generateBSDaysFullGrid(bsYear, bsMonth1Based)}
-      </div>
-    `;
-        }
-        /** Render day cells from pure grid model (DOM strings unchanged for Stage 3.1). */
-        generateBSDaysFullGrid(bsYear, bsMonth1Based) {
-            const model = buildBsMonthGrid(bsYear, bsMonth1Based, this.state.selected);
-            let daysHTML = "";
-            for (const cell of model.cells) {
-                let classes = "nepali-day";
-                if (cell.kind !== "current") {
-                    classes += " nepali-other-month";
-                }
-                if (cell.selected) {
-                    classes += " nepali-selected";
-                }
-                const otherAttr = cell.kind === "prev"
-                    ? ' data-other="prev"'
-                    : cell.kind === "next"
-                        ? ' data-other="next"'
-                        : "";
-                daysHTML += `<div class="${classes}" data-day="${cell.day}"${otherAttr}>${localizeDigits(cell.day, this.language)}</div>`;
-            }
-            return daysHTML;
-        }
         setupCalendarEvents(calendarDiv) {
             const prevButton = calendarDiv.querySelector(".nepali-prev-btn");
             const nextButton = calendarDiv.querySelector(".nepali-next-btn");
             const monthSelect = calendarDiv.querySelector(".nepali-month-select");
             const yearSelect = calendarDiv.querySelector(".nepali-year-select");
-            prevButton === null || prevButton === void 0 ? void 0 : prevButton.addEventListener("click", (e) => {
-                e.stopPropagation();
-                this.previousBSMonth();
-            });
-            nextButton === null || nextButton === void 0 ? void 0 : nextButton.addEventListener("click", (e) => {
-                e.stopPropagation();
-                this.nextBSMonth();
-            });
-            monthSelect === null || monthSelect === void 0 ? void 0 : monthSelect.addEventListener("change", (e) => {
-                e.stopPropagation();
-                this.changeBSMonth(e);
-            });
-            yearSelect === null || yearSelect === void 0 ? void 0 : yearSelect.addEventListener("change", (e) => {
-                e.stopPropagation();
-                this.changeBSYear(e);
-            });
-            calendarDiv.addEventListener("click", (e) => this.handleBSDateClick(e));
+            prevButton === null || prevButton === void 0 ? void 0 : prevButton.addEventListener("click", this.onPrevMonthClick);
+            nextButton === null || nextButton === void 0 ? void 0 : nextButton.addEventListener("click", this.onNextMonthClick);
+            monthSelect === null || monthSelect === void 0 ? void 0 : monthSelect.addEventListener("change", this.onMonthSelectChange);
+            yearSelect === null || yearSelect === void 0 ? void 0 : yearSelect.addEventListener("change", this.onYearSelectChange);
+            calendarDiv.addEventListener("click", this.onCalendarClick);
+        }
+        teardownCalendarDom() {
+            if (!this.floatingCalendar)
+                return;
+            const calendarDiv = this.floatingCalendar;
+            const prevButton = calendarDiv.querySelector(".nepali-prev-btn");
+            const nextButton = calendarDiv.querySelector(".nepali-next-btn");
+            const monthSelect = calendarDiv.querySelector(".nepali-month-select");
+            const yearSelect = calendarDiv.querySelector(".nepali-year-select");
+            prevButton === null || prevButton === void 0 ? void 0 : prevButton.removeEventListener("click", this.onPrevMonthClick);
+            nextButton === null || nextButton === void 0 ? void 0 : nextButton.removeEventListener("click", this.onNextMonthClick);
+            monthSelect === null || monthSelect === void 0 ? void 0 : monthSelect.removeEventListener("change", this.onMonthSelectChange);
+            yearSelect === null || yearSelect === void 0 ? void 0 : yearSelect.removeEventListener("change", this.onYearSelectChange);
+            calendarDiv.removeEventListener("click", this.onCalendarClick);
+            if (calendarDiv.parentNode) {
+                calendarDiv.parentNode.removeChild(calendarDiv);
+            }
+            this.floatingCalendar = null;
         }
         handleBSDateClick(event) {
             if (isDestroyed(this.state))
@@ -1309,10 +1376,7 @@
         }
         closeCalendar() {
             this.state = closePicker(this.state);
-            if (this.floatingCalendar && this.floatingCalendar.parentNode) {
-                this.floatingCalendar.parentNode.removeChild(this.floatingCalendar);
-                this.floatingCalendar = null;
-            }
+            this.teardownCalendarDom();
         }
         closeAllOtherCalendars() {
             NepaliDatePicker.instances.forEach(instance => {
