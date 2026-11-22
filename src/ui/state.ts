@@ -17,17 +17,21 @@ export interface DatePickerState {
   view: ViewMonth;
   /** Selected BS date (always set in v1 parity) */
   selected: NepaliDate;
+  /** Keyboard-focused BS date (distinct from selected) */
+  focused: NepaliDate;
   /** Civil "today" snapshot at init (BS) */
   today: NepaliDate;
 }
 
 export function createInitialState(today: NepaliDate): DatePickerState {
+  const snap = { year: today.year, month: today.month, day: today.day };
   return {
     open: false,
     destroyed: false,
     view: { year: today.year, month: today.month },
-    selected: { year: today.year, month: today.month, day: today.day },
-    today: { year: today.year, month: today.month, day: today.day },
+    selected: { ...snap },
+    focused: { ...snap },
+    today: { ...snap },
   };
 }
 
@@ -51,10 +55,23 @@ export function setSelected(
   date: NepaliDate
 ): DatePickerState {
   if (state.destroyed) return state;
+  const next = { year: date.year, month: date.month, day: date.day };
   return {
     ...state,
-    selected: { year: date.year, month: date.month, day: date.day },
+    selected: next,
+    focused: next,
     view: { year: date.year, month: date.month },
+  };
+}
+
+export function setFocused(
+  state: DatePickerState,
+  date: NepaliDate
+): DatePickerState {
+  if (state.destroyed) return state;
+  return {
+    ...state,
+    focused: { year: date.year, month: date.month, day: date.day },
   };
 }
 

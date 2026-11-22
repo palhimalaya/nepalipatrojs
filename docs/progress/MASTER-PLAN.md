@@ -75,7 +75,8 @@ Overall status: **IN PROGRESS** (Phase 0 CLOSED; Phase 1 IN PROGRESS — baselin
 17. ~~Phase 3 Step 3.0 datepicker assessment & redesign spec~~ **DONE 2026-11-22**
 18. ~~Phase 3 Stage 3.1 state/grid extract + destroy fix~~ **DONE 2026-11-22** (ISS-022)
 19. ~~Phase 3 Stage 3.2 safe DOM render (ISS-014)~~ **DONE 2026-11-22**
-20. Phase 3 Stage 3.3 — Escape / keyboard / focus / ARIA ← **NEXT** (await authorization)
+20. ~~Phase 3 Stage 3.3 Escape / keyboard / focus / ARIA~~ **DONE 2026-11-22**
+21. Phase 3 Stage 3.4 — Positioning / z-index ← **NEXT** (await authorization)
 
 **Maintainer locks:** packaging → Phase 5; no `nepalipatrojs/core` deep export for now.
 
@@ -170,7 +171,7 @@ Overall status: **IN PROGRESS** (Phase 0 CLOSED; Phase 1 IN PROGRESS — baselin
 
 ## Phase 3 — Datepicker redesign
 
-**Status:** 3.0–3.2 COMPLETED; Stage 3.3 pending authorization  
+**Status:** 3.0–3.3 COMPLETED; Stage 3.4 pending authorization  
 **Depends on:** Phase 2 + ADR-004; assessment review  
 **Objective:** Modular, accessible, modern dual-calendar UI.  
 **Spec:** [phase3-datepicker-assessment.md](../architecture/phase3-datepicker-assessment.md)
@@ -180,7 +181,7 @@ Overall status: **IN PROGRESS** (Phase 0 CLOSED; Phase 1 IN PROGRESS — baselin
 - [x] Step 3.0 — Behavior inventory, compatibility contract, UX + module spec
 - [x] Stage 3.1 — Pure `state` + `grid`; destroy listener fix (ISS-022); date-only weekday
 - [x] Stage 3.2 — Replace `innerHTML` with safe DOM construction (ISS-014)
-- [ ] Stage 3.3 — Escape, keyboard, focus, ARIA
+- [x] Stage 3.3 — Escape, keyboard, focus, ARIA
 - [ ] Stage 3.4 — Positioning / z-index (no full-DOM scan)
 - [ ] Stage 3.5 — Today, min/max, disabled dates
 - [ ] Stage 3.6 — Dual AD/BS display

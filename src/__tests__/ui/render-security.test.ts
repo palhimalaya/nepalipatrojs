@@ -59,14 +59,19 @@ describe('Stage 3.2 safe rendering (ISS-014)', () => {
     expect((window as unknown as { __np_xss?: number }).__np_xss).toBe(0);
   });
 
+  const baseOpts = {
+    theme: 'light' as const,
+    language: 'en' as const,
+    viewYear: 2080,
+    viewMonth: 1,
+    selected: { year: 2080, month: 1, day: 15 },
+    focused: { year: 2080, month: 1, day: 15 },
+    today: { year: 2080, month: 1, day: 10 },
+    popupId: 'nepali-datepicker-test',
+  };
+
   it('malicious localization strings render as text, not markup', () => {
-    const root = buildCalendarElement({
-      theme: 'light',
-      language: 'en',
-      viewYear: 2080,
-      viewMonth: 1,
-      selected: { year: 2080, month: 1, day: 15 },
-    });
+    const root = buildCalendarElement(baseOpts);
     document.body.appendChild(root);
 
     expect(root.querySelectorAll('img').length).toBe(0);
@@ -93,11 +98,10 @@ describe('Stage 3.2 safe rendering (ISS-014)', () => {
 
   it('theme className injection cannot create elements', () => {
     const root = buildCalendarElement({
+      ...baseOpts,
       theme: 'light"><img src=x onerror=alert(1) class="' as 'light',
-      language: 'en',
-      viewYear: 2080,
-      viewMonth: 1,
       selected: { year: 2080, month: 1, day: 1 },
+      focused: { year: 2080, month: 1, day: 1 },
     });
     expect(root.querySelector('img')).toBeNull();
     expect(root.tagName).toBe('DIV');
@@ -106,11 +110,12 @@ describe('Stage 3.2 safe rendering (ISS-014)', () => {
 
   it('renders 42 day cells with expected CSS hooks', () => {
     const root = buildCalendarElement({
+      ...baseOpts,
       theme: 'dark',
-      language: 'en',
-      viewYear: 2080,
       viewMonth: 2,
       selected: { year: 2080, month: 2, day: 1 },
+      focused: { year: 2080, month: 2, day: 1 },
+      today: { year: 2080, month: 2, day: 1 },
     });
     expect(root.classList.contains('nepali-datepicker-dark')).toBe(true);
     expect(root.querySelector('.nepali-datepicker-header')).toBeTruthy();

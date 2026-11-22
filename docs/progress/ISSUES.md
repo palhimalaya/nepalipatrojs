@@ -105,8 +105,9 @@ Severity: `critical` | `high` | `medium` | `low`
 
 - **Severity:** medium  
 - **Module:** UI  
-- **Status:** open — Phase 3 implementation  
-- **Description:** No min/max/disabled, dual calendar, keyboard/ARIA depth, today/clear, Escape.  
+- **Status:** open — partially addressed (Stage 3.3)  
+- **Description:** Remaining: min/max/disabled, dual calendar, today/clear.  
+- **Done in Stage 3.3:** Escape; arrow/Home/End/Page keyboard nav; focus restore; dialog/grid ARIA; live month region; roving tabindex.  
 - **Related:** [phase3-datepicker-assessment.md](../architecture/phase3-datepicker-assessment.md)  
 
 ## ISS-014 — Unsafe / brittle HTML rendering

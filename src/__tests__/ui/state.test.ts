@@ -20,6 +20,7 @@ describe('DatePickerState (pure)', () => {
     expect(s.destroyed).toBe(false);
     expect(s.view).toEqual({ year: 2080, month: 1 });
     expect(s.selected).toEqual(today);
+    expect(s.focused).toEqual(today);
     expect(s.today).toEqual(today);
   });
 
@@ -49,10 +50,11 @@ describe('DatePickerState (pure)', () => {
     expect(s.view).toEqual({ year: 2081, month: 1 });
   });
 
-  it('setSelected updates view to selected month', () => {
+  it('setSelected updates view and focused to selected month', () => {
     let s = createInitialState(today);
     s = setSelected(s, { year: 2079, month: 5, day: 10 });
     expect(s.selected).toEqual({ year: 2079, month: 5, day: 10 });
+    expect(s.focused).toEqual({ year: 2079, month: 5, day: 10 });
     expect(s.view).toEqual({ year: 2079, month: 5 });
   });
 

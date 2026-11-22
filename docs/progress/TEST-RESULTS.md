@@ -422,6 +422,26 @@ Public ESM export keys unchanged vs Stage 2.0 inventory.
 
 ---
 
+## 2026-11-22 — Phase 3 Stage 3.3: Keyboard, focus, ARIA
+
+### Change
+
+`src/ui/keyboard.ts` (pure nav); state `focused`; render dialog/grid/ARIA/live region; orchestrator Escape + arrows + focus restore; minimal `:focus-visible` ring. Week starts **Sunday** (matches grid).
+
+### Commands
+
+```bash
+npx jest --runInBand --coverage=false   # PASS 243/243 ~29s
+npx tsc --noEmit                        # PASS
+npm run build                           # PASS
+```
+
+### Note on `dist/`
+
+Build refreshed tracked `dist/nepali-patro-js.{umd,esm}.js` (+ css pipeline). Source of truth remains `src/`; do not edit dist by hand.
+
+---
+
 ## 2026-11-22 — Phase 3 Stage 3.2: Safe DOM rendering (ISS-014)
 
 ### Change
