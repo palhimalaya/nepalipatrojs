@@ -258,3 +258,14 @@ Public barrel still imports and re-exports the picker; UMD/`window.NepaliDatePic
 | `NepaliMonth*` / `NepaliWeekDay*` | `i18n/names.ts` | yes |
 | `NepaliPatroOptions`, `DateFormatPattern` | `i18n/types.ts` | yes |
 | `NepaliDatePickerOptions` | `ui/types.ts` | yes |
+
+### Runtime vs type-only (compatibility inventory)
+
+Moving TypeScript definition files (Stage 2.6) does **not** by itself change runtime behavior. Keep distinguishing:
+
+| Kind | Examples |
+|------|----------|
+| Runtime values | `NepaliDatePicker` class, converters, `formatBSDate`, **enums** (`NepaliMonth`, …) |
+| Type-only | `NepaliDatePickerOptions`, `NepaliPatroOptions`, `DateFormatPattern`, `NepaliDate` interfaces |
+
+Enums remain runtime exports even when owned by `i18n/names.ts`.

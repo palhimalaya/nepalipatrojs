@@ -710,14 +710,185 @@
         });
     }
 
+    /**
+     * Pure BS calendar grid model (Phase 3 Stage 3.1).
+     * No DOM. Uses core getDaysInMonth + date-only weekday index (not JS Date weekday APIs).
+     */
+    const TOTAL_CELLS = 42;
+    /**
+     * Days in BS month via core API.
+     * Numeric fallback only for years outside MIN/MAX (adjacent-month padding).
+     */
+    function daysInBsMonth(year, month1Based, fallback = 30) {
+        try {
+            return getDaysInMonth(year, month1Based);
+        }
+        catch (err) {
+            if (year < MIN_BS_YEAR || year > MAX_BS_YEAR) {
+                return fallback;
+            }
+            throw err;
+        }
+    }
+    /**
+     * Weekday of BS Y-M-1 as 0=Sunday…6=Saturday (date-only; TZ-independent).
+     * Out-of-range / invalid → 0 (Sunday), matching prior defensive UI behavior.
+     */
+    function firstWeekdayOfBsMonth(year, month1Based) {
+        try {
+            const nepaliIndex = getBsWeekdayIndex({ year, month: month1Based, day: 1 });
+            return nepaliIndex - 1; // 1=Aitabar(Sun) → 0
+        }
+        catch (_a) {
+            return 0;
+        }
+    }
+    function shiftMonth(year, month, delta) {
+        let y = year;
+        let m = month + delta;
+        while (m < 1) {
+            m += 12;
+            y -= 1;
+        }
+        while (m > 12) {
+            m -= 12;
+            y += 1;
+        }
+        return { year: y, month: m };
+    }
+    function buildBsMonthGrid(viewYear, viewMonth, selected) {
+        const daysInMonth = daysInBsMonth(viewYear, viewMonth);
+        const firstWeekday = firstWeekdayOfBsMonth(viewYear, viewMonth);
+        const prev = shiftMonth(viewYear, viewMonth, -1);
+        const lastDayOfPrevMonth = daysInBsMonth(prev.year, prev.month);
+        const next = shiftMonth(viewYear, viewMonth, 1);
+        const cells = [];
+        for (let i = 0; i < firstWeekday; i++) {
+            const day = lastDayOfPrevMonth - firstWeekday + i + 1;
+            cells.push({
+                day,
+                year: prev.year,
+                month: prev.month,
+                kind: 'prev',
+                selected: false,
+            });
+        }
+        for (let day = 1; day <= daysInMonth; day++) {
+            const selectedCell = selected.year === viewYear &&
+                selected.month === viewMonth &&
+                selected.day === day;
+            cells.push({
+                day,
+                year: viewYear,
+                month: viewMonth,
+                kind: 'current',
+                selected: selectedCell,
+            });
+        }
+        let nextDay = 1;
+        while (cells.length < TOTAL_CELLS) {
+            cells.push({
+                day: nextDay,
+                year: next.year,
+                month: next.month,
+                kind: 'next',
+                selected: false,
+            });
+            nextDay += 1;
+        }
+        return {
+            year: viewYear,
+            month: viewMonth,
+            firstWeekday,
+            daysInMonth,
+            cells,
+        };
+    }
+
+    /**
+     * Pure datepicker state (Phase 3 Stage 3.1).
+     * No DOM / browser APIs. Months are 1-based (BS domain).
+     */
+    function createInitialState(today) {
+        return {
+            open: false,
+            destroyed: false,
+            view: { year: today.year, month: today.month },
+            selected: { year: today.year, month: today.month, day: today.day },
+            today: { year: today.year, month: today.month, day: today.day },
+        };
+    }
+    function openPicker(state) {
+        if (state.destroyed)
+            return state;
+        return { ...state, open: true };
+    }
+    function closePicker(state) {
+        if (state.destroyed)
+            return state;
+        return { ...state, open: false };
+    }
+    function setSelected(state, date) {
+        if (state.destroyed)
+            return state;
+        return {
+            ...state,
+            selected: { year: date.year, month: date.month, day: date.day },
+            view: { year: date.year, month: date.month },
+        };
+    }
+    function setView(state, year, month) {
+        if (state.destroyed)
+            return state;
+        return {
+            ...state,
+            view: { year, month },
+        };
+    }
+    function previousMonth(state) {
+        if (state.destroyed)
+            return state;
+        let { year, month } = state.view;
+        month -= 1;
+        if (month < 1) {
+            month = 12;
+            year -= 1;
+        }
+        return { ...state, view: { year, month } };
+    }
+    function nextMonth(state) {
+        if (state.destroyed)
+            return state;
+        let { year, month } = state.view;
+        month += 1;
+        if (month > 12) {
+            month = 1;
+            year += 1;
+        }
+        return { ...state, view: { year, month } };
+    }
+    function markDestroyed(state) {
+        return {
+            ...state,
+            open: false,
+            destroyed: true,
+        };
+    }
+    function isDestroyed(state) {
+        return state.destroyed;
+    }
+
     class NepaliDatePicker {
         constructor(inputElement, options = {}) {
-            this.calendarVisible = false;
-            this.currentBSYear = getCurrentBSDate().year;
-            this.currentBSMonth = getCurrentBSDate().month - 1;
-            this.currentBSDay = getCurrentBSDate().day;
             this.floatingCalendar = null;
-            this.handleClickOutside = (event) => {
+            /** Tracked so destroy() can remove every listener (ISS-022). */
+            this.onInputClick = (e) => {
+                e.stopPropagation();
+                this.toggleCalendar();
+            };
+            this.onDocumentClick = (event) => {
+                if (isDestroyed(this.state))
+                    return;
                 const target = event.target;
                 if (this.floatingCalendar &&
                     target &&
@@ -730,6 +901,7 @@
             this.format = options.format || "YYYY-MM-DD";
             this.theme = options.theme || "light";
             this.language = options.language || "en";
+            this.state = createInitialState(getCurrentBSDate());
             // Calculate appropriate z-index
             this.zIndex = this.calculateZIndex(options.zIndex);
             NepaliDatePicker.instances.add(this);
@@ -803,14 +975,13 @@
             return highest;
         }
         init() {
-            this.inputElement.addEventListener("click", (e) => {
-                e.stopPropagation();
-                this.toggleCalendar();
-            });
-            document.addEventListener("click", this.handleClickOutside);
+            this.inputElement.addEventListener("click", this.onInputClick);
+            document.addEventListener("click", this.onDocumentClick);
         }
         toggleCalendar() {
-            if (this.calendarVisible) {
+            if (isDestroyed(this.state))
+                return;
+            if (this.state.open) {
                 this.closeCalendar();
             }
             else {
@@ -826,9 +997,7 @@
             try {
                 const parsedDate = this.parseDateString(inputValue);
                 if (parsedDate) {
-                    this.currentBSYear = parsedDate.year;
-                    this.currentBSMonth = parsedDate.month - 1;
-                    this.currentBSDay = parsedDate.day;
+                    this.state = setSelected(this.state, parsedDate);
                 }
             }
             catch (error) {
@@ -917,41 +1086,25 @@
                 return false;
             }
         }
-        /**
-         * Days in BS month via getDaysInMonth only (single calendar truth).
-         * Numeric fallback (30) applies only when `year` is outside MIN/MAX_BS_YEAR —
-         * used solely for adjacent-month grid padding (e.g. days before Baisakh of
-         * MIN_BS_YEAR). Does not read calendar data. Unexpected core errors for
-         * supported years are rethrown, not swallowed.
-         */
-        daysInBsMonth(year, month1Based, fallback = 30) {
-            try {
-                return getDaysInMonth(year, month1Based);
-            }
-            catch (err) {
-                if (year < MIN_BS_YEAR || year > MAX_BS_YEAR) {
-                    return fallback;
-                }
-                throw err;
-            }
-        }
         openCalendar() {
+            if (isDestroyed(this.state))
+                return;
             // Close all other calendars before opening this one
             this.closeAllOtherCalendars();
             // Recalculate z-index in case the context has changed
             this.zIndex = this.calculateZIndex();
             // Parse existing value from input field if present
             this.parseAndSetDateFromInput();
-            this.calendarVisible = true;
-            this.renderCalendar(this.currentBSYear, this.currentBSMonth);
+            this.state = openPicker(this.state);
+            this.renderCalendar(this.state.view.year, this.state.view.month);
         }
-        renderCalendar(bsYear, bsMonth) {
+        renderCalendar(bsYear, bsMonth1Based) {
             if (this.floatingCalendar && this.floatingCalendar.parentNode) {
                 this.floatingCalendar.parentNode.removeChild(this.floatingCalendar);
             }
             const calendarDiv = document.createElement("div");
             calendarDiv.className = `nepali-datepicker nepali-datepicker-${this.theme}`;
-            calendarDiv.innerHTML = this.generateCalendarHtml(bsYear, bsMonth);
+            calendarDiv.innerHTML = this.generateCalendarHtml(bsYear, bsMonth1Based);
             this.setupCalendarEvents(calendarDiv);
             const modalContainer = this.findModalContainer();
             const appendTarget = modalContainer || document.body;
@@ -984,7 +1137,7 @@
             }
             return null;
         }
-        generateCalendarHtml(bsYear, bsMonth) {
+        generateCalendarHtml(bsYear, bsMonth1Based) {
             // Supported years via range constants (not raw dataset keys)
             let yearOptions = "";
             for (let y = MIN_BS_YEAR; y <= MAX_BS_YEAR; y++) {
@@ -992,20 +1145,9 @@
             }
             let monthOptions = "";
             for (let i = 0; i < 12; i++) {
-                monthOptions += `<option value="${i}"${i === bsMonth ? " selected" : ""}>${localizeMonth(i + 1, this.language)}</option>`;
+                const month1 = i + 1;
+                monthOptions += `<option value="${i}"${month1 === bsMonth1Based ? " selected" : ""}>${localizeMonth(month1, this.language)}</option>`;
             }
-            // bsMonth is 0-based in the picker; getDaysInMonth expects 1-based
-            const daysInMonth = this.daysInBsMonth(bsYear, bsMonth + 1);
-            // Calculate the weekday of the 1st day of this BS month
-            const firstDayOfWeek = this.getBSFirstDayOfWeek(bsYear, bsMonth);
-            // Get days in previous month
-            let prevMonth = bsMonth - 1;
-            let prevYear = bsYear;
-            if (prevMonth < 0) {
-                prevMonth = 11;
-                prevYear--;
-            }
-            const lastDayOfPrevMonth = this.daysInBsMonth(prevYear, prevMonth + 1);
             const weekdays = this.language === "np"
                 ? ["आ", "सो", "मं", "बु", "बि", "शु", "श"]
                 : ["S", "M", "T", "W", "T", "F", "S"];
@@ -1022,53 +1164,30 @@
         ${weekdays.map(day => `<div class="nepali-weekday">${day}</div>`).join('')}
       </div>
       <div class="nepali-calendar-body">
-        ${this.generateBSDaysFullGrid(bsYear, bsMonth, daysInMonth, firstDayOfWeek, lastDayOfPrevMonth)}
+        ${this.generateBSDaysFullGrid(bsYear, bsMonth1Based)}
       </div>
     `;
         }
-        getBSFirstDayOfWeek(bsYear, bsMonth) {
-            try {
-                const adDate = convertBSToAD({
-                    year: bsYear,
-                    month: bsMonth + 1,
-                    day: 1,
-                });
-                if (adDate instanceof Date && !isNaN(adDate.getTime())) {
-                    return adDate.getDay();
-                }
-            }
-            catch (e) {
-                console.log("Error converting BS to AD:", e);
-            }
-            return 0;
-        }
-        // Render the days grid for BS calendar
-        generateBSDaysFullGrid(bsYear, bsMonth, daysInMonth, firstDayOfWeek, lastDayOfPrevMonth) {
+        /** Render day cells from pure grid model (DOM strings unchanged for Stage 3.1). */
+        generateBSDaysFullGrid(bsYear, bsMonth1Based) {
+            const model = buildBsMonthGrid(bsYear, bsMonth1Based, this.state.selected);
             let daysHTML = "";
-            const totalCells = 42;
-            // Previous month days
-            for (let i = 0; i < firstDayOfWeek; i++) {
-                const prevDay = lastDayOfPrevMonth - firstDayOfWeek + i + 1;
-                daysHTML += `<div class="nepali-day nepali-other-month" data-day="${prevDay}" data-other="prev">${localizeDigits(prevDay, this.language)}</div>`;
-            }
-            // Current month days
-            for (let day = 1; day <= daysInMonth; day++) {
+            for (const cell of model.cells) {
                 let classes = "nepali-day";
-                if (this.isBSSelectedDate(bsYear, bsMonth, day))
+                if (cell.kind !== "current") {
+                    classes += " nepali-other-month";
+                }
+                if (cell.selected) {
                     classes += " nepali-selected";
-                daysHTML += `<div class="${classes}" data-day="${day}">${localizeDigits(day, this.language)}</div>`;
-            }
-            // Next month days
-            const daysFilled = firstDayOfWeek + daysInMonth;
-            for (let i = 1; i <= totalCells - daysFilled; i++) {
-                daysHTML += `<div class="nepali-day nepali-other-month" data-day="${i}" data-other="next">${localizeDigits(i, this.language)}</div>`;
+                }
+                const otherAttr = cell.kind === "prev"
+                    ? ' data-other="prev"'
+                    : cell.kind === "next"
+                        ? ' data-other="next"'
+                        : "";
+                daysHTML += `<div class="${classes}" data-day="${cell.day}"${otherAttr}>${localizeDigits(cell.day, this.language)}</div>`;
             }
             return daysHTML;
-        }
-        isBSSelectedDate(bsYear, bsMonth, bsDay) {
-            return (bsYear === this.currentBSYear &&
-                bsMonth === this.currentBSMonth &&
-                bsDay === this.currentBSDay);
         }
         setupCalendarEvents(calendarDiv) {
             const prevButton = calendarDiv.querySelector(".nepali-prev-btn");
@@ -1094,6 +1213,8 @@
             calendarDiv.addEventListener("click", (e) => this.handleBSDateClick(e));
         }
         handleBSDateClick(event) {
+            if (isDestroyed(this.state))
+                return;
             const target = event.target;
             const dayEl = target.closest(".nepali-day");
             if (!dayEl)
@@ -1103,39 +1224,35 @@
         }
         selectBSDate(dayElement) {
             var _a;
+            if (isDestroyed(this.state))
+                return;
             let day = parseInt((_a = dayElement.dataset.day) !== null && _a !== void 0 ? _a : "0", 10);
-            let month = this.currentBSMonth;
-            let year = this.currentBSYear;
+            let month = this.state.view.month; // 1-based
+            let year = this.state.view.year;
             if (this.floatingCalendar) {
                 const monthSelect = this.floatingCalendar.querySelector(".nepali-month-select");
                 const yearSelect = this.floatingCalendar.querySelector(".nepali-year-select");
                 if (monthSelect && yearSelect) {
-                    month = parseInt(monthSelect.value, 10);
+                    month = parseInt(monthSelect.value, 10) + 1; // select is 0-based
                     year = parseInt(yearSelect.value, 10);
                 }
             }
             if (dayElement.dataset.other === "prev") {
                 month -= 1;
-                if (month < 0) {
-                    month = 11;
+                if (month < 1) {
+                    month = 12;
                     year -= 1;
                 }
             }
             else if (dayElement.dataset.other === "next") {
                 month += 1;
-                if (month > 11) {
-                    month = 0;
+                if (month > 12) {
+                    month = 1;
                     year += 1;
                 }
             }
-            this.currentBSYear = year;
-            this.currentBSMonth = month;
-            this.currentBSDay = day;
-            const date = {
-                year: this.currentBSYear,
-                month: this.currentBSMonth + 1,
-                day: this.currentBSDay,
-            };
+            const date = { year, month, day };
+            this.state = setSelected(this.state, date);
             const formatted = formatBS(date, this.format, {
                 language: this.language,
             });
@@ -1144,38 +1261,32 @@
             this.closeCalendar();
         }
         previousBSMonth() {
-            let month = this.currentBSMonth - 1;
-            let year = this.currentBSYear;
-            if (month < 0) {
-                month = 11;
-                year--;
-            }
-            this.currentBSMonth = month;
-            this.currentBSYear = year;
-            this.renderCalendar(year, month);
+            if (isDestroyed(this.state))
+                return;
+            this.state = previousMonth(this.state);
+            this.renderCalendar(this.state.view.year, this.state.view.month);
         }
         nextBSMonth() {
-            let month = this.currentBSMonth + 1;
-            let year = this.currentBSYear;
-            if (month > 11) {
-                month = 0;
-                year++;
-            }
-            this.currentBSMonth = month;
-            this.currentBSYear = year;
-            this.renderCalendar(year, month);
+            if (isDestroyed(this.state))
+                return;
+            this.state = nextMonth(this.state);
+            this.renderCalendar(this.state.view.year, this.state.view.month);
         }
         changeBSMonth(event) {
+            if (isDestroyed(this.state))
+                return;
             const target = event.target;
-            const newMonth = parseInt(target.value, 10);
-            this.currentBSMonth = newMonth;
-            this.renderCalendar(this.currentBSYear, newMonth);
+            const newMonth0 = parseInt(target.value, 10);
+            this.state = setView(this.state, this.state.view.year, newMonth0 + 1);
+            this.renderCalendar(this.state.view.year, this.state.view.month);
         }
         changeBSYear(event) {
+            if (isDestroyed(this.state))
+                return;
             const target = event.target;
             const newYear = parseInt(target.value, 10);
-            this.currentBSYear = newYear;
-            this.renderCalendar(newYear, this.currentBSMonth);
+            this.state = setView(this.state, newYear, this.state.view.month);
+            this.renderCalendar(this.state.view.year, this.state.view.month);
         }
         positionCalendarPopup() {
             if (!this.floatingCalendar)
@@ -1197,7 +1308,7 @@
             this.floatingCalendar.style.left = `${left}px`;
         }
         closeCalendar() {
-            this.calendarVisible = false;
+            this.state = closePicker(this.state);
             if (this.floatingCalendar && this.floatingCalendar.parentNode) {
                 this.floatingCalendar.parentNode.removeChild(this.floatingCalendar);
                 this.floatingCalendar = null;
@@ -1205,20 +1316,27 @@
         }
         closeAllOtherCalendars() {
             NepaliDatePicker.instances.forEach(instance => {
-                if (instance !== this && instance.calendarVisible) {
+                if (instance !== this && instance.state.open && !isDestroyed(instance.state)) {
                     instance.closeCalendar();
                 }
             });
         }
         setZIndex(zIndex) {
+            if (isDestroyed(this.state))
+                return;
             this.zIndex = zIndex;
             if (this.floatingCalendar) {
                 this.floatingCalendar.style.zIndex = zIndex.toString();
             }
         }
         destroy() {
+            if (isDestroyed(this.state)) {
+                return;
+            }
             this.closeCalendar();
-            document.removeEventListener("click", this.handleClickOutside);
+            this.inputElement.removeEventListener("click", this.onInputClick);
+            document.removeEventListener("click", this.onDocumentClick);
+            this.state = markDestroyed(this.state);
             NepaliDatePicker.instances.delete(this);
         }
     }

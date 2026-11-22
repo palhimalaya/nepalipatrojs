@@ -72,7 +72,9 @@ Overall status: **IN PROGRESS** (Phase 0 CLOSED; Phase 1 IN PROGRESS — baselin
 14. ~~Phase 2 Stage 2.4 physical `core/` + `i18n/` folders~~ **DONE 2026-11-22**
 15. ~~Phase 2 Stage 2.5 architecture boundary enforcement (ISS-018)~~ **DONE 2026-11-22**
 16. ~~Phase 2 Stage 2.6 ownership cleanup~~ **DONE 2026-11-22**
-17. Phase 3 — datepicker redesign (assessment first) ← **NEXT** (await authorization)
+17. ~~Phase 3 Step 3.0 datepicker assessment & redesign spec~~ **DONE 2026-11-22**
+18. ~~Phase 3 Stage 3.1 state/grid extract + destroy fix~~ **DONE 2026-11-22** (ISS-022)
+19. Phase 3 Stage 3.2 — safe DOM render (replace innerHTML) ← **NEXT** (await authorization)
 
 **Maintainer locks:** packaging → Phase 5; no `nepalipatrojs/core` deep export for now.
 
@@ -167,24 +169,29 @@ Overall status: **IN PROGRESS** (Phase 0 CLOSED; Phase 1 IN PROGRESS — baselin
 
 ## Phase 3 — Datepicker redesign
 
-**Status:** NOT STARTED  
-**Depends on:** Phase 2 + ADR-004 approval  
-**Objective:** Modular, accessible, modern dual-calendar UI.
+**Status:** 3.0–3.1 COMPLETED; Stage 3.2 pending authorization  
+**Depends on:** Phase 2 + ADR-004; assessment review  
+**Objective:** Modular, accessible, modern dual-calendar UI.  
+**Spec:** [phase3-datepicker-assessment.md](../architecture/phase3-datepicker-assessment.md)
 
 ### Tasks
 
-- [ ] Split modules (state, parse, grid, render, position, a11y, theme)
-- [ ] New light/dark visual design
-- [ ] Dual AD/BS viewing; today/clear; min/max/disabled
-- [ ] Keyboard + ARIA; Escape; multi-instance; destroy safety
-- [ ] Configurable z-index / positioning — **no** full-DOM scan
-- [ ] Prefer safe DOM construction
+- [x] Step 3.0 — Behavior inventory, compatibility contract, UX + module spec
+- [x] Stage 3.1 — Pure `state` + `grid`; destroy listener fix (ISS-022); date-only weekday
+- [ ] Stage 3.2 — Replace `innerHTML` with safe DOM construction
+- [ ] Stage 3.3 — Escape, keyboard, focus, ARIA
+- [ ] Stage 3.4 — Positioning / z-index (no full-DOM scan)
+- [ ] Stage 3.5 — Today, min/max, disabled dates
+- [ ] Stage 3.6 — Dual AD/BS display
+- [ ] Stage 3.7 — Visual design / theme tokens
+- [ ] Rename `ui/` → `datepicker/` when appropriate
 
 ### Acceptance criteria
 
-- Feature checklist in ADR-004 / architecture doc met
+- Feature checklist in ADR-004 / Phase 3.0 spec met
 - Datepicker tests cover selection, constraints, keyboard, cleanup
 - Visual review signed off by maintainer
+- Public ctor / options / `destroy` / `setZIndex` compatibility preserved
 
 ---
 

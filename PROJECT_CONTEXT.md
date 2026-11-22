@@ -83,13 +83,14 @@ npm run build
 
 **Phase 1 — CLOSED.** Correctness, timezone, ISS-003 prefix AD→BS approved.
 
-**Phase 2 — Stages 2.0–2.6 COMPLETED** (architecture + ownership complete).
+**Phase 2 — COMPLETED** (architecture + ownership).
 
-- Physical `src/core/` + `src/i18n/` + ownership separation; public barrel unchanged
-- ISS-018 resolved; Stage 2.6 ownership moves applied and enforced
-- ISS-020 / ISS-021 resolved; ISS-017 remains resolved (inventory freeze)
-- Locks: barrel-only entry (no `nepalipatrojs/core`); packaging → Phase 5; ISS-016 provenance open
-- **Next:** Phase 3 datepicker redesign — start with design/behavior assessment (await authorization).
+**Phase 3 — 3.0 assessment + Stage 3.1 COMPLETED.**
+
+- Pure `ui/state.ts` + `ui/grid.ts`; ISS-022 destroy leak fixed
+- Still pending: innerHTML (3.2), a11y (3.3), z-index (3.4), constraints (3.5), dual AD (3.6), visual (3.7)
+- Locks: barrel-only entry; packaging → Phase 5; ISS-016 provenance open
+- **Next:** Stage 3.2 safe DOM rendering (await authorization).
 
 ## Known limitations (v1)
 

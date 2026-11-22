@@ -21,6 +21,7 @@ describe('NepaliDatePicker', () => {
     expect(input).toBeDefined();
     input.click();
     expect(document.querySelector('.nepali-datepicker')).toBeTruthy();
+    dp.destroy();
   });
 
   it('should respect format and theme options', () => {
@@ -28,6 +29,7 @@ describe('NepaliDatePicker', () => {
     input.click();
     const calendar = document.querySelector('.nepali-datepicker-dark');
     expect(calendar).toBeTruthy();
+    dp.destroy();
   });
 
   it('should select a date and update input value', () => {
@@ -36,6 +38,7 @@ describe('NepaliDatePicker', () => {
     const firstDay = document.querySelector('.nepali-day[data-day="1"]') as HTMLElement;
     firstDay.click();
     expect(input.value).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+    dp.destroy();
   });
 
   it('should close calendar on outside click', () => {
@@ -44,61 +47,55 @@ describe('NepaliDatePicker', () => {
     expect(document.querySelector('.nepali-datepicker')).toBeTruthy();
     document.body.click();
     expect(document.querySelector('.nepali-datepicker')).toBeFalsy();
+    dp.destroy();
   });
 
   it('should parse predefined date from input and highlight it in calendar', () => {
-    // Set a predefined date value
     input.value = '2081-01-15';
-    
+
     const dp = new NepaliDatePicker(input, { format: 'YYYY-MM-DD', language: 'en' });
     input.click();
-    
-    // Check if calendar opened
+
     expect(document.querySelector('.nepali-datepicker')).toBeTruthy();
-    
-    // Check if the day 15 is selected/highlighted
+
     const selectedDay = document.querySelector('.nepali-day.nepali-selected');
     expect(selectedDay).toBeTruthy();
     expect(selectedDay?.getAttribute('data-day')).toBe('15');
+    dp.destroy();
   });
 
   it('should parse different date formats', () => {
-    // Test DD/MM/YYYY format
     input.value = '15/01/2081';
-    
+
     const dp = new NepaliDatePicker(input, { format: 'DD/MM/YYYY', language: 'en' });
     input.click();
-    
-    // Check if calendar opened and correct date is selected
+
     const selectedDay = document.querySelector('.nepali-day.nepali-selected');
     expect(selectedDay).toBeTruthy();
     expect(selectedDay?.getAttribute('data-day')).toBe('15');
+    dp.destroy();
   });
 
   it('should parse Nepali digits', () => {
-    // Test with Nepali digits
     input.value = '२०८१-०१-१५';
-    
+
     const dp = new NepaliDatePicker(input, { format: 'YYYY-MM-DD', language: 'np' });
     input.click();
-    
-    // Check if calendar opened and correct date is selected
+
     const selectedDay = document.querySelector('.nepali-day.nepali-selected');
     expect(selectedDay).toBeTruthy();
     expect(selectedDay?.getAttribute('data-day')).toBe('15');
+    dp.destroy();
   });
 
   it('should handle empty input gracefully', () => {
-    // Empty input should use current date
     input.value = '';
-    
+
     const dp = new NepaliDatePicker(input);
     input.click();
-    
-    // Calendar should still open
+
     expect(document.querySelector('.nepali-datepicker')).toBeTruthy();
-    
-    // Should have some selected date (current date)
+
     const selectedDay = document.querySelector('.nepali-day.nepali-selected');
     expect(selectedDay).toBeTruthy();
     dp.destroy();
@@ -185,13 +182,9 @@ describe('NepaliDatePicker', () => {
     });
 
     it('daysInBsMonth fallback is year-range-only (documented defensive UI padding)', () => {
-      const src = readFileSync(
-        join(__dirname, '../../ui/NepaliDatePicker.ts'),
-        'utf8'
-      );
+      const src = readFileSync(join(__dirname, '../../ui/grid.ts'), 'utf8');
       expect(src).toMatch(/year < MIN_BS_YEAR \|\| year > MAX_BS_YEAR/);
       expect(src).toMatch(/throw err/);
-      // Opening Baisakh of MIN_BS_YEAR needs prev-year padding without crashing
       input.value = `${MIN_BS_YEAR}-01-01`;
       const dp = new NepaliDatePicker(input, { format: 'YYYY-MM-DD' });
       expect(() => input.click()).not.toThrow();
@@ -201,6 +194,64 @@ describe('NepaliDatePicker', () => {
       expect(currentDays.length).toBe(getDaysInMonth(MIN_BS_YEAR, 1));
       expect(document.querySelectorAll('.nepali-other-month').length).toBeGreaterThan(0);
       dp.destroy();
+    });
+  });
+
+  describe('Stage 3.1 — destroy lifecycle (ISS-022)', () => {
+    it('removes input click listener so destroyed picker cannot reopen', () => {
+      const dp = new NepaliDatePicker(input);
+      input.click();
+      expect(document.querySelector('.nepali-datepicker')).toBeTruthy();
+      dp.destroy();
+      expect(document.querySelector('.nepali-datepicker')).toBeFalsy();
+      input.click();
+      expect(document.querySelector('.nepali-datepicker')).toBeFalsy();
+    });
+
+    it('repeated destroy is safe', () => {
+      const dp = new NepaliDatePicker(input);
+      expect(() => {
+        dp.destroy();
+        dp.destroy();
+        dp.destroy();
+      }).not.toThrow();
+      input.click();
+      expect(document.querySelector('.nepali-datepicker')).toBeFalsy();
+    });
+
+    it('multiple instances remain independent after one is destroyed', () => {
+      document.body.innerHTML = '<input id="a" /><input id="b" />';
+      const a = document.getElementById('a') as HTMLInputElement;
+      const b = document.getElementById('b') as HTMLInputElement;
+      const dpA = new NepaliDatePicker(a);
+      const dpB = new NepaliDatePicker(b);
+      dpA.destroy();
+      // Destroyed A must not open
+      a.click();
+      expect(document.querySelector('.nepali-datepicker')).toBeFalsy();
+      // B still opens / toggles independently
+      b.click();
+      expect(document.querySelector('.nepali-datepicker')).toBeTruthy();
+      b.click();
+      expect(document.querySelector('.nepali-datepicker')).toBeFalsy();
+      b.click();
+      expect(document.querySelector('.nepali-datepicker')).toBeTruthy();
+      dpB.destroy();
+      expect(document.querySelector('.nepali-datepicker')).toBeFalsy();
+      b.click();
+      expect(document.querySelector('.nepali-datepicker')).toBeFalsy();
+    });
+
+    it('source no longer uses Date.getDay for weekday offset', () => {
+      const picker = readFileSync(
+        join(__dirname, '../../ui/NepaliDatePicker.ts'),
+        'utf8'
+      );
+      const grid = readFileSync(join(__dirname, '../../ui/grid.ts'), 'utf8');
+      expect(picker).not.toMatch(/\.getDay\s*\(/);
+      expect(grid).toMatch(/getBsWeekdayIndex/);
+      expect(grid).not.toMatch(/\.getDay\s*\(/);
+      expect(grid).not.toMatch(/BS_CALENDAR_DATA/);
     });
   });
 });

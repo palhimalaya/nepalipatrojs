@@ -51,6 +51,8 @@ User-facing npm release notes will also live in the root `CHANGELOG` when 2.0 sh
 - **Stage 2.4:** Physical `src/core/` + `src/i18n/` layout; `helpers.ts` removed; `ui/` retained. No public API / algorithm / dataset change.
 - **Stage 2.5 / ISS-018:** Automated architecture boundary enforcement (Jest; negative fixtures). Ownership exceptions documented, not moved.
 - **Stage 2.6:** Ownership cleanup — digits/names/i18n+ui types moved; public re-exports unchanged; ownership rules enforced.
+- **Phase 3 Step 3.0:** Datepicker behavior assessment & redesign specification published (`docs/architecture/phase3-datepicker-assessment.md`). No production UI changes.
+- **Phase 3 Stage 3.1 / ISS-022:** Pure `ui/state` + `ui/grid`; datepicker wired to them; destroy removes all listeners; weekday via date-only core API. No visual redesign; `innerHTML` retained until 3.2.
 
 ### Changed (process)
 

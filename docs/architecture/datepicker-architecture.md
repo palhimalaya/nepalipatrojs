@@ -1,23 +1,26 @@
 # Datepicker architecture
 
-## Current (v1)
+## Current (v1 → Stage 3.1)
 
-Single class: `src/ui/NepaliDatePicker.ts` (~645 lines).
+Orchestrator: `src/ui/NepaliDatePicker.ts`  
+Pure modules: `src/ui/state.ts`, `src/ui/grid.ts`
+
+**Full Phase 3.0 assessment:** [phase3-datepicker-assessment.md](phase3-datepicker-assessment.md).
 
 | Concern | How it is handled today |
 |---------|-------------------------|
-| State | Instance fields (`currentBSYear/Month/Day`, visibility) |
-| Parsing | Inline regex + month-name parsers |
-| Rendering | HTML strings via `innerHTML` |
-| Navigation | Prev/next + `<select>` handlers |
-| Positioning | Absolute under input; flip if near edges |
-| Z-index | Walk ancestors + modal selectors + **`querySelectorAll('*')`** |
+| State | Pure `state.ts` (`view`, `selected`, `open`, `destroyed`, `today`) |
+| Grid model | Pure `grid.ts` → 42 `CalendarCell`s; `getDaysInMonth` + `getBsWeekdayIndex` |
+| Parsing | Still inline in orchestrator (regex + month-name parsers) |
+| Rendering | HTML strings via `innerHTML` (**Stage 3.2**) |
+| Navigation | Prev/next + `<select>`; updates pure state then re-renders |
+| Positioning | Absolute under input; flip if near edges (**Stage 3.4**) |
+| Z-index | Walk ancestors + modal selectors + **`querySelectorAll('*')`** (**Stage 3.4**) |
 | Theme | CSS class `nepali-datepicker-light/dark` |
 | Locale | `en` / `np` digit and month localization |
 | Events | Sets `input.value`, dispatches `change` |
-| Cleanup | `destroy()` removes listener + instance from static `Set` |
-| Import | `core/` + `i18n/` + year range (Stages 2.1–2.4); **no barrel**; **no `BS_CALENDAR_DATA`** |
-| Month length | `getDaysInMonth`; `daysInBsMonth` fallback only for years outside MIN/MAX_BS_YEAR |
+| Cleanup | `destroy()` removes **input + document** listeners, closes popup, marks destroyed, drops registry |
+| Import | `core/` + `i18n/`; **no barrel**; **no `BS_CALENDAR_DATA`** |
 
 ### Missing product features
 

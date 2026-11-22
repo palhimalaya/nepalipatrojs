@@ -97,22 +97,35 @@ Severity: `critical` | `high` | `medium` | `low`
 
 - **Severity:** medium  
 - **Module:** `NepaliDatePicker.getHighestZIndex`  
-- **Status:** open  
+- **Status:** open — Phase 3 implementation  
 - **Description:** `querySelectorAll('*')` + getComputedStyle on open — expensive and fragile.  
+- **Related:** ADR-004; [phase3-datepicker-assessment.md](../architecture/phase3-datepicker-assessment.md) D2  
 
 ## ISS-013 — Datepicker feature gaps
 
 - **Severity:** medium  
 - **Module:** UI  
-- **Status:** open  
+- **Status:** open — Phase 3 implementation  
 - **Description:** No min/max/disabled, dual calendar, keyboard/ARIA depth, today/clear, Escape.  
+- **Related:** [phase3-datepicker-assessment.md](../architecture/phase3-datepicker-assessment.md)  
 
 ## ISS-014 — Unsafe / brittle HTML rendering
 
 - **Severity:** medium  
 - **Module:** datepicker `innerHTML` templates  
-- **Status:** open  
+- **Status:** open — Phase 3 implementation  
 - **Proposed:** DOM APIs + escaping (Phase 3).  
+- **Related:** ADR-004; assessment D3  
+
+## ISS-022 — Datepicker `destroy()` leaves input click listener
+
+- **Severity:** high  
+- **Module:** `src/ui/NepaliDatePicker.ts`  
+- **Status:** **resolved** (Phase 3 Stage 3.1, 2026-11-22)  
+- **Description:** `destroy()` removed document outside-click handler and registry entry but not the input `click` listener.  
+- **Fix:** Track `onInputClick` / `onDocumentClick`; remove both on destroy; `destroyed` state blocks open; repeated destroy is safe.  
+- **Verification:** UI destroy regressions + full Jest.  
+- **Related:** [phase3-datepicker-assessment.md](../architecture/phase3-datepicker-assessment.md)  
 
 ## ISS-015 — Weak / absent baseline verification in this workspace
 

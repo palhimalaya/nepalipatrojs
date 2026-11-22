@@ -422,6 +422,24 @@ Public ESM export keys unchanged vs Stage 2.0 inventory.
 
 ---
 
+## 2026-11-22 — Phase 3 Stage 3.1: State/grid extraction + destroy fix
+
+### Change
+
+- Added pure `src/ui/state.ts` and `src/ui/grid.ts` (date-only weekday via `getBsWeekdayIndex`)
+- Wired `NepaliDatePicker` to state/grid; appearance/`innerHTML` unchanged
+- Fixed ISS-022 destroy listener leak
+
+### Commands
+
+```bash
+npx jest --runInBand --coverage=false   # PASS 213/213 ~28s
+npx tsc --noEmit                        # PASS
+npm run build                           # PASS
+```
+
+---
+
 ## 2026-11-22 — Phase 2 Stage 2.6: Ownership cleanup
 
 ### Change

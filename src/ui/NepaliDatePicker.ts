@@ -1,6 +1,5 @@
 import { MAX_BS_YEAR, MIN_BS_YEAR } from "../core/calendar-data";
 import { getCurrentBSDate } from "../core/converters/ad-to-bs";
-import { convertBSToAD } from "../core/converters/bs-to-ad";
 import { getDaysInMonth } from "../core/calendar";
 import { NepaliDate } from "../core/types";
 import { NepaliDatePickerOptions } from "./types";
@@ -11,20 +10,49 @@ import {
   nepaliDigitsToEnglish,
   getDateFormatPatterns,
 } from "../i18n/localization";
+import { buildBsMonthGrid } from "./grid";
+import {
+  closePicker,
+  createInitialState,
+  DatePickerState,
+  isDestroyed,
+  markDestroyed,
+  nextMonth as stateNextMonth,
+  openPicker,
+  previousMonth as statePreviousMonth,
+  setSelected,
+  setView,
+} from "./state";
 
 export class NepaliDatePicker {
   private static instances: Set<NepaliDatePicker> = new Set();
-  
+
   private inputElement: HTMLInputElement;
-  private calendarVisible = false;
-  private currentBSYear: number = getCurrentBSDate().year;
-  private currentBSMonth: number = getCurrentBSDate().month - 1;
-  private currentBSDay: number = getCurrentBSDate().day;
+  private state: DatePickerState;
   private floatingCalendar: HTMLElement | null = null;
   private format: string;
   private theme: "light" | "dark";
   private language: "en" | "np";
   private zIndex: number;
+
+  /** Tracked so destroy() can remove every listener (ISS-022). */
+  private readonly onInputClick = (e: MouseEvent): void => {
+    e.stopPropagation();
+    this.toggleCalendar();
+  };
+
+  private readonly onDocumentClick = (event: MouseEvent): void => {
+    if (isDestroyed(this.state)) return;
+    const target = event.target as Node | null;
+    if (
+      this.floatingCalendar &&
+      target &&
+      !this.floatingCalendar.contains(target) &&
+      !this.inputElement.contains(target)
+    ) {
+      this.closeCalendar();
+    }
+  };
 
   constructor(
     inputElement: HTMLInputElement,
@@ -34,12 +62,13 @@ export class NepaliDatePicker {
     this.format = options.format || "YYYY-MM-DD";
     this.theme = options.theme || "light";
     this.language = options.language || "en";
-    
+    this.state = createInitialState(getCurrentBSDate());
+
     // Calculate appropriate z-index
     this.zIndex = this.calculateZIndex(options.zIndex);
-    
+
     NepaliDatePicker.instances.add(this);
-    
+
     this.init();
   }
 
@@ -51,17 +80,17 @@ export class NepaliDatePicker {
 
     // Find the highest z-index in the current context
     const highestZIndex = this.getHighestZIndex();
-    
+
     // Use a much higher base z-index for modals
     const baseZIndex = Math.max(highestZIndex + 1000, 999999);
-    
+
     return baseZIndex;
   }
 
   // Method to find the highest z-index in the current document
   private getHighestZIndex(): number {
     let highest = 0;
-    
+
     // Check if input is inside a modal or high z-index container
     let element: HTMLElement | null = this.inputElement;
     while (element && element !== document.body) {
@@ -121,33 +150,18 @@ export class NepaliDatePicker {
   }
 
   private init(): void {
-    this.inputElement.addEventListener("click", (e) => {
-      e.stopPropagation();
-      this.toggleCalendar();
-    });
-
-    document.addEventListener("click", this.handleClickOutside);
+    this.inputElement.addEventListener("click", this.onInputClick);
+    document.addEventListener("click", this.onDocumentClick);
   }
 
   private toggleCalendar(): void {
-    if (this.calendarVisible) {
+    if (isDestroyed(this.state)) return;
+    if (this.state.open) {
       this.closeCalendar();
     } else {
       this.openCalendar();
     }
   }
-
-  private handleClickOutside = (event: MouseEvent): void => {
-    const target = event.target as Node | null;
-    if (
-      this.floatingCalendar &&
-      target &&
-      !this.floatingCalendar.contains(target) &&
-      !this.inputElement.contains(target)
-    ) {
-      this.closeCalendar();
-    }
-  };
 
   private parseAndSetDateFromInput(): void {
     const inputValue = this.inputElement.value.trim();
@@ -159,9 +173,7 @@ export class NepaliDatePicker {
     try {
       const parsedDate = this.parseDateString(inputValue);
       if (parsedDate) {
-        this.currentBSYear = parsedDate.year;
-        this.currentBSMonth = parsedDate.month - 1;
-        this.currentBSDay = parsedDate.day;
+        this.state = setSelected(this.state, parsedDate);
       }
     } catch (error) {
       // If parsing fails, keep current date
@@ -173,14 +185,14 @@ export class NepaliDatePicker {
     if (!dateString) return null;
 
     const normalizedString = nepaliDigitsToEnglish(dateString);
-    
+
     const monthNameDate = this.parseWithMonthNames(normalizedString);
     if (monthNameDate) {
       return monthNameDate;
     }
-    
+
     const formatPatterns = getDateFormatPatterns();
-    
+
     for (const pattern of formatPatterns) {
       const match = normalizedString.match(pattern.regex);
       if (match) {
@@ -188,7 +200,7 @@ export class NepaliDatePicker {
           const year = parseInt(match[pattern.yearIndex], 10);
           const month = parseInt(match[pattern.monthIndex], 10);
           const day = parseInt(match[pattern.dayIndex], 10);
-          
+
           // Validate the parsed date
           if (this.isValidBSDate(year, month, day)) {
             return { year, month, day };
@@ -198,19 +210,19 @@ export class NepaliDatePicker {
         }
       }
     }
-    
+
     return null;
   }
 
   private parseWithMonthNames(dateString: string): NepaliDate | null {
     const englishMonths: string[] = [];
     const nepaliMonths: string[] = [];
-    
+
     for (let i = 1; i <= 12; i++) {
       englishMonths.push(localizeMonth(i, "en"));
       nepaliMonths.push(localizeMonth(i, "np"));
     }
-    
+
     // Try English month names first
     for (let i = 0; i < englishMonths.length; i++) {
       const monthName = englishMonths[i];
@@ -218,18 +230,18 @@ export class NepaliDatePicker {
       const escapedMonth = monthName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
       const monthRegex = new RegExp(`${escapedMonth}\\s+(\\d{1,2}),?\\s+(\\d{4})|${escapedMonth}\\s+(\\d{1,2})\\s+(\\d{4})|(\\d{1,2})\\s+${escapedMonth}\\s+(\\d{4})`, 'i');
       const match = dateString.match(monthRegex);
-      
+
       if (match) {
         const day = parseInt(match[1] || match[3] || match[5], 10);
         const year = parseInt(match[2] || match[4] || match[6], 10);
         const month = i + 1;
-        
+
         if (this.isValidBSDate(year, month, day)) {
           return { year, month, day };
         }
       }
     }
-    
+
     // Try Nepali month names
     for (let i = 0; i < nepaliMonths.length; i++) {
       const monthName = nepaliMonths[i];
@@ -237,18 +249,18 @@ export class NepaliDatePicker {
       const escapedMonth = monthName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
       const monthRegex = new RegExp(`${escapedMonth}\\s+(\\d{1,2}),?\\s+(\\d{4})|${escapedMonth}\\s+(\\d{1,2})\\s+(\\d{4})|(\\d{1,2})\\s+${escapedMonth}\\s+(\\d{4})`);
       const match = dateString.match(monthRegex);
-      
+
       if (match) {
         const day = parseInt(match[1] || match[3] || match[5], 10);
         const year = parseInt(match[2] || match[4] || match[6], 10);
         const month = i + 1;
-        
+
         if (this.isValidBSDate(year, month, day)) {
           return { year, month, day };
         }
       }
     }
-    
+
     return null;
   }
 
@@ -264,39 +276,23 @@ export class NepaliDatePicker {
     }
   }
 
-  /**
-   * Days in BS month via getDaysInMonth only (single calendar truth).
-   * Numeric fallback (30) applies only when `year` is outside MIN/MAX_BS_YEAR —
-   * used solely for adjacent-month grid padding (e.g. days before Baisakh of
-   * MIN_BS_YEAR). Does not read calendar data. Unexpected core errors for
-   * supported years are rethrown, not swallowed.
-   */
-  private daysInBsMonth(year: number, month1Based: number, fallback = 30): number {
-    try {
-      return getDaysInMonth(year, month1Based);
-    } catch (err) {
-      if (year < MIN_BS_YEAR || year > MAX_BS_YEAR) {
-        return fallback;
-      }
-      throw err;
-    }
-  }
-
   private openCalendar(): void {
+    if (isDestroyed(this.state)) return;
+
     // Close all other calendars before opening this one
     this.closeAllOtherCalendars();
-    
+
     // Recalculate z-index in case the context has changed
     this.zIndex = this.calculateZIndex();
-    
+
     // Parse existing value from input field if present
     this.parseAndSetDateFromInput();
-    
-    this.calendarVisible = true;
-    this.renderCalendar(this.currentBSYear, this.currentBSMonth);
+
+    this.state = openPicker(this.state);
+    this.renderCalendar(this.state.view.year, this.state.view.month);
   }
 
-  private renderCalendar(bsYear: number, bsMonth: number): void {
+  private renderCalendar(bsYear: number, bsMonth1Based: number): void {
     if (this.floatingCalendar && this.floatingCalendar.parentNode) {
       this.floatingCalendar.parentNode.removeChild(this.floatingCalendar);
     }
@@ -304,13 +300,13 @@ export class NepaliDatePicker {
     const calendarDiv = document.createElement("div");
     calendarDiv.className = `nepali-datepicker nepali-datepicker-${this.theme}`;
 
-    calendarDiv.innerHTML = this.generateCalendarHtml(bsYear, bsMonth);
+    calendarDiv.innerHTML = this.generateCalendarHtml(bsYear, bsMonth1Based);
 
     this.setupCalendarEvents(calendarDiv);
 
     const modalContainer = this.findModalContainer();
     const appendTarget = modalContainer || document.body;
-    
+
     appendTarget.appendChild(calendarDiv);
     this.floatingCalendar = calendarDiv;
 
@@ -319,16 +315,16 @@ export class NepaliDatePicker {
 
   private findModalContainer(): HTMLElement | null {
     let element: HTMLElement | null = this.inputElement;
-    
+
     while (element && element !== document.body) {
       const classList = element.classList;
       const role = element.getAttribute('role');
       const tagName = element.tagName.toLowerCase();
-      
+
       if (tagName === 'dialog') {
         return element;
       }
-      
+
       if (
         classList.contains('modal') ||
         classList.contains('Modal') ||
@@ -338,19 +334,19 @@ export class NepaliDatePicker {
         role === 'dialog' ||
         element.hasAttribute('data-modal') ||
         // Check for high z-index that might indicate a modal
-        (window.getComputedStyle(element).zIndex !== 'auto' && 
+        (window.getComputedStyle(element).zIndex !== 'auto' &&
          parseInt(window.getComputedStyle(element).zIndex) > 1000)
       ) {
         return element;
       }
-      
+
       element = element.parentElement;
     }
-    
+
     return null;
   }
 
-  private generateCalendarHtml(bsYear: number, bsMonth: number): string {
+  private generateCalendarHtml(bsYear: number, bsMonth1Based: number): string {
     // Supported years via range constants (not raw dataset keys)
     let yearOptions = "";
     for (let y = MIN_BS_YEAR; y <= MAX_BS_YEAR; y++) {
@@ -360,22 +356,12 @@ export class NepaliDatePicker {
     }
     let monthOptions = "";
     for (let i = 0; i < 12; i++) {
+      const month1 = i + 1;
       monthOptions += `<option value="${i}"${
-        i === bsMonth ? " selected" : ""
-      }>${localizeMonth(i + 1, this.language)}</option>`;
+        month1 === bsMonth1Based ? " selected" : ""
+      }>${localizeMonth(month1, this.language)}</option>`;
     }
-    // bsMonth is 0-based in the picker; getDaysInMonth expects 1-based
-    const daysInMonth = this.daysInBsMonth(bsYear, bsMonth + 1);
-    // Calculate the weekday of the 1st day of this BS month
-    const firstDayOfWeek = this.getBSFirstDayOfWeek(bsYear, bsMonth);
-    // Get days in previous month
-    let prevMonth = bsMonth - 1;
-    let prevYear = bsYear;
-    if (prevMonth < 0) {
-      prevMonth = 11;
-      prevYear--;
-    }
-    const lastDayOfPrevMonth = this.daysInBsMonth(prevYear, prevMonth + 1);
+
     const weekdays = this.language === "np"
     ? ["आ", "सो", "मं", "बु", "बि", "शु", "श"]
     : ["S", "M", "T", "W", "T", "F", "S"];
@@ -393,73 +379,32 @@ export class NepaliDatePicker {
         ${weekdays.map(day => `<div class="nepali-weekday">${day}</div>`).join('')}
       </div>
       <div class="nepali-calendar-body">
-        ${this.generateBSDaysFullGrid(
-          bsYear,
-          bsMonth,
-          daysInMonth,
-          firstDayOfWeek,
-          lastDayOfPrevMonth
-        )}
+        ${this.generateBSDaysFullGrid(bsYear, bsMonth1Based)}
       </div>
     `;
   }
 
-  private getBSFirstDayOfWeek(bsYear: number, bsMonth: number): number {
-    try {
-      const adDate = convertBSToAD({
-        year: bsYear,
-        month: bsMonth + 1,
-        day: 1,
-      });
-      if (adDate instanceof Date && !isNaN(adDate.getTime())) {
-        return adDate.getDay();
-      }
-    } catch (e) {
-      console.log("Error converting BS to AD:", e);
-    }
-    return 0;
-  }
-
-  // Render the days grid for BS calendar
-  private generateBSDaysFullGrid(
-    bsYear: number,
-    bsMonth: number,
-    daysInMonth: number,
-    firstDayOfWeek: number,
-    lastDayOfPrevMonth: number
-  ): string {
+  /** Render day cells from pure grid model (DOM strings unchanged for Stage 3.1). */
+  private generateBSDaysFullGrid(bsYear: number, bsMonth1Based: number): string {
+    const model = buildBsMonthGrid(bsYear, bsMonth1Based, this.state.selected);
     let daysHTML = "";
-    const totalCells = 42;
-    // Previous month days
-    for (let i = 0; i < firstDayOfWeek; i++) {
-      const prevDay = lastDayOfPrevMonth - firstDayOfWeek + i + 1;
-      daysHTML += `<div class="nepali-day nepali-other-month" data-day="${prevDay}" data-other="prev">${localizeDigits(prevDay, this.language)}</div>`;
-    }
-    // Current month days
-    for (let day = 1; day <= daysInMonth; day++) {
+    for (const cell of model.cells) {
       let classes = "nepali-day";
-      if (this.isBSSelectedDate(bsYear, bsMonth, day))
+      if (cell.kind !== "current") {
+        classes += " nepali-other-month";
+      }
+      if (cell.selected) {
         classes += " nepali-selected";
-      daysHTML += `<div class="${classes}" data-day="${day}">${localizeDigits(day, this.language)}</div>`;
-    }
-    // Next month days
-    const daysFilled = firstDayOfWeek + daysInMonth;
-    for (let i = 1; i <= totalCells - daysFilled; i++) {
-      daysHTML += `<div class="nepali-day nepali-other-month" data-day="${i}" data-other="next">${localizeDigits(i, this.language)}</div>`;
+      }
+      const otherAttr =
+        cell.kind === "prev"
+          ? ' data-other="prev"'
+          : cell.kind === "next"
+            ? ' data-other="next"'
+            : "";
+      daysHTML += `<div class="${classes}" data-day="${cell.day}"${otherAttr}>${localizeDigits(cell.day, this.language)}</div>`;
     }
     return daysHTML;
-  }
-
-  private isBSSelectedDate(
-    bsYear: number,
-    bsMonth: number,
-    bsDay: number
-  ): boolean {
-    return (
-      bsYear === this.currentBSYear &&
-      bsMonth === this.currentBSMonth &&
-      bsDay === this.currentBSDay
-    );
   }
 
   private setupCalendarEvents(calendarDiv: HTMLElement): void {
@@ -498,6 +443,7 @@ export class NepaliDatePicker {
   }
 
   private handleBSDateClick(event: MouseEvent): void {
+    if (isDestroyed(this.state)) return;
     const target = event.target as HTMLElement;
     const dayEl = target.closest<HTMLElement>(".nepali-day");
     if (!dayEl) return;
@@ -506,9 +452,11 @@ export class NepaliDatePicker {
   }
 
   private selectBSDate(dayElement: HTMLElement): void {
+    if (isDestroyed(this.state)) return;
+
     let day = parseInt(dayElement.dataset.day ?? "0", 10);
-    let month = this.currentBSMonth;
-    let year = this.currentBSYear;
+    let month = this.state.view.month; // 1-based
+    let year = this.state.view.year;
 
     if (this.floatingCalendar) {
       const monthSelect =
@@ -519,34 +467,28 @@ export class NepaliDatePicker {
         ".nepali-year-select"
       );
       if (monthSelect && yearSelect) {
-        month = parseInt(monthSelect.value, 10);
+        month = parseInt(monthSelect.value, 10) + 1; // select is 0-based
         year = parseInt(yearSelect.value, 10);
       }
     }
 
     if (dayElement.dataset.other === "prev") {
       month -= 1;
-      if (month < 0) {
-        month = 11;
+      if (month < 1) {
+        month = 12;
         year -= 1;
       }
     } else if (dayElement.dataset.other === "next") {
       month += 1;
-      if (month > 11) {
-        month = 0;
+      if (month > 12) {
+        month = 1;
         year += 1;
       }
     }
 
-    this.currentBSYear = year;
-    this.currentBSMonth = month;
-    this.currentBSDay = day;
+    const date: NepaliDate = { year, month, day };
+    this.state = setSelected(this.state, date);
 
-    const date: NepaliDate = {
-      year: this.currentBSYear,
-      month: this.currentBSMonth + 1,
-      day: this.currentBSDay,
-    };
     const formatted = formatBSDate(date, this.format, {
       language: this.language,
     });
@@ -556,41 +498,31 @@ export class NepaliDatePicker {
   }
 
   private previousBSMonth(): void {
-    let month = this.currentBSMonth - 1;
-    let year = this.currentBSYear;
-    if (month < 0) {
-      month = 11;
-      year--;
-    }
-    this.currentBSMonth = month;
-    this.currentBSYear = year;
-    this.renderCalendar(year, month);
+    if (isDestroyed(this.state)) return;
+    this.state = statePreviousMonth(this.state);
+    this.renderCalendar(this.state.view.year, this.state.view.month);
   }
 
   private nextBSMonth(): void {
-    let month = this.currentBSMonth + 1;
-    let year = this.currentBSYear;
-    if (month > 11) {
-      month = 0;
-      year++;
-    }
-    this.currentBSMonth = month;
-    this.currentBSYear = year;
-    this.renderCalendar(year, month);
+    if (isDestroyed(this.state)) return;
+    this.state = stateNextMonth(this.state);
+    this.renderCalendar(this.state.view.year, this.state.view.month);
   }
 
   private changeBSMonth(event: Event): void {
+    if (isDestroyed(this.state)) return;
     const target = event.target as HTMLSelectElement;
-    const newMonth = parseInt(target.value, 10);
-    this.currentBSMonth = newMonth;
-    this.renderCalendar(this.currentBSYear, newMonth);
+    const newMonth0 = parseInt(target.value, 10);
+    this.state = setView(this.state, this.state.view.year, newMonth0 + 1);
+    this.renderCalendar(this.state.view.year, this.state.view.month);
   }
 
   private changeBSYear(event: Event): void {
+    if (isDestroyed(this.state)) return;
     const target = event.target as HTMLSelectElement;
     const newYear = parseInt(target.value, 10);
-    this.currentBSYear = newYear;
-    this.renderCalendar(newYear, this.currentBSMonth);
+    this.state = setView(this.state, newYear, this.state.view.month);
+    this.renderCalendar(this.state.view.year, this.state.view.month);
   }
 
   private positionCalendarPopup(): void {
@@ -621,7 +553,7 @@ export class NepaliDatePicker {
   }
 
   private closeCalendar(): void {
-    this.calendarVisible = false;
+    this.state = closePicker(this.state);
     if (this.floatingCalendar && this.floatingCalendar.parentNode) {
       this.floatingCalendar.parentNode.removeChild(this.floatingCalendar);
       this.floatingCalendar = null;
@@ -630,13 +562,14 @@ export class NepaliDatePicker {
 
   private closeAllOtherCalendars(): void {
     NepaliDatePicker.instances.forEach(instance => {
-      if (instance !== this && instance.calendarVisible) {
+      if (instance !== this && instance.state.open && !isDestroyed(instance.state)) {
         instance.closeCalendar();
       }
     });
   }
 
   public setZIndex(zIndex: number): void {
+    if (isDestroyed(this.state)) return;
     this.zIndex = zIndex;
     if (this.floatingCalendar) {
       this.floatingCalendar.style.zIndex = zIndex.toString();
@@ -644,8 +577,13 @@ export class NepaliDatePicker {
   }
 
   public destroy(): void {
+    if (isDestroyed(this.state)) {
+      return;
+    }
     this.closeCalendar();
-    document.removeEventListener("click", this.handleClickOutside);
+    this.inputElement.removeEventListener("click", this.onInputClick);
+    document.removeEventListener("click", this.onDocumentClick);
+    this.state = markDestroyed(this.state);
     NepaliDatePicker.instances.delete(this);
   }
 }
