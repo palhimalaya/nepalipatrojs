@@ -6,10 +6,10 @@
 
 **NepaliPatroJS** is a TypeScript/JavaScript library for the **Bikram Sambat (BS)** Nepali civil calendar: conversion to/from Gregorian (**AD**), formatting/localization, and a browser datepicker.
 
-- npm: `nepalipatrojs` (current published: **1.0.5**)
+- npm: `nepalipatrojs` (published: **1.0.5**; repo prepared as **2.0.0**, publish not yet authorized)
 - Repo: https://github.com/palhimalaya/nepalipatrojs
 - License: MIT (Copyright 2025 Himalaya Pal)
-- Target major version in progress: **2.0**
+- Target major version: **2.0**
 
 Intended consumers: Nepali web apps, business platforms, forms needing BS dates, CDN/browser scripts, and (planned) React apps. The **core conversion engine must stay UI- and framework-independent**.
 
@@ -96,18 +96,17 @@ npm run build
 - **Stages 4.1–4.4 CLOSED** (2026-11-22): docs; browser smoke; a11y keyboard/ARIA-DOM; mobile CSS + contrast
 - Desktop day **42×42**; mobile **44×44** / popup **344**; ISS-026/027 resolved
 - ISS-025 nested scroll: **resolved**
-- Open: ISS-013 (SR speech)
-- **Next:** Recommended Phase 5 packaging/CI **assessment** (not authorized). No React.
+- Phase 5 stages **5.1–5.6 implemented** (packaging/CI); ISS-008/009/010/028 resolved
+- Open: ISS-013 (SR speech); npm **2.0.0 publish not authorized**
+- **Next:** Await 5.2–5.6 close + separate publish auth. No React.
 
 ## Known limitations (v1 / current)
 
 - Legacy `Date` APIs remain timezone-sensitive by design (prefer date-only APIs)
 - Dataset provenance **unknown** (ISS-016) — documented in README; round-trips ≠ historical proof
 - Locale code is `'np'` not `'ne'` (ISS-005 open for future alias)
-- `dist/index.d.ts` emits on build; gitignore / publish story still Phase 5 (ISS-008)
-- CSS export `./styles` → missing `only-styles.css` (ISS-009); use `./css`
-- CI can “pass” with failed build/test (`continue-on-error: true`) (ISS-010)
-- Datepicker: Jest a11y/keyboard only — not AT-certified (ISS-013); no real-browser smoke yet
+- Packaging: ESM + CJS + UMD; `./css` and `./styles`; bundled `index.d.ts` (Phase 5)
+- Datepicker: Jest a11y/keyboard only — not AT-certified (ISS-013)
 - AD footer tracks focus, not hover (ISS-024 accepted)
 - BS range ends at 2099
 - (ISS-003 resolved — AD→BS uses prefix tables)

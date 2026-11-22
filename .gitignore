@@ -2,11 +2,16 @@
 node_modules/
 jspm_packages/
 
-# TypeScript compiled output
+# TypeScript / Rollup output — track only shippable public artifacts
 dist/*
 !dist/nepali-patro-js.css
 !dist/nepali-patro-js.umd.js
+!dist/nepali-patro-js.umd.js.map
 !dist/nepali-patro-js.esm.js
+!dist/nepali-patro-js.esm.js.map
+!dist/nepali-patro-js.cjs
+!dist/nepali-patro-js.cjs.map
+!dist/index.d.ts
 
 build/
 *.tsbuildinfo
@@ -44,3 +49,5 @@ lerna-debug.log*
 .smoke-evidence/
 smoke-phase42.html
 
+# npm pack artifacts
+*.tgz

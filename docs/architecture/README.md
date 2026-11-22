@@ -15,7 +15,8 @@
 | [phase4-browser-smoke-results.md](phase4-browser-smoke-results.md) | Phase 4.2 | Real-browser smoke B1–B8 + geometry measurements |
 | [phase4-accessibility-results.md](phase4-accessibility-results.md) | Phase 4.3 | Manual a11y — keyboard/ARIA; SR speech gaps |
 | [localization.md](localization.md) | Phase 0 | Locales, digits, formatting |
-| [packaging.md](packaging.md) | Phase 0 | Build, exports, types, CI |
+| [packaging.md](packaging.md) | Phase 0 / 5 | Build, exports, types, CI (short index) |
+| [phase5-packaging-assessment.md](phase5-packaging-assessment.md) | Phase 5 | Packaging/CI assessment, pack smoke, stages 5.1–5.6 |
 
 ## Guiding decision (Accepted)
 

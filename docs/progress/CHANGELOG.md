@@ -66,6 +66,9 @@ User-facing npm release notes will also live in the root `CHANGELOG` when 2.0 sh
 - **Phase 4.3 (2026-11-22):** Manual accessibility — keyboard/ARIA-DOM PASS; NVDA/VO/Orca speech NOT TESTED; ISS-026/027 contrast filed; ISS-013 remains open. No production fixes.
 - **Phase 4.4 (2026-11-22):** Mobile day **44px**, popup **344px**, weekday **12px**, AD **11px**; ISS-026/027 contrast tokens; desktop **42px** preserved. CSS-only.
 - **ISS-025 (2026-11-22):** Datepicker repositions when scrollable ancestors scroll; listeners cleaned on close/destroy. No public API change. **Resolved** (maintainer close).
+- **Phase 5 assessment (2026-11-22):** Packaging/CI report published; ISS-028 filed (empty CJS require). No package/CI code changes.
+- **Phase 5.1 (2026-11-22):** CI honesty — removed `continue-on-error` from build/test (ISS-010). No packaging/export changes.
+- **Phase 5.2–5.6 (2026-11-22):** Packaging release prep for **2.0.0** — CJS `.cjs` entry (ISS-028); `./styles` aliases `./css` (ISS-009); bundled `index.d.ts` (ISS-008); `pack:smoke` + CI/publish gates; migration guide. **npm publish not run.**
 
 ### Changed (process)
 

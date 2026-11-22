@@ -55,6 +55,49 @@ npx jest --runInBand --coverage=false   # 312/312
 
 ---
 
+## 2026-11-22 — Phase 5.2–5.6 packaging (ISS-008/009/028)
+
+| Check | Result |
+|-------|--------|
+| `npm run build` | **PASS** (ESM + CJS + UMD + CSS + `index.d.ts`) |
+| `npm run typecheck` | **PASS** |
+| Full Jest | **325/325 PASS** |
+| `npm run pack:smoke` | **PASS** (CJS require, ESM import, css≡styles, consumer tsc, clean tarball) |
+| Local CJS `require('./dist/…cjs')` | APIs present; `convertAdToBs` → 2080-09-16 |
+| npm publish | **Not run** (await auth) |
+
+---
+
+## 2026-11-22 — Phase 5.1 CI honesty (ISS-010)
+
+| Check | Result |
+|-------|--------|
+| `ci.yml` Build/Test `continue-on-error` | **Removed** |
+| Jest `workflow-honesty` | **6/6 PASS** |
+| `node scripts/verify-ci-honesty.mjs` | **PASS** (controlled fail build skips Test; fail test exits non-zero) |
+| Full Jest | **323/323 PASS** |
+| `tsc --noEmit` | **PASS** |
+| `npm run build` | **PASS** |
+| Packaging / exports / deps | **Unchanged** |
+
+Not claimed: live GitHub Actions run on `main` (local YAML + simulation only).
+
+---
+
+## 2026-11-22 — Phase 5 packaging/CI assessment (no code changes)
+
+| Check | Result |
+|-------|--------|
+| Config / CI / Rollup inspection | Documented in [phase5-packaging-assessment.md](../architecture/phase5-packaging-assessment.md) |
+| `npm pack` → ESM import | **PASS** (`convertAdToBs` / `NepaliDatePicker`) |
+| `npm pack` → CJS `require` | **FAIL** — empty module (ISS-028) |
+| `nepalipatrojs/css` resolve | **PASS** |
+| `nepalipatrojs/styles` | **FAIL** — missing `only-styles.css` (ISS-009) |
+| npm `1.0.5` tarball | 27 files; broken `./styles`; incomplete/stale `.d.ts` set vs current tree |
+| Implementation | **None** (assessment only) |
+
+---
+
 ## 2026-11-22 — ISS-025 nested-scroll reposition
 
 ### Checks

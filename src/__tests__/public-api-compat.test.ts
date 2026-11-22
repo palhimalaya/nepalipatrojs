@@ -122,15 +122,34 @@ describe('Stage 2.1 UMD / browser globals (built artifact)', () => {
   });
 });
 
-describe('Stage 2.1 CSS entry unchanged', () => {
-  it('package exports ./css path still points at nepali-patro-js.css', () => {
+describe('Phase 5 package entries', () => {
+  it('package exports ./css and ./styles both point at nepali-patro-js.css', () => {
     const pkg = JSON.parse(
       readFileSync(join(__dirname, '../../package.json'), 'utf8')
     );
     expect(pkg.exports['./css']).toBe('./dist/nepali-patro-js.css');
+    expect(pkg.exports['./styles']).toBe('./dist/nepali-patro-js.css');
     expect(
       readFileSync(join(__dirname, '../../dist/nepali-patro-js.css'), 'utf8')
         .length
     ).toBeGreaterThan(0);
+  });
+
+  it('require entry is CJS (.cjs) and exposes APIs (ISS-028)', () => {
+    const pkg = JSON.parse(
+      readFileSync(join(__dirname, '../../package.json'), 'utf8')
+    );
+    expect(pkg.main).toBe('./dist/nepali-patro-js.cjs');
+    expect(pkg.exports['.'].require).toBe('./dist/nepali-patro-js.cjs');
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    const m = require('../../dist/nepali-patro-js.cjs');
+    expect(typeof m.convertAdToBs).toBe('function');
+    expect(typeof m.NepaliDatePicker).toBe('function');
+    expect(typeof m.default).toBe('function');
+    expect(m.convertAdToBs({ year: 2024, month: 1, day: 1 })).toEqual({
+      year: 2080,
+      month: 9,
+      day: 16,
+    });
   });
 });

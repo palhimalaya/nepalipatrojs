@@ -1,25 +1,33 @@
 # Project status
 
 **Last updated:** 2026-11-22  
-**Current published version:** 1.0.5  
+**Current published version:** 1.0.5 (npm)  
+**Repo package version:** 2.0.0  
 **Target version:** 2.0.0  
-**Current phase:** Phase 4 — Stage **4.4 CLOSED**; ISS-025 **RESOLVED**  
-**Phases 0–3 / Stages 4.1–4.4:** CLOSED  
+**Current phase:** Phase 5 — Stages **5.1–5.6 implemented** (awaiting maintainer close / release auth)  
+**Phases 0–3 / Stages 4.1–4.4:** CLOSED
 
 ## Completion
 
 | Phase / step | Status |
 |--------------|--------|
-| Stages 4.1–4.4 | **CLOSED** (maintainer approved) |
-| ISS-025 nested scroll | **Resolved** |
-| ISS-026 / ISS-027 | Resolved |
+| Stages 4.1–4.4 | **CLOSED** |
+| Stage 5.1 CI honesty | **CLOSED** (ISS-010) |
+| Stages 5.2–5.6 | **Implemented** — await close review |
+| ISS-008 / 009 / 010 / 028 | **Resolved** |
+| ISS-025 / 026 / 027 | Resolved |
 | ISS-013 | Open — SR speech still missing |
-| Phase 5 — Packaging/CI | Not started; **not authorized** |
+| npm publish 2.0.0 | **Not authorized** |
+| React | Deferred |
 
-## ISS-025 close notes
+## Phase 5 implementation notes
 
-Maintainer approved closure. Nested-scroll ancestor listeners + cleanup accepted. Browser smoke limited (IDE Chromium reposition trigger only); documented; does not block close.
+- **5.3:** CJS `dist/nepali-patro-js.cjs` — `require` works
+- **5.2:** `./styles` aliases `./css`
+- **5.4:** Bundled `dist/index.d.ts`; clean dist; allowlisted `files`
+- **5.5:** `pack:smoke` + CI typecheck/pack gates; publish workflow gated
+- **5.6:** Version `2.0.0`, migration guide, README/metadata updated — **publish not done**
 
 ## Next exact task
 
-**Recommended (not authorized):** Phase 5 **assessment** — packaging/CI release blockers (`./styles`, CI reliability), staged plan. No packaging/CI changes until explicit approval. ISS-013 remains open. No React.
+**Await close review** of Stages 5.2–5.6. Separate authorization required before npm publish / GitHub release. ISS-013 and React unchanged.

@@ -75,4 +75,4 @@ Implemented under jsdom: dialog + grid ARIA, roving tabindex, Escape closes with
 
 ### CSS import
 
-Use `import 'nepalipatrojs/css'` or the CDN `nepali-patro-js.css` path. Do not rely on `nepalipatrojs/styles` (ISS-009).
+Use `import 'nepalipatrojs/css'` (or alias `nepalipatrojs/styles`) or the CDN `nepali-patro-js.css` path.

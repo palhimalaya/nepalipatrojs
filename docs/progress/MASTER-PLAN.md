@@ -11,7 +11,7 @@ Overall status: **IN PROGRESS** (Phases 0–3 CLOSED; Phase 4 **assessment COMPL
 | 2 | Architecture / module boundaries | **COMPLETED** / CLOSED |
 | 3 | Datepicker redesign | **COMPLETED** / CLOSED (2026-11-22) |
 | 4 | Integration & quality hardening | **Assessment DONE** — impl stages await auth |
-| 5 | Build, packaging, CI | NOT STARTED (after 4.x evidence / maintainer call) |
+| 5 | Build, packaging, CI | **5.1–5.6 implemented** (await close); npm publish not authorized |
 | 6 | Documentation site & playground | NOT STARTED |
 | 7 | Final verification | NOT STARTED |
 | — | Framework integration (React) | Deferred — revisit after hardening |
@@ -88,7 +88,11 @@ Overall status: **IN PROGRESS** (Phases 0–3 CLOSED; Phase 4 **assessment COMPL
 29. ~~Phase 4.3 manual accessibility~~ **DONE 2026-11-22** → [phase4-accessibility-results.md](../architecture/phase4-accessibility-results.md)
 30. ~~Phase 4.4 mobile sizing + ISS-026/027 contrast~~ **DONE / CLOSED 2026-11-22**
 31. ~~ISS-025 nested-scroll positioning~~ **RESOLVED 2026-11-22**
-32. Phase 5 packaging/CI assessment ← **recommended next**; not authorized
+32. ~~Phase 5 packaging/CI assessment~~ **DONE 2026-11-22** → [phase5-packaging-assessment.md](../architecture/phase5-packaging-assessment.md)
+33. ~~Phase 5.1 CI honesty~~ **CLOSED 2026-11-22** (ISS-010)
+34. ~~Phase 5.2–5.6 packaging~~ **IMPLEMENTED 2026-11-22** (await close; publish separate)
+35. npm publish / GitHub release 2.0.0 ← **await authorization**
+36. ISS-013 SR validation ← separate
 
 **Maintainer locks:** packaging changes → Phase 5; no `nepalipatrojs/core` deep export; no React / no CSS sizing without separate auth.
 
@@ -268,15 +272,26 @@ Revisit only after vanilla package + public API are stable. Core must remain Rea
 
 ## Phase 5 — Build, packaging, CI
 
-**Status:** NOT STARTED (priority subject to Phase 4 assessment)  
-**Objective:** Correct exports, real `.d.ts`, failing CI on errors, pack smoke test.
+**Status:** Assessment **COMPLETE** (2026-11-22); implementation **NOT STARTED**  
+**Report:** [phase5-packaging-assessment.md](../architecture/phase5-packaging-assessment.md)  
+**Objective:** Correct exports, usable ESM+CJS entries, real public `.d.ts`, fail-closed CI, pack smoke before publish.
+
+### Stages
+
+- [x] **5.1** CI honesty (ISS-010) — **CLOSED**
+- [x] **5.3** Module entry / CJS (ISS-028) — **implemented**
+- [x] **5.2** CSS exports (ISS-009) — **implemented** (`./styles` → same CSS as `./css`)
+- [x] **5.4** Types publish (ISS-008) — **implemented** (bundled `index.d.ts`)
+- [x] **5.5** Pack smoke + publish gate — **implemented**
+- [x] **5.6** Release metadata / 2.0.0 version prep — **implemented** (publish not run)
 
 ### Acceptance criteria
 
-- ISS-008, ISS-009, ISS-010 resolved
-- `continue-on-error` removed from critical jobs
-- `npm pack` install smoke verifies exports
-- Publish workflow only ships verified artifacts
+- [x] ISS-008, ISS-009, ISS-010, ISS-028 resolved
+- [x] `continue-on-error` removed from critical jobs
+- [x] `npm pack` install smoke verifies ESM, CJS, CSS/styles, types
+- [x] Publish workflow runs typecheck/build/test/pack:smoke before publish
+- [ ] Maintainer close + separate npm publish authorization
 
 ---
 

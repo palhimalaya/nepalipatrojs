@@ -70,22 +70,36 @@ Severity: `critical` | `high` | `medium` | `low`
 
 - **Severity:** high  
 - **Module:** packaging / Rollup  
-- **Status:** open (partially mitigated)  
-- **Description:** After `npm run build` (2026-11-21), `dist/index.d.ts` **is** emitted by the TS plugin. `rollup-plugin-dts` remains unused. `.gitignore` still excludes most of `dist/` except umd/esm/css — local git may not track declarations. Publish via `prepublishOnly` may include them if present at pack time — needs pack smoke test (Phase 5).  
+- **Status:** **resolved** (Phase 5.4, 2026-11-22)  
+- **Fix:** `rollup-plugin-dts` emits a single `dist/index.d.ts`; build cleans `dist/` first; `files` allowlists public artifacts; pack smoke runs consumer `tsc`.  
+- **Related:** [phase5-packaging-assessment.md](../architecture/phase5-packaging-assessment.md)
 
 ## ISS-009 — Broken `./styles` CSS export
 
 - **Severity:** high  
 - **Module:** `package.json` exports  
-- **Status:** open  
-- **Description:** Points to `dist/only-styles.css` which is not built; `./css` correctly points to `nepali-patro-js.css`.  
+- **Status:** **resolved** (Phase 5.2, 2026-11-22)  
+- **Fix:** `exports["./styles"]` aliases `./dist/nepali-patro-js.css` (same as `./css`).  
+- **Related:** [phase5-packaging-assessment.md](../architecture/phase5-packaging-assessment.md)
 
 ## ISS-010 — CI continue-on-error on build and test
 
 - **Severity:** high  
 - **Module:** `.github/workflows/ci.yml`  
-- **Status:** open  
-- **Description:** Failed build/test do not fail the workflow.  
+- **Status:** **resolved** (Phase 5.1, 2026-11-22)  
+- **Description:** Failed build/test did not fail the workflow (`continue-on-error: true`).  
+- **Fix:** Removed soft-fail from Build and Test; failure diagnostics use `if: failure()`. Regressions: `src/__tests__/ci/workflow-honesty.test.ts`, `scripts/verify-ci-honesty.mjs`.  
+- **Deferred (later stages):** dedicated typecheck job; `dist/` cache review — not in 5.1 scope.  
+- **Related:** [phase5-packaging-assessment.md](../architecture/phase5-packaging-assessment.md)
+
+## ISS-028 — Node `require` / `exports.require` yields empty module
+
+- **Severity:** critical (packaging)  
+- **Module:** `package.json` `type`/`exports.require` / UMD build  
+- **Status:** **resolved** (Phase 5.3, 2026-11-22)  
+- **Evidence (pre-fix):** `npm pack` → `require('nepalipatrojs')` → `{}`.  
+- **Fix:** Ship real CJS as `dist/nepali-patro-js.cjs`; `main` / `exports.require` point there; UMD retained for CDN.  
+- **Related:** [phase5-packaging-assessment.md](../architecture/phase5-packaging-assessment.md)
 
 ## ISS-011 — Circular dependency index ↔ NepaliDatePicker
 

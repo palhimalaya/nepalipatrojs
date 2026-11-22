@@ -1,32 +1,52 @@
 {
   "name": "nepalipatrojs",
-  "version": "1.0.5",
+  "version": "2.0.0",
   "description": "A JavaScript library for Nepali date conversion and calendar utilities",
   "type": "module",
-  "main": "dist/nepali-patro-js.umd.js",
+  "main": "./dist/nepali-patro-js.cjs",
+  "module": "./dist/nepali-patro-js.esm.js",
+  "types": "./dist/index.d.ts",
   "repository": {
-        "type": "git",
-        "url": "https://github.com/palhimalaya/nepalipatrojs"
-      },
-  "module": "dist/nepali-patro-js.esm.js",
-  "types": "dist/index.d.ts",
+    "type": "git",
+    "url": "https://github.com/palhimalaya/nepalipatrojs"
+  },
   "files": [
-    "dist"
+    "dist/nepali-patro-js.cjs",
+    "dist/nepali-patro-js.cjs.map",
+    "dist/nepali-patro-js.esm.js",
+    "dist/nepali-patro-js.esm.js.map",
+    "dist/nepali-patro-js.umd.js",
+    "dist/nepali-patro-js.umd.js.map",
+    "dist/nepali-patro-js.css",
+    "dist/index.d.ts",
+    "LICENSE",
+    "README.md"
   ],
   "exports": {
     ".": {
+      "types": "./dist/index.d.ts",
       "import": "./dist/nepali-patro-js.esm.js",
-      "require": "./dist/nepali-patro-js.umd.js",
-      "types": "./dist/index.d.ts"
+      "require": "./dist/nepali-patro-js.cjs"
     },
     "./css": "./dist/nepali-patro-js.css",
-    "./styles": "./dist/only-styles.css"
+    "./styles": "./dist/nepali-patro-js.css",
+    "./package.json": "./package.json"
+  },
+  "sideEffects": [
+    "*.css",
+    "./dist/nepali-patro-js.css"
+  ],
+  "engines": {
+    "node": ">=18"
   },
   "scripts": {
-    "build": "rollup -c",
+    "clean": "node scripts/clean-dist.mjs",
+    "build": "npm run clean && rollup -c",
     "dev": "rollup -c -w",
+    "typecheck": "tsc --noEmit",
     "test": "jest",
-    "prepublishOnly": "npm run build"
+    "pack:smoke": "node scripts/pack-smoke.mjs",
+    "prepublishOnly": "npm run build && npm test && npm run pack:smoke"
   },
   "keywords": [
     "nepali",
@@ -44,7 +64,7 @@
     "ad",
     "conversion"
   ],
-  "author": "",
+  "author": "Himalaya Pal",
   "license": "MIT",
   "devDependencies": {
     "@rollup/plugin-commonjs": "^28.0.6",

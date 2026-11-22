@@ -5,15 +5,15 @@ A JavaScript/TypeScript library for **Bikram Sambat (BS)** ↔ Gregorian (**AD**
 [![npm version](https://img.shields.io/npm/v/nepalipatrojs.svg)](https://www.npmjs.com/package/nepalipatrojs)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-**Published package today:** `1.0.5` · **In-progress major:** `2.0` (core + datepicker redesign landed in-repo; packaging/release hardening ongoing)
+**Package version (repo):** `2.0.0` · **Last published on npm:** `1.0.5` (publish requires separate release authorization)
 
 ## Features
 
 - Convert between BS and AD (date-only APIs preferred; legacy `Date` wrappers retained)
 - Format BS dates (English or Nepali digits/names)
 - Vanilla DOM datepicker: keyboard navigation, constraints, dual AD labels, light/dark theme tokens
-- TypeScript types (emitted on build; see packaging notes below)
-- UMD + ESM bundles
+- TypeScript types (`dist/index.d.ts` bundled on build)
+- ESM + CJS + UMD bundles
 
 ## Supported range and data honesty
 
@@ -34,10 +34,10 @@ npm install nepalipatrojs
 
 ### CSS
 
-**Working import** (recommended):
-
 ```ts
 import 'nepalipatrojs/css';
+// alias also works:
+import 'nepalipatrojs/styles';
 // → dist/nepali-patro-js.css
 ```
 
@@ -46,8 +46,6 @@ CDN:
 ```html
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/nepalipatrojs/dist/nepali-patro-js.css" />
 ```
-
-> **Known packaging issue:** `package.json` also declares `nepalipatrojs/styles` → `dist/only-styles.css`, but that file is **not built**. Use `./css` until Phase 5 packaging fixes land (ISS-009).
 
 ## Import
 

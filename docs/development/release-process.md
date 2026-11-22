@@ -8,7 +8,8 @@
 ## Target (v2)
 
 1. All Phase acceptance criteria for the release milestone met  
-2. CI green without `continue-on-error` on build/test/typecheck  
+2. CI green without `continue-on-error` on build/test (Phase 5.1 done); typecheck gate still pending later stage  
+
 3. Pack smoke test green  
 4. `docs/migration/v1-to-v2.md` updated for any breaking changes  
 5. CHANGELOG entry for the version  
