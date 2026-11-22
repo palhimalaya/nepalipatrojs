@@ -39,5 +39,31 @@ Uses the BS “today” snapshot from `getCurrentBSDate()` at construction. If t
 
 - **Authoritative calendar:** BS (selection, navigation, constraints).
 - **AD presentation:** secondary only — each day cell shows a compact AD day-of-month; a footer shows the full AD civil date for the **focused** BS date.
+- **Footer sync:** updates on keyboard focus moves and month re-renders; removed when the popup closes (Today / day selection). Mouse hover does not update the footer (ISS-024).
 - **Conversion:** core `convertBsToAd` (date-only, timezone-independent).
 - **Not included:** AD month grid, AD navigation, or calendar-mode switching.
+
+### Theme tokens (Stage 3.7)
+
+Existing `theme: "light" | "dark"` applies `.nepali-datepicker-light` / `.nepali-datepicker-dark`.
+
+Consumers may override CSS variables on the popup root (or a parent that wraps the mounted popup). No new JS theme API.
+
+| Variable | Role (light default) |
+|----------|----------------------|
+| `--np-surface` | Popup background |
+| `--np-surface-muted` / `--np-surface-emphasis` | Hover / muted fills |
+| `--np-text` / `--np-text-muted` / `--np-text-subtle` | Text hierarchy |
+| `--np-border` | Borders / separators |
+| `--np-accent` / `--np-accent-strong` | Accent / selected border |
+| `--np-selected-bg` / `--np-selected-text` | Selected day |
+| `--np-today-bg` / `--np-today-text` | Today highlight |
+| `--np-focus-ring` | `:focus-visible` outline |
+| `--np-radius` / `--np-radius-sm` | Corner radii |
+| `--np-space-*` | Spacing scale |
+| `--np-font` / `--np-font-size*` | Typography |
+| `--np-day-size` / `--np-popup-width` | Sizing |
+| `--np-shadow` | Elevation |
+| `--np-disabled-opacity` / `--np-ad-opacity` | Disabled / AD subtitle |
+
+Dark theme reassigns the same tokens on `.nepali-datepicker-dark`.

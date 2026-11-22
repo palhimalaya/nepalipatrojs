@@ -79,7 +79,8 @@ Overall status: **IN PROGRESS** (Phase 0 CLOSED; Phase 1 IN PROGRESS — baselin
 21. ~~Phase 3 Stage 3.4 Positioning / z-index (ISS-012)~~ **DONE 2026-11-22**
 22. ~~Phase 3 Stage 3.5 Today / constraints / disabled dates~~ **DONE 2026-11-22**
 23. ~~Phase 3 Stage 3.6 Dual AD/BS display~~ **DONE 2026-11-22**
-24. Phase 3 Stage 3.7 — Visual redesign / theme tokens ← **NEXT** (await authorization)
+24. ~~Phase 3 Stage 3.7 Visual redesign / theme tokens~~ **DONE 2026-11-22**
+25. Phase 3 close-out / next project phase ← **await maintainer**
 
 **Maintainer locks:** packaging → Phase 5; no `nepalipatrojs/core` deep export for now.
 
@@ -174,7 +175,7 @@ Overall status: **IN PROGRESS** (Phase 0 CLOSED; Phase 1 IN PROGRESS — baselin
 
 ## Phase 3 — Datepicker redesign
 
-**Status:** 3.0–3.6 COMPLETED; Stage 3.7 pending authorization  
+**Status:** 3.0–3.7 COMPLETED (await Phase 3 close-out review)  
 **Depends on:** Phase 2 + ADR-004; assessment review  
 **Objective:** Modular, accessible, modern dual-calendar UI.  
 **Spec:** [phase3-datepicker-assessment.md](../architecture/phase3-datepicker-assessment.md)
@@ -188,7 +189,7 @@ Overall status: **IN PROGRESS** (Phase 0 CLOSED; Phase 1 IN PROGRESS — baselin
 - [x] Stage 3.4 — Positioning / z-index (no full-DOM scan) (ISS-012)
 - [x] Stage 3.5 — Today, min/max, disabled dates
 - [x] Stage 3.6 — Dual AD/BS display (equivalent AD; no AD grid)
-- [ ] Stage 3.7 — Visual design / theme tokens
+- [x] Stage 3.7 — Visual design / theme tokens (`--np-*`)
 - [ ] Rename `ui/` → `datepicker/` when appropriate
 
 ### Acceptance criteria

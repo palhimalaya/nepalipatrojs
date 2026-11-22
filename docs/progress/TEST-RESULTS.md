@@ -422,6 +422,22 @@ Public ESM export keys unchanged vs Stage 2.0 inventory.
 
 ---
 
+## 2026-11-22 — Phase 3 Stage 3.7: Visual redesign / theme tokens
+
+### Change
+
+CSS custom properties `--np-*` on `.nepali-datepicker`; dark theme re-tokens on `.nepali-datepicker-dark`. Footer sync preflight recorded (ISS-024: focus not hover).
+
+### Commands
+
+```bash
+npx jest --runInBand --coverage=false   # PASS 310/310 ~28s
+npx tsc --noEmit                        # PASS
+npm run build                           # PASS
+```
+
+---
+
 ## 2026-11-22 — Phase 3 Stage 3.6: Dual AD/BS display
 
 ### Change

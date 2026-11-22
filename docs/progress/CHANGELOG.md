@@ -58,6 +58,7 @@ User-facing npm release notes will also live in the root `CHANGELOG` when 2.0 sh
 - **Phase 3 Stage 3.4 / ISS-012:** Deterministic popup positioning (`ui/position.ts`); no full-DOM z-index scan; sticky `zIndex` / `setZIndex` precedence; scroll/resize reposition.
 - **Phase 3 Stage 3.5:** `minDate` / `maxDate` / `disabledDates` / `isDateDisabled`; Today + Clear; keyboard skips unavailable dates (`ui/constraints.ts`).
 - **Phase 3 Stage 3.6:** Dual AD equivalent display (`ui/ad-display.ts`) — per-cell AD day + focused AD footer; BS remains authoritative for selection.
+- **Phase 3 Stage 3.7:** Datepicker CSS theme tokens (`--np-*`); light/dark via existing `theme` option; no new runtime theme API.
 
 ### Changed (process)
 

@@ -1,10 +1,11 @@
 # Datepicker architecture
 
-## Current (v1 → Stage 3.6)
+## Current (v1 → Stage 3.7)
 
 Orchestrator: `src/ui/NepaliDatePicker.ts`  
 Pure modules: `state`, `grid`, `keyboard`, `position`, `constraints`, `ad-display`  
-Safe DOM: `src/ui/render.ts`
+Safe DOM: `src/ui/render.ts`  
+Styles: `src/ui/styles.css` (`--np-*` tokens; light/dark)
 
 **Full Phase 3.0 assessment:** [phase3-datepicker-assessment.md](phase3-datepicker-assessment.md).  
 **Public options:** [datepicker.md](../api/datepicker.md).
@@ -21,7 +22,7 @@ Safe DOM: `src/ui/render.ts`
 | Navigation | Prev/next + `<select>` + PageUp/PageDown / arrows |
 | Positioning | `position.ts` — body-attached `absolute` |
 | Z-index | Sticky precedence (no DOM scan) |
-| Theme | CSS class `nepali-datepicker-light/dark` |
+| Theme | `theme` option → light/dark class; `--np-*` CSS variables (Stage 3.7) |
 | Locale | `en` / `np` digit and month localization |
 | Events | Select/Today/Clear → `change` (Clear keeps popup open) |
 | Cleanup | See listener inventory below |
@@ -135,10 +136,17 @@ No duplicate popup listeners across re-renders: teardown runs before each rebuil
 - Disabled BS dates still show AD text but stay non-selectable.
 - **Deferred:** full AD calendar grid, AD month navigation, calendar-mode toggle.
 
+### Theme tokens (Stage 3.7)
+
+- Defaults and dark overrides live on `.nepali-datepicker` / `.nepali-datepicker-dark`.
+- Consumer customization: set `--np-*` on the popup or an ancestor; keep `theme: "light"|"dark"`.
+- No new public JS theme API.
+- States use outline, inset bar (today), dashed border (disabled), and fill — not color alone.
+
 ### Missing product features
 
-- Visual redesign / theme tokens (Stage 3.7)
 - Optional AD grid / calendar-system toggle (post–3.6, if authorized)
+- `ui/` → `datepicker/` rename (when authorized)
 
 ### Visual (v1)
 

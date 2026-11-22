@@ -85,12 +85,12 @@ npm run build
 
 **Phase 2 — COMPLETED** (architecture + ownership).
 
-**Phase 3 — Stages 3.0–3.6 COMPLETED.**
+**Phase 3 — Stages 3.0–3.7 COMPLETED (await close-out review).**
 
-- Modular datepicker with a11y, positioning, constraints, Today/Clear, AD equivalents
-- Still pending: visual redesign / theme tokens (3.7)
+- Modular datepicker: a11y, positioning, constraints, AD equivalents, `--np-*` theme tokens
+- Deferred: full AD grid / mode switch; `ui/` rename
 - Locks: barrel-only entry; packaging → Phase 5; ISS-016 provenance open
-- **Next:** Stage 3.7 visual redesign (await authorization).
+- **Next:** Await maintainer Phase 3 close-out / next-phase authorization.
 
 ## Known limitations (v1)
 

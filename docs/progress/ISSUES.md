@@ -106,12 +106,19 @@ Severity: `critical` | `high` | `medium` | `low`
 
 - **Severity:** medium  
 - **Module:** UI  
-- **Status:** open — partially addressed (Stages 3.3–3.6)  
-- **Description:** Remaining: visual redesign / theme tokens (Stage 3.7). Full AD calendar grid / mode switch deferred.  
-- **Done in Stage 3.3:** Escape; keyboard nav; focus restore; dialog/grid ARIA.  
-- **Done in Stage 3.5:** `minDate` / `maxDate` / `disabledDates` / `isDateDisabled`; Today + Clear.  
-- **Done in Stage 3.6:** BS-primary grid with per-cell AD day subtitle + focused AD footer (no AD grid).  
+- **Status:** open — largely addressed (Stages 3.3–3.7); deferred items remain  
+- **Description:** Remaining deferred: full AD calendar grid / mode switch (post–3.6). Visual tokens done in 3.7.  
+- **Done in Stage 3.3–3.7:** a11y, constraints, Today/Clear, AD equivalents, CSS theme tokens.  
 - **Related:** [phase3-datepicker-assessment.md](../architecture/phase3-datepicker-assessment.md)  
+
+## ISS-024 — AD footer tracks focus, not mouse hover
+
+- **Severity:** low (documented behavior)  
+- **Module:** datepicker AD footer  
+- **Status:** **accepted limitation** (Stage 3.7 preflight, 2026-11-22)  
+- **Clarification:** Footer syncs on keyboard focus moves, month navigation re-renders, Clear (focused unchanged), and is removed when Today/selection closes the popup. Mouse **hover** does not update the footer; mouse **click** on a day selects and closes.  
+- **Not a silent Stage 3.7 fix:** no functional change folded into visual work.  
+- **Verification:** `ad-footer-sync.test.ts`  
 
 ## ISS-023 — Constraint option mutability semantics (Stage 3.5 clarification)
 
