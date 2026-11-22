@@ -422,6 +422,22 @@ Public ESM export keys unchanged vs Stage 2.0 inventory.
 
 ---
 
+## 2026-11-22 — Phase 2 Stage 2.5: Architecture boundary enforcement (ISS-018)
+
+### Change
+
+Automated boundary checker (no new deps) with positive scan of production `src/` and negative synthetic fixtures. Rules documented in `docs/architecture/boundary-rules.md`. Exceptions evaluated (not moved) in `docs/architecture/exceptions-stage25.md`.
+
+### Commands
+
+```bash
+npx jest --runInBand --coverage=false   # PASS 191/191 ~29s
+npx tsc --noEmit                        # PASS
+npm run build                           # PASS
+```
+
+---
+
 ## 2026-11-22 — Phase 2 Stage 2.4: Physical core / i18n restructuring
 
 ### Change

@@ -22,11 +22,11 @@ i18n/ ──✕──► ui/, document, window
 1. ~~Circular `index` ↔ datepicker~~ **Resolved Stage 2.1.**
 2. ~~Datepicker raw `BS_CALENDAR_DATA`~~ **Resolved Stage 2.2.**
 3. ~~`helpers.ts` mixes core/i18n~~ **Resolved Stage 2.3**; physical folders **Stage 2.4**.
-4. Fuller automated boundary enforcement — **Stage 2.5 / ISS-018**.
+4. ~~Fuller automated boundary enforcement~~ **Resolved Stage 2.5 / ISS-018** ([boundary-rules.md](boundary-rules.md)).
 5. Legacy `Date` APIs remain local-field (intentional); date-only path is TZ-safe.
 6. UI still monolithic (~645 lines) — Phase 3 (`datepicker/` modularization).
 
-**Known co-location exceptions (not silent refactors)**
+**Known co-location exceptions** (evaluated Stage 2.5; moves need approval — [exceptions-stage25.md](exceptions-stage25.md))
 
 - `NEPALI_DIGITS` lives in `core/calendar-data.ts` (i18n data next to calendar table).
 - Locale name enums + picker options live in `core/types.ts` (mixed types file).

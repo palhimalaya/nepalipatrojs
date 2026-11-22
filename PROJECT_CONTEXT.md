@@ -83,13 +83,14 @@ npm run build
 
 **Phase 1 — CLOSED.** Correctness, timezone, ISS-003 prefix AD→BS approved.
 
-**Phase 2 — Stages 2.0–2.4 COMPLETED; Stage 2.5 not started.**
+**Phase 2 — Stages 2.0–2.5 COMPLETED** (architecture sequence done).
 
 - Physical `src/core/` + `src/i18n/`; public barrel unchanged
-- ISS-017 remains resolved (API inventory); ISS-018 owns boundary enforcement (Stage 2.5)
-- ISS-020 / ISS-021 resolved: no barrel cycle; no raw `BS_CALENDAR_DATA` in datepicker
+- ISS-018 resolved: automated boundary tests (`docs/architecture/boundary-rules.md`)
+- Ownership exceptions (digits/enums/options in core) documented — moves need approval
+- ISS-020 / ISS-021 resolved; ISS-017 remains resolved (inventory freeze)
 - Locks: barrel-only entry (no `nepalipatrojs/core`); packaging → Phase 5; ISS-016 provenance open
-- **Next:** Stage 2.5 architecture boundary enforcement — ISS-018 (await authorization).
+- **Next:** Phase 3 datepicker redesign (await authorization).
 
 ## Known limitations (v1)
 

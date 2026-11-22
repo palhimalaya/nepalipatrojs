@@ -6,6 +6,8 @@
 |-----|--------|-------------|
 | [system-overview.md](system-overview.md) | Phase 0 | Current v1 map + proposed v2 layout |
 | [phase2-assessment.md](phase2-assessment.md) | Phase 2 | Module boundaries assessment + Stage 2.x progress |
+| [boundary-rules.md](boundary-rules.md) | Stage 2.5 | Enforceable dependency rules + commands |
+| [exceptions-stage25.md](exceptions-stage25.md) | Stage 2.5 | Ownership exceptions (proposed moves, not applied) |
 | [core-engine.md](core-engine.md) | Phase 0–2 | Conversion, validation, date-only model, helper split |
 | [datepicker-architecture.md](datepicker-architecture.md) | Phase 0 | Modular UI plan |
 | [localization.md](localization.md) | Phase 0 | Locales, digits, formatting |
